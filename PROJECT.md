@@ -17,7 +17,7 @@ GitHub Pages serves **`main`**. If this file and the live site disagree, `main` 
 - **Language:** Say **location**, not house. A house, centre or day program stays place-based. A client is named as a person. Disability clients display **Home and community**; aged-care clients display **Support at Home**. Sector changes labels only, never screens or behaviour. Legacy `/manage-house` URLs still rewrite to `/manage-location`.
 - **Do not:** invent tokens, visual language, or dependencies. Prefer `src/components/ui`.
 - **Run:** `npm install` then `npm run dev`. Open http://localhost:3021/ (hash routes, e.g. `#/bookings`).
-- **Check:** `npm run lint` and `node --test tests/*.test.ts`. There are **235** source-file assertion tests — update them, do not delete them.
+- **Check:** `npm run lint` and `node --test tests/*.test.ts`. There are **236** source-file assertion tests — update them, do not delete them.
 - **Verify UI** from **Start a session** on a fresh run; a return visit with a remembered persona should skip it. Choose-location has a stripped header.
 - **Commit:** only if asked. Work on a `josephine-*` branch, never `main`. Never force-push.
 - **Target IA:** if the task is building toward the research IA, also read [`TARGET-IA.md`](TARGET-IA.md) first. It is not current behaviour.
@@ -100,7 +100,7 @@ On pages listed in `src/lib/pageVariants.ts`, a second icon appears beside the p
 
 ## Jobs to be done
 
-Route: `#/jobs-to-be-done`. This is a moderator/stakeholder research screen outside the signed-in product. It uses the standard page width, type, spacing, `Card`, `Tag`, `Button`, product logo header and footer. The page heading is title-only, matching the other pre-session screens.
+Route: `#/jobs-to-be-done`. This is a moderator/stakeholder research screen outside the signed-in product. It uses the product page shell (`max-w-page` + `px-8`, content left-aligned), type, spacing, `Card`, `Tag`, `Button`, product logo header and footer. The page heading is title-only, matching the other pre-session screens. Job titles keep `max-w-content` as a reading measure, not a centred page column.
 
 `src/data/jobsToBeDone.ts` is the source of truth. It contains **119** typed records seeded from the rebuilt root `jobs-to-be-done.xlsx` snapshot on 10 September 2026. The workbook has one job sheet; its Summary content is not copied. The workbook is not read by the app and is not kept in sync. **After this seed, add or edit jobs directly in `src/data/jobsToBeDone.ts`; do not update the workbook and expect the screen to change.** Counts and filter options are derived from the array.
 
@@ -110,7 +110,7 @@ The screen has one list with a live matching count. A row gives the participant-
 
 ## Information architecture screen
 
-Route: `#/information-architecture`. Like Jobs to be done, this is a stakeholder screen outside the signed-in product. It uses the product logo header, a title-only heading, and a short assumption list rather than boxed context cards. `src/pages/InformationArchitecture.tsx` generates the current structure directly from `ORGANISATIONS`, `PERSONAS`, `GROUPINGS`, `LOCATIONS`, their ID relationships, `serviceTypeLabel`, and `NODE_NAV_ITEMS`. It contains no persona, grouping, or location names. Adding or changing those data records updates the tree automatically; a location listed in several groupings renders beneath every direct parent. A location not yet assigned to a grouping still appears in its organisation rather than disappearing.
+Route: `#/information-architecture`. Like Jobs to be done, this is a stakeholder screen outside the signed-in product. It uses the same product page shell (`max-w-page` + `px-8`, content left-aligned). It has the product logo header, a title-only heading, and a short assumption list rather than boxed context cards. `src/pages/InformationArchitecture.tsx` generates the current structure directly from `ORGANISATIONS`, `PERSONAS`, `GROUPINGS`, `LOCATIONS`, their ID relationships, `serviceTypeLabel`, and `NODE_NAV_ITEMS`. It contains no persona, grouping, or location names. Adding or changing those data records updates the tree automatically; a location listed in several groupings renders beneath every direct parent. A location not yet assigned to a grouping still appears in its organisation rather than disappearing.
 
 `NODE_NAV_ITEMS` in `src/lib/informationArchitecture.ts` is the shared source of truth for node destinations. The signed-in `AppHeader`, the location switcher’s Location settings item, and this screen all read it. A grouping resolves to **Dashboard** and **Workers**. A location resolves to **Dashboard**, **Bookings**, **Messages**, **Notifications**, **Workers**, and **Location settings**. The visualisation does not restate those lists.
 
@@ -313,7 +313,7 @@ Two tiers, `max-w-page` + `px-8` on both. The header is **not sticky** — it sc
 
 ## Layout archetypes
 
-- Page shell: 1440px (`--container-page: 90rem`), main `px-8 pt-8 pb-4`.
+- Page shell: 1440px (`--container-page: 90rem`), main `px-8 pt-8 pb-4`. Pre-session screens (**Start a session**, **Choose a persona**, **Jobs to be done**, **Information architecture**) use the same `max-w-page` + `px-8` shell and left-align inside it. They do not wrap the page in a centred `max-w-content` column. Long prose may still use `max-w-content` as a reading measure, without `mx-auto`.
 - Narrow column: `--narrow-column-width: 20rem` (320px). Do not invent per-page sidebar widths.
 - Bookings + Settings: `layout-rail-content`.
 - Messages: `layout-master-detail`. The shell is a **definite** `height: var(--messages-shell-height)` with `grid-template-rows: minmax(0, 1fr)`, and both columns carry `min-h-0`. All three are needed: with only a height the grid row still stretches to its content, and without `min-h-0` a column refuses to shrink, so the list grows instead of scrolling. Conversation rows carry the divider on the `li` with `last:border-b-0`, so the list finishes on one line rather than doubling up against the next element.

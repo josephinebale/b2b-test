@@ -39,19 +39,18 @@ export function SessionLanding({
       </header>
 
       <main className="mx-auto w-full max-w-page flex-1 px-8 py-8">
-        <div className="mx-auto max-w-content">
-          {pickingPersona ? (
-            <>
-              <PageHeading
-                title="Choose a persona"
-                actions={
-                  <Button type="button" onClick={onBack}>
-                    Back
-                  </Button>
-                }
-              />
-              <Card>
-                <div className="py-1">
+        {pickingPersona ? (
+          <>
+            <PageHeading
+              title="Choose a persona"
+              actions={
+                <Button type="button" onClick={onBack}>
+                  Back
+                </Button>
+              }
+            />
+            <Card>
+              <div className="py-1">
                 {ORGANISATIONS.map((organisation) => (
                   <Fragment key={organisation}>
                     <p className="px-3 pb-1 pt-2 text-xs font-bold text-text-secondary">
@@ -79,51 +78,50 @@ export function SessionLanding({
                     ))}
                   </Fragment>
                 ))}
-                </div>
-              </Card>
-            </>
-          ) : (
-            <>
-              <PageHeading title="Start a session" />
-              <div className="space-y-4">
-                <button
-                  type="button"
-                  onClick={onPlay}
-                  className="ui-linked-surface w-full text-left"
-                >
-                  <Card className="ui-inset-card flex items-center gap-3">
-                    <AppWindow className="h-5 w-5 shrink-0 text-text-strong" />
-                    <p className="font-bold text-text">
-                      <EntityLink as="span">Play the prototype</EntityLink>
-                    </p>
-                  </Card>
-                </button>
-                <a
-                  href={href(JOBS_TO_BE_DONE_ROUTE)}
-                  className="ui-linked-surface"
-                >
-                  <Card className="ui-inset-card flex items-center gap-3">
-                    <ListChecks className="h-5 w-5 shrink-0 text-text-strong" />
-                    <p className="font-bold text-text">
-                      <EntityLink as="span">Jobs to be done</EntityLink>
-                    </p>
-                  </Card>
-                </a>
-                <a
-                  href={href(INFORMATION_ARCHITECTURE_ROUTE)}
-                  className="ui-linked-surface"
-                >
-                  <Card className="ui-inset-card flex items-center gap-3">
-                    <Network className="h-5 w-5 shrink-0 text-text-strong" />
-                    <p className="font-bold text-text">
-                      <EntityLink as="span">Information architecture</EntityLink>
-                    </p>
-                  </Card>
-                </a>
               </div>
-            </>
-          )}
-        </div>
+            </Card>
+          </>
+        ) : (
+          <>
+            <PageHeading title="Start a session" />
+            <div className="space-y-4">
+              <button
+                type="button"
+                onClick={onPlay}
+                className="ui-linked-surface w-full text-left"
+              >
+                <Card className="ui-inset-card flex items-center gap-3">
+                  <AppWindow className="h-5 w-5 shrink-0 text-text-strong" />
+                  <p className="font-bold text-text">
+                    <EntityLink as="span">Play the prototype</EntityLink>
+                  </p>
+                </Card>
+              </button>
+              <a
+                href={href(JOBS_TO_BE_DONE_ROUTE)}
+                className="ui-linked-surface"
+              >
+                <Card className="ui-inset-card flex items-center gap-3">
+                  <ListChecks className="h-5 w-5 shrink-0 text-text-strong" />
+                  <p className="font-bold text-text">
+                    <EntityLink as="span">Jobs to be done</EntityLink>
+                  </p>
+                </Card>
+              </a>
+              <a
+                href={href(INFORMATION_ARCHITECTURE_ROUTE)}
+                className="ui-linked-surface"
+              >
+                <Card className="ui-inset-card flex items-center gap-3">
+                  <Network className="h-5 w-5 shrink-0 text-text-strong" />
+                  <p className="font-bold text-text">
+                    <EntityLink as="span">Information architecture</EntityLink>
+                  </p>
+                </Card>
+              </a>
+            </div>
+          </>
+        )}
       </main>
 
       <AppFooter />

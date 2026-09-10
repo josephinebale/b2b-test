@@ -54,3 +54,23 @@ test('Workers keeps a narrow measure without centring its left edge', () => {
   assert.match(workers, /className="width-main-column"/);
   assert.doesNotMatch(workers, /className="mx-auto max-w-content"/);
 });
+
+test('pre-session screens use the product page shell and left-align inside it', () => {
+  const landing = readFileSync(
+    new URL('../src/pages/SessionLanding.tsx', import.meta.url),
+    'utf8',
+  );
+  const jobs = readFileSync(
+    new URL('../src/pages/JobsToBeDone.tsx', import.meta.url),
+    'utf8',
+  );
+  const architecture = readFileSync(
+    new URL('../src/pages/InformationArchitecture.tsx', import.meta.url),
+    'utf8',
+  );
+
+  for (const page of [landing, jobs, architecture]) {
+    assert.match(page, /<main className="mx-auto w-full max-w-page flex-1 px-8 py-8">/);
+    assert.doesNotMatch(page, /className="mx-auto max-w-content"/);
+  }
+});

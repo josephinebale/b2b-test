@@ -95,13 +95,12 @@ export function JobsToBeDone() {
       </header>
 
       <main className="mx-auto w-full max-w-page flex-1 px-8 py-8">
-        <div className="mx-auto max-w-content">
-          <PageHeading
-            title="Jobs to be done"
-            actions={<Button href={href('/')}>Back</Button>}
-          />
+        <PageHeading
+          title="Jobs to be done"
+          actions={<Button href={href('/')}>Back</Button>}
+        />
 
-          <Card as="section" className="p-4">
+        <Card as="section" className="p-4">
             <h2 className="text-sm font-bold text-text">Filter jobs</h2>
             <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <label className="block text-xs font-medium text-text">
@@ -185,11 +184,10 @@ export function JobsToBeDone() {
                 </span>
               </label>
             </div>
-          </Card>
+        </Card>
 
-          <div className="mt-8">
-            <JobSection jobs={filteredJobs} />
-          </div>
+        <div className="mt-8">
+          <JobSection jobs={filteredJobs} />
         </div>
       </main>
 
