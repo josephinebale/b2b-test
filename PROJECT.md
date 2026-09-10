@@ -23,8 +23,8 @@ GitHub Pages serves **`main`**. If this file and the live site disagree, `main` 
 - **Target IA:** if the task is building toward the research IA, also read [`TARGET-IA.md`](TARGET-IA.md) first. It is not current behaviour.
 
 Folder: `/Users/josephine/Downloads/b2b-test`  
-GitHub: `https://github.com/josephinebale/dorothy-test` (repo name is still `dorothy-test`)  
-Live: `https://josephinebale.github.io/dorothy-test/`  
+GitHub: `https://github.com/josephinebale/b2b-test`  
+Live: `https://josephinebale.github.io/b2b-test/`  
 Stack: React 19 + TypeScript + Vite 6 + Tailwind 4. Runtime extras: `lucide-react` only.
 
 ## Run it
