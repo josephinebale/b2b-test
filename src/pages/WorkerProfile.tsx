@@ -1,11 +1,19 @@
 import { CheckCircle2 } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import { PageHeading } from '../components/PageHeading';
+import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Tag } from '../components/ui/Tag';
-import { findWorker, type LocationData } from '../data/locations';
-import { TEAM_ROUTE } from '../lib/pageContent';
+import {
+  GROUPING,
+  findWorker,
+  groupingWorkers,
+  locationHistoryForWorker,
+  type LocationData,
+  type Grouping,
+} from '../data/locations';
+import { WORKERS_ROUTE } from '../lib/pageContent';
 import { href } from '../lib/router';
 
 const SUPPORT_AREAS = [
@@ -34,15 +42,19 @@ const AVAILABILITY = [
 export function WorkerProfile({
   data,
   workerId,
+  nodeType = 'location',
+  grouping = GROUPING,
 }: {
   data: LocationData;
   workerId: string | null;
+  nodeType?: 'grouping' | 'location';
+  grouping?: Grouping;
 }) {
   const localIndex = data.workers.findIndex((item) => item.id === workerId);
   const found =
     localIndex >= 0
       ? { worker: data.workers[localIndex], location: data.location, index: localIndex }
-      : findWorker(workerId);
+      : findWorker(workerId, data.location.organisation);
   const worker = found?.worker;
   const workerIndex = found?.index ?? 0;
 
@@ -53,33 +65,55 @@ export function WorkerProfile({
         <Card className="px-6 py-12 text-center">
           <p className="text-lg font-bold text-text">Worker not found</p>
           <p className="mt-1 text-sm text-text-secondary">
-            This worker is not on the team at any of your locations.
+            This worker has no booking history with this provider.
           </p>
-          <Button href={href(TEAM_ROUTE)} variant="secondary" className="mt-4">
-            Back to team
+          <Button href={href(WORKERS_ROUTE)} variant="secondary" className="mt-4">
+            Back to workers
           </Button>
         </Card>
       </div>
     );
   }
 
-  const completedBookings = Math.max(worker.bookingCount, 8 + workerIndex * 3);
+  const providerWorker = groupingWorkers(grouping.id).find(
+    (item) => item.id === worker.id,
+  );
+  const providerHistory = locationHistoryForWorker(
+    worker.id,
+    data.location.organisation,
+  );
+  const history =
+    nodeType === 'grouping' ? providerWorker?.locations ?? [] : providerHistory;
+  const completedBookings =
+    nodeType === 'grouping'
+      ? providerWorker?.shiftCount ?? worker.bookingCount
+      : Math.max(worker.bookingCount, 8 + workerIndex * 3);
   const yearsExperience = 3 + (workerIndex % 6);
+  const client = data.location.serviceType === 'home-community';
+  const profileDescription =
+    nodeType === 'grouping'
+      ? `Support worker with history at ${history.length} ${history.length === 1 ? 'location' : 'locations'} in ${grouping.name}`
+      : localIndex >= 0
+        ? client
+          ? `Support worker who has worked with ${data.location.name}`
+          : `Support worker known at ${data.location.name}`
+        : `Support worker with history elsewhere in ${grouping.name}`;
 
   return (
     <div>
       <a
-        href={href(TEAM_ROUTE)}
+        href={href(WORKERS_ROUTE)}
         className="ui-link mb-4 inline-block rounded text-sm"
       >
-        Back to team
+        Back to workers
       </a>
 
       <PageHeading
         title={worker.name}
-        description={`Support worker on the ${found.location.name} team`}
+        description={profileDescription}
         actions={
           <>
+            <PinnedQuestion questionId="workers-profile-context" />
             <Button href={href('/messages')} variant="secondary">
               Message
             </Button>
@@ -96,9 +130,13 @@ export function WorkerProfile({
             </div>
             <p className="mt-3 text-md font-bold text-text">{worker.name}</p>
             <p className="mt-1 text-sm text-text-secondary">Support worker</p>
-            <p className="mt-1 text-xs text-text-tertiary">{found.location.name}</p>
+            <p className="mt-1 text-xs text-text-tertiary">
+              {nodeType === 'grouping' ? grouping.organisation : found.location.name}
+            </p>
             <p className="mt-4 text-sm text-text">
-              {completedBookings} bookings with {found.location.name}
+              {nodeType === 'grouping'
+                ? `${completedBookings} shifts across ${history.length} ${history.length === 1 ? 'location' : 'locations'}`
+                : `${completedBookings} bookings with ${found.location.name}`}
             </p>
             <div className="mt-4 border-t border-border-subtle pt-4 text-left">
               <p className="flex items-center gap-2 text-sm text-text">
@@ -123,7 +161,10 @@ export function WorkerProfile({
             <p className="mt-3 text-sm text-text-strong">
               I’m a disability support worker with {yearsExperience} years of experience supporting
               people at home and in the community. I enjoy building steady routines, helping people
-              stay connected, and working closely with each location’s wider support team.
+              stay connected, and working closely with{' '}
+              {client
+                ? `other workers supporting ${data.location.name}.`
+                : 'each location’s wider support workers.'}
             </p>
           </Card>
 

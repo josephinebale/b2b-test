@@ -1,15 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import {
   Bell,
   ChevronDown,
-  MessageSquare,
 } from 'lucide-react';
-import type { Location } from '../data/locations';
+import type { Grouping, Location } from '../data/locations';
 import {
-  MANAGER_NAME,
+  NODE_NAV_ITEMS,
+  NOTIFICATIONS_NODE_ITEM,
   PERSONAL_MENU_ITEMS,
+  type Persona,
 } from '../lib/informationArchitecture';
-import { BOOKING_DETAIL_ROUTE, TEAM_ROUTE } from '../lib/pageContent';
+import { BOOKING_DETAIL_ROUTE } from '../lib/pageContent';
 import { href } from '../lib/router';
 import { useKeyboardMenu } from '../lib/useKeyboardMenu';
 import { Avatar } from './Avatar';
@@ -21,34 +22,37 @@ import {
 } from './header-utils';
 import { LocationSwitcher } from './LocationSwitcher';
 import { Logo } from './Logo';
+import { PinnedQuestion } from './PinnedQuestion';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
 import { IconButton } from './ui/IconButton';
 
-const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/' },
-  { label: 'Bookings', path: '/bookings' },
-  { label: 'Team', path: TEAM_ROUTE },
-];
-
 type AppHeaderProps = {
-  location: Location;
+  location: Location | null;
+  grouping: Grouping;
+  persona: Persona;
+  nodeType: 'grouping' | 'location';
   path: string;
   unreadMessages: number;
   bookingsBadge: number;
   unreadNotifications: number;
-  onSelectLocation: (locationId: string) => void;
+  onSelectLocation: (locationId: string, groupingId?: string) => void;
+  onSelectGrouping: (groupingId: string) => void;
   onSignOut: () => void;
 };
 
 export function AppHeader({
   location,
+  grouping,
+  persona,
+  nodeType,
   path,
   unreadMessages,
   bookingsBadge,
   unreadNotifications,
   onSelectLocation,
+  onSelectGrouping,
   onSignOut,
 }: AppHeaderProps) {
   const accountMenu = useKeyboardMenu();
@@ -58,9 +62,13 @@ export function AppHeader({
     activeNavRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }, [path]);
 
-  const messagesName = messagesAccessibleName(unreadMessages);
   const notificationsName = notificationsAccessibleName(unreadNotifications);
-  const accountName = accountAccessibleName(MANAGER_NAME);
+  const accountName = accountAccessibleName(persona.name);
+  const visibleNavItems = NODE_NAV_ITEMS.filter(
+    (item) =>
+      item.placement === 'main' &&
+      item.nodeTypes.some((itemNodeType) => itemNodeType === nodeType),
+  );
 
   return (
     <header className="app-header z-20">
@@ -77,33 +85,32 @@ export function AppHeader({
             >
               <Logo />
             </a>
-          <LocationSwitcher location={location} onSelect={onSelectLocation} />
+          <LocationSwitcher
+            location={location}
+            grouping={grouping}
+            persona={persona}
+            nodeType={nodeType}
+            onSelect={onSelectLocation}
+            onSelectGrouping={onSelectGrouping}
+          />
           </div>
 
           <div className="flex flex-1 items-center justify-end gap-3">
+            {nodeType === 'location' && (
             <IconButton
-              href={href('/messages')}
-              aria-label={messagesName}
-              data-tooltip={messagesName}
-              className={`header-utility relative ui-tooltip ${
-                path === '/messages' ? 'header-utility--active' : ''
-              }`}
-            >
-              <MessageSquare className="h-5 w-5" />
-              <Badge count={unreadMessages} />
-            </IconButton>
-
-            <IconButton
-              href={href('/notifications')}
+              href={href(NOTIFICATIONS_NODE_ITEM.path)}
               aria-label={notificationsName}
               data-tooltip={notificationsName}
               className={`header-utility relative ui-tooltip ${
-                path === '/notifications' ? 'header-utility--active' : ''
+                path === NOTIFICATIONS_NODE_ITEM.path
+                  ? 'header-utility--active'
+                  : ''
               }`}
             >
               <Bell className="h-5 w-5" />
               <Badge count={unreadNotifications} />
             </IconButton>
+            )}
 
             <div className="relative flex items-center">
               <Button
@@ -118,7 +125,7 @@ export function AppHeader({
                 aria-label={accountName}
                 className="header-menu-trigger"
               >
-                <Avatar name={MANAGER_NAME} size="sm" />
+                <Avatar name={persona.name} size="sm" />
                 <ChevronDown
                   className={`h-5 w-5 shrink-0 text-text-tertiary transition-transform ${
                     accountMenu.open ? 'rotate-180' : ''
@@ -135,9 +142,15 @@ export function AppHeader({
                     onKeyDown={accountMenu.onMenuKeyDown}
                     className="py-1"
                   >
-                    <p className="px-3 py-2 text-sm font-bold text-text">
-                      {MANAGER_NAME}
-                    </p>
+                    <div className="px-3 py-2">
+                      <p className="text-sm font-bold text-text">
+                        {persona.name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-text-secondary">
+                        {persona.role}
+                        {persona.team ? ` · ${persona.team}` : ''}
+                      </p>
+                    </div>
                     {PERSONAL_MENU_ITEMS.map(({ label, path: itemPath }) => (
                       <a
                         key={itemPath}
@@ -176,7 +189,7 @@ export function AppHeader({
 
       <div className="app-header-nav-row mx-auto flex max-w-page items-stretch overflow-x-auto px-8">
           <nav className="flex h-full w-max items-stretch" aria-label="Main">
-            {NAV_ITEMS.map((item) => {
+            {visibleNavItems.map((item) => {
               const bookingRequestRoute =
                 item.path === '/bookings' &&
                 (path === '/request-booking' ||
@@ -185,18 +198,24 @@ export function AppHeader({
               const active =
                 bookingRequestRoute ||
                 (item.path === '/' ? path === '/' : path.startsWith(item.path));
-              const count = item.label === 'Bookings' ? bookingsBadge : 0;
+              const count =
+                item.label === 'Bookings'
+                  ? bookingsBadge
+                  : item.label === 'Messages'
+                    ? unreadMessages
+                    : 0;
 
-              return (
+              const link = (
                 <a
-                  key={item.path}
                   ref={active ? activeNavRef : undefined}
                   href={href(item.path)}
                   aria-current={active ? 'page' : undefined}
                   aria-label={
                     item.label === 'Bookings'
                       ? bookingsAccessibleName(bookingsBadge)
-                      : item.label
+                      : item.label === 'Messages'
+                        ? messagesAccessibleName(unreadMessages)
+                        : item.label
                   }
                   className={`main-nav-link h-full shrink-0 text-sm ${
                     active
@@ -208,6 +227,17 @@ export function AppHeader({
                   <Badge count={count} />
                 </a>
               );
+
+              if (item.label === 'Messages') {
+                return (
+                  <span key={item.path} className="flex h-full items-center">
+                    {link}
+                    <PinnedQuestion questionId="messages-nav" />
+                  </span>
+                );
+              }
+
+              return <Fragment key={item.path}>{link}</Fragment>;
             })}
           </nav>
       </div>

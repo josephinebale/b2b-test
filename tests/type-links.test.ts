@@ -11,10 +11,10 @@ const source = [
   read('../src/pages/Bookings.tsx'),
   read('../src/pages/Messages.tsx'),
   read('../src/pages/Notifications.tsx'),
-  read('../src/pages/Team.tsx'),
+  read('../src/pages/Workers.tsx'),
   read('../src/pages/dashboard/BookingsWeek.tsx'),
   read('../src/pages/dashboard/NotificationStrip.tsx'),
-  read('../src/pages/dashboard/TeamPanel.tsx'),
+  read('../src/pages/dashboard/WorkersPanel.tsx'),
 ].join('\n');
 
 test('type tokens expose only the five requested steps', () => {
@@ -146,11 +146,11 @@ test('a link nested in an interactive surface answers on its own', () => {
 
   // The row's own links keep tinting the row with it.
   assert.doesNotMatch(
-    read('../src/pages/Team.tsx'),
+    read('../src/pages/Workers.tsx'),
     /ui-nested-link/,
   );
   assert.doesNotMatch(
-    read('../src/pages/dashboard/TeamPanel.tsx'),
+    read('../src/pages/dashboard/WorkersPanel.tsx'),
     /ui-nested-link/,
   );
 });
@@ -171,7 +171,7 @@ test('every text link shares one hover treatment', () => {
 
   // Hand-rolled link styling is gone, so a new link cannot miss the hover.
   for (const file of [
-    '../src/pages/dashboard/TeamPanel.tsx',
+    '../src/pages/dashboard/WorkersPanel.tsx',
     '../src/pages/dashboard/NotificationStrip.tsx',
     '../src/pages/dashboard/BookingsWeek.tsx',
     '../src/pages/WorkerProfile.tsx',

@@ -39,13 +39,16 @@ test('the account menu exposes one account destination', () => {
   ]);
 });
 
-test('the account menu is full name, account destination, divider, then log out', () => {
+test('the account menu is persona identity, account destination, divider, then log out', () => {
   const header = readFileSync(
     new URL('../src/components/AppHeader.tsx', import.meta.url),
     'utf8',
   );
 
-  assert.match(header, /<p[^>]*>\s*\{MANAGER_NAME\}\s*<\/p>/);
+  const menu = header.slice(header.indexOf('{accountMenu.open &&'));
+  assert.match(menu, /\{persona\.name\}/);
+  assert.match(menu, /\{persona\.role\}/);
+  assert.match(menu, /persona\.team/);
   assert.match(header, /PERSONAL_MENU_ITEMS\.map/);
   assert.match(header, /role="separator"/);
   assert.doesNotMatch(header, /ACCOUNT_ICONS|<LogOut/);
@@ -70,12 +73,13 @@ test('organisation editing is controlled by one flag', () => {
   assert.equal(MANAGER_NAME, 'Helen Dawson');
 });
 
-test('financial details reuse the shared organisation name', () => {
+test('organisation settings follow the selected node’s organisation name', () => {
   const settingsSource = readFileSync(
     new URL('../src/pages/Settings.tsx', import.meta.url),
     'utf8',
   );
-  assert.match(settingsSource, /useState\(ORGANISATION_NAME\)/);
+  assert.match(settingsSource, /useState\(organisationName\)/);
+  assert.match(settingsSource, /organisationName=\{data\.location\.organisation\}/);
   assert.doesNotMatch(settingsSource, /Hireup Demonstration Co/);
 });
 
@@ -85,13 +89,13 @@ test('the account page folds photo and password fields into one section', () => 
     'utf8',
   );
   const account = settingsSource.slice(
-    settingsSource.indexOf('function Account()'),
+    settingsSource.indexOf('function Account('),
     settingsSource.indexOf('function SupportPlan'),
   );
 
   assert.match(account, /Email address/);
   assert.match(account, /Profile photo/);
-  assert.match(account, /<Avatar name=\{MANAGER_NAME\}/);
+  assert.match(account, /<Avatar name=\{persona\.name\}/);
   assert.match(account, /Choose file/);
   assert.match(account, /label="Password"/);
   assert.doesNotMatch(settingsSource, /function AboutYou|function ProfilePicture|function PrivacySettings|function Password/);
@@ -107,6 +111,17 @@ test('location settings exclude consumer matching, COVID, and picture sections',
     settingsSource,
     /function CovidRequirements|function LocationPicture|case 'support-areas'|case 'specialised'|case 'covid'|case 'location-picture'/,
   );
+});
+
+test('the node menu scrolls rather than running off a short window', () => {
+  const switcher = readFileSync(
+    new URL('../src/components/LocationSwitcher.tsx', import.meta.url),
+    'utf8',
+  );
+
+  /* Five grouping rows, nested caseloads, twelve locations, and settings rows are taller than a
+     laptop window, and a clipped menu hides the rows at the bottom. */
+  assert.match(switcher, /role="menu"[\s\S]*?max-h-\[70vh\] overflow-y-auto/);
 });
 
 test('arrow keys wrap through menu items', () => {

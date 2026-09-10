@@ -5,6 +5,8 @@ import {
   readLocationProfile,
   SUPPORT_PLACE_OPTIONS,
   SUPPORT_REQUIRED_OPTIONS,
+  supportPlaceLabel,
+  supportRequiredLabel,
   writeLocationProfile,
   type LocationProfile,
 } from '../lib/locationProfiles';
@@ -19,6 +21,7 @@ function toggleValue(values: string[], value: string): string[] {
 }
 
 export function LocationProfileSettings({ data }: { data: LocationData }) {
+  const client = data.location.serviceType === 'home-community';
   const [profile, setProfile] = useState<LocationProfile>(
     () => readLocationProfile(data.location),
   );
@@ -47,9 +50,13 @@ export function LocationProfileSettings({ data }: { data: LocationData }) {
       }}
     >
       <Card as="section" className="p-6">
-        <h2 className="text-sm font-bold text-text">About this location</h2>
+        <h2 className="text-sm font-bold text-text">
+          {client ? `About ${data.location.name}` : 'About this location'}
+        </h2>
         <p className="mt-1 text-sm text-text-secondary">
-          Introduce the location and the way its team supports residents.
+          {client
+            ? `Introduce ${data.location.name} and how workers support them.`
+            : 'Introduce the location and the way its workers support residents.'}
         </p>
         <label className="mt-4 block text-sm font-medium text-text">
           About
@@ -75,16 +82,20 @@ export function LocationProfileSettings({ data }: { data: LocationData }) {
                 }
                 className="h-4 w-4 rounded border-border"
               />
-              {place}
+              {supportPlaceLabel(place, data.location)}
             </label>
           ))}
         </div>
       </Card>
 
       <Card as="section" className="p-6">
-        <h2 className="text-sm font-bold text-text">People supported</h2>
+        <h2 className="text-sm font-bold text-text">
+          {client ? 'Support needs' : 'People supported'}
+        </h2>
         <p className="mt-1 text-sm text-text-secondary">
-          Add broad support needs only. Do not include resident names or private details.
+          {client
+            ? 'Add broad support needs only. Do not include private details.'
+            : 'Add broad support needs only. Do not include resident names or private details.'}
         </p>
         <label className="mt-4 block text-sm font-medium text-text">
           Support needs
@@ -137,7 +148,7 @@ export function LocationProfileSettings({ data }: { data: LocationData }) {
                 }
                 className="h-4 w-4 rounded border-border"
               />
-              {support}
+              {supportRequiredLabel(support, data.location)}
             </label>
           ))}
         </div>

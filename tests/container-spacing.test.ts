@@ -36,8 +36,8 @@ test('every list row uses the row step, so their content shares one left edge', 
     messages: read('../src/pages/Messages.tsx'),
     notifications: read('../src/pages/Notifications.tsx'),
     settings: read('../src/pages/Settings.tsx'),
-    team: read('../src/pages/Team.tsx'),
-    teamPanel: read('../src/pages/dashboard/TeamPanel.tsx'),
+    workers: read('../src/pages/Workers.tsx'),
+    workersPanel: read('../src/pages/dashboard/WorkersPanel.tsx'),
   };
 
   for (const [name, source] of Object.entries(rows)) {

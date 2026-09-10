@@ -7,18 +7,23 @@ function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
 }
 
-test('worker profile routes use the worker id under Team', () => {
-  assert.equal(workerProfilePath('dee-why-1-worker-5'), '/team/dee-why-1-worker-5');
-  assert.equal(workerIdFromPath('/team/dee-why-1-worker-5'), 'dee-why-1-worker-5');
-  assert.equal(workerIdFromPath('/team'), null);
+test('worker profile routes use the worker id under Workers', () => {
+  assert.equal(workerProfilePath('eleni-p'), '/workers/eleni-p');
+  assert.equal(workerIdFromPath('/workers/eleni-p'), 'eleni-p');
+  assert.equal(workerIdFromPath('/workers'), null);
 });
 
-test('the app renders a worker profile from the current location team', () => {
+test('the app renders worker profiles from either node', () => {
   const app = source('../src/App.tsx');
 
   assert.match(app, /import \{ WorkerProfile \}/);
-  assert.match(app, /path\.startsWith\(`\$\{TEAM_ROUTE\}\/`\)/);
-  assert.match(app, /<WorkerProfile data=\{visibleData\} workerId=\{workerIdFromPath\(path\)\}/);
+  assert.match(app, /path\.startsWith\(`\$\{WORKERS_ROUTE\}\/`\)/);
+  assert.match(
+    app,
+    /<WorkerProfile[\s\S]*data=\{visibleData\}[\s\S]*workerId=\{workerIdFromPath\(path\)\}/,
+  );
+  assert.match(app, /nodeType="grouping"/);
+  assert.match(app, /grouping=\{grouping\}/);
 });
 
 test('the worker profile adapts the reference into existing product primitives', () => {
@@ -37,13 +42,13 @@ test('the worker profile adapts the reference into existing product primitives',
 });
 
 test('safe worker-name links open profiles without replacing selection controls', () => {
-  const team = source('../src/pages/Team.tsx');
-  const dashboardTeam = source('../src/pages/dashboard/TeamPanel.tsx');
+  const workers = source('../src/pages/Workers.tsx');
+  const dashboardWorkers = source('../src/pages/dashboard/WorkersPanel.tsx');
   const bookings = source('../src/pages/Bookings.tsx');
   const messages = source('../src/pages/Messages.tsx');
 
-  assert.match(team, /href=\{href\(workerProfilePath\(worker\.id\)\)\}/);
-  assert.match(dashboardTeam, /href=\{href\(workerProfilePath\(worker\.id\)\)\}/);
+  assert.match(workers, /href=\{href\(workerProfilePath\(worker\.id\)\)\}/);
+  assert.match(dashboardWorkers, /href=\{href\(workerProfilePath\(worker\.id\)\)\}/);
   assert.match(bookings, /workerProfilePath\(worker\.id\)/);
   assert.match(messages, /href=\{href\(workerProfilePath\(selected\.id\)\)\}/);
   assert.match(messages, /selectConversation\(conversation\)/);

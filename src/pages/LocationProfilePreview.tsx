@@ -5,18 +5,27 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Tag } from '../components/ui/Tag';
 import type { LocationData } from '../data/locations';
-import { ORGANISATION_NAME, ROUTES } from '../lib/informationArchitecture';
-import { readLocationProfile } from '../lib/locationProfiles';
+import { ROUTES } from '../lib/informationArchitecture';
+import {
+  readLocationProfile,
+  supportPlaceLabel,
+  supportRequiredLabel,
+} from '../lib/locationProfiles';
 import { href } from '../lib/router';
 
 export function LocationProfilePreview({ data }: { data: LocationData }) {
   const profile = readLocationProfile(data.location);
+  const client = data.location.serviceType === 'home-community';
 
   return (
     <div>
       <PageHeading
-        title="Location profile preview"
-        description="Preview of what workers see before accepting work at this location."
+        title={client ? `${data.location.name} profile preview` : 'Location profile preview'}
+        description={
+          client
+            ? `Preview of what workers see before accepting work with ${data.location.name}.`
+            : 'Preview of what workers see before accepting work at this location.'
+        }
         actions={
           <Button href={href(`${ROUTES.manageLocation}/profile`)} variant="secondary">
             Edit profile
@@ -31,7 +40,9 @@ export function LocationProfilePreview({ data }: { data: LocationData }) {
               <LocationMarker location={data.location} />
             </div>
             <h2 className="mt-3 text-md font-bold text-text">{data.location.name}</h2>
-            <p className="mt-1 text-sm text-text-secondary">{ORGANISATION_NAME}</p>
+            <p className="mt-1 text-sm text-text-secondary">
+              {data.location.organisation}
+            </p>
             <Tag className="mt-3">Worker view</Tag>
             <p className="mt-4 flex items-center justify-center gap-2 text-sm text-text-secondary">
               <MapPin className="h-5 w-5" />
@@ -42,7 +53,9 @@ export function LocationProfilePreview({ data }: { data: LocationData }) {
 
         <div className="min-w-0 space-y-6">
           <Card as="section" className="p-6">
-            <h2 className="text-md font-bold text-text">About this location</h2>
+            <h2 className="text-md font-bold text-text">
+              {client ? `About ${data.location.name}` : 'About this location'}
+            </h2>
             <p className="mt-3 text-sm text-text-strong">{profile.about}</p>
           </Card>
 
@@ -52,14 +65,16 @@ export function LocationProfilePreview({ data }: { data: LocationData }) {
               {profile.supportPlaces.map((place) => (
                 <li key={place} className="flex items-center gap-2 text-sm text-text">
                   <MapPin className="h-5 w-5 shrink-0" />
-                  {place}
+                  {supportPlaceLabel(place, data.location)}
                 </li>
               ))}
             </ul>
           </Card>
 
           <Card as="section" className="p-6">
-            <h2 className="text-md font-bold text-text">People supported</h2>
+            <h2 className="text-md font-bold text-text">
+              {client ? 'Support needs' : 'People supported'}
+            </h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {profile.supportNeeds.map((need) => <Tag key={need}>{need}</Tag>)}
             </div>
@@ -79,7 +94,7 @@ export function LocationProfilePreview({ data }: { data: LocationData }) {
               {profile.supportRequired.map((support) => (
                 <li key={support} className="flex items-center gap-2 text-sm text-text">
                   <Building2 className="h-5 w-5 shrink-0" />
-                  {support}
+                  {supportRequiredLabel(support, data.location)}
                 </li>
               ))}
             </ul>

@@ -19,8 +19,8 @@ const settings = readFileSync(
   new URL('../src/pages/Settings.tsx', import.meta.url),
   'utf8',
 );
-const team = readFileSync(
-  new URL('../src/pages/Team.tsx', import.meta.url),
+const workers = readFileSync(
+  new URL('../src/pages/Workers.tsx', import.meta.url),
   'utf8',
 );
 
@@ -50,7 +50,7 @@ test('pages declare their distinct layout archetype', () => {
   assert.match(dashboard, /layout-content-aside/);
 });
 
-test('Team keeps a narrow measure without centring its left edge', () => {
-  assert.match(team, /className="width-main-column"/);
-  assert.doesNotMatch(team, /mx-auto max-w-content/);
+test('Workers keeps a narrow measure without centring its left edge', () => {
+  assert.match(workers, /className="width-main-column"/);
+  assert.doesNotMatch(workers, /className="mx-auto max-w-content"/);
 });

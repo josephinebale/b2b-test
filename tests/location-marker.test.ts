@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { LOCATIONS } from '../src/data/locations.ts';
 
 /** The only colour in the Cerebral Palsy Alliance logo (CP-Brandmark-1-1.svg). */
 const LOGO_GREEN = '#2E953E';
@@ -68,4 +69,24 @@ test('the marker renders one colour rather than a per-location tone', () => {
   );
   assert.match(marker, /bg-location-surface/);
   assert.match(marker, /text-location-foreground/);
+});
+
+test('a home-and-community marker uses the person’s initials, not the suburb or a bracket', () => {
+  const home = LOCATIONS.find((location) => location.serviceType === 'home-community');
+  assert.ok(home);
+  assert.equal(home.name, 'Maya Nguyen');
+  assert.doesNotMatch(home.name, /[()]/);
+  const initials = home.name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0] ?? '')
+    .join('')
+    .toUpperCase();
+  assert.equal(initials, 'MN');
+  const marker = readFileSync(
+    new URL('../src/components/LocationMarker.tsx', import.meta.url),
+    'utf8',
+  );
+  assert.match(marker, /initials\(location\.name\)/);
 });

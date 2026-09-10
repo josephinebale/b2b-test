@@ -27,10 +27,33 @@ export const SUPPORT_REQUIRED_OPTIONS = [
   'Transport',
 ];
 
+export function supportPlaceLabel(value: string, location: Location): string {
+  return location.serviceType === 'home-community' && value === 'At the location'
+    ? 'At home'
+    : value;
+}
+
+export function supportRequiredLabel(
+  value: string,
+  location: Location,
+): string {
+  return location.serviceType === 'home-community' &&
+    value === 'Help around the location'
+    ? 'Help at home'
+    : value;
+}
+
 export function createDefaultLocationProfile(location: Location): LocationProfile {
+  const about =
+    location.serviceType === 'centre'
+      ? `${location.name} is a centre and day program in ${location.suburb}. Support is planned around who is attending each session.`
+      : location.serviceType === 'home-community'
+        ? `${location.name} lives in ${location.suburb}. Support is provided at home and in the community.`
+        : `${location.name} is a supported independent living location in ${location.suburb}. We focus on consistent routines, choice, community participation, and support that reflects each resident’s goals.`;
+
   return {
     locationId: location.id,
-    about: `${location.name} is a supported independent living location in ${location.suburb}. We focus on consistent routines, choice, community participation, and support that reflects each resident’s goals.`,
+    about,
     supportPlaces: [...SUPPORT_PLACE_OPTIONS],
     supportNeeds: [
       'Cerebral palsy',

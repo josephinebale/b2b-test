@@ -10,7 +10,7 @@ npm install
 npm run dev
 ```
 
-Then open http://localhost:3020/
+Then open http://localhost:3021/
 
 ## Checking it still compiles
 
@@ -20,19 +20,20 @@ npm run lint
 
 ## What is built
 
-- **Dashboard**, scoped to the selected location: a notifications strip, the week view of upcoming
-  bookings with week navigation, and a Team panel showing the most booked workers for that
-  location.
+- **Dashboard**, scoped to the selected node: the location face has notifications, upcoming
+  bookings, and most-booked workers; the grouping face compares waiting counts, urgent requests,
+  and recent Hireup booking volume across locations.
 - **Location switcher** in the global nav. Switching keeps you on the page you are on
   and swaps the location context.
 - **First run**: a simple branded holding screen starts the prototype without credentials, then
   opens "Choose your location". After choosing, return visits open the last location.
 - **Bookings**, scoped to the selected location: status views, worker and date filters, a
   "Bookings I have created" toggle, and booking detail cards.
-- **Team**, scoped to the selected location: an alphabetical worker list and linked worker profiles
-  with availability, support, credentials, qualifications, and work history.
-- **Messages**, across every location: conversation list with location labels, empty state, and a
-  thread view matching the existing Messages layout.
+- **Workers**, scoped to the selected node. At a location it leads with the location team, followed
+  by workers known elsewhere in the grouping and people available nearby. At the grouping it ranks
+  everyone with provider history by shifts and locations worked. Both faces include search.
+- **Messages**, scoped to the selected location: conversation list, empty state, and a
+  thread view matching the existing Messages layout. Switching location switches the inbox.
 - **Settings** for this location, the organisation, and Helen’s account. The account menu goes to
   Your account or Log out. Location settings includes an editable worker-facing profile and preview.
 
@@ -53,17 +54,19 @@ The account menu (top right) has **Log out**. That screen offers:
 ## Placeholder data
 
 Five alphabetised public Cerebral Palsy Alliance SIL listing names and suburbs, each with its own
-placeholder roster and bookings. Private street addresses are not used. Bookings are generated from
-a fixed seed relative to today, so the data is stable between reloads but the week view always
-includes today. See `src/data/locations.ts`.
+placeholder workers and bookings, plus nearby workers with no provider history. Private street
+addresses are not used. Bookings are generated from a fixed seed relative to today, so the data is
+stable between reloads but the week view always includes today. See `src/data/locations.ts`.
 
 ## Booking requests
 
 The prototype includes a three-step booking request flow for location and time, support details,
-and worker selection. Submitted requests appear in the Requested bookings list and open into a
-status and detail view. Created requests are kept for the current app session rather than sent
-to a backend.
+and worker selection. Selection shows available location workers first, then available workers
+known elsewhere in the grouping; nearby workers appear only when both are empty. Submitted
+requests appear in the Requested bookings list and open into a status and detail view. Created
+requests are kept for the current app session rather than sent to a backend.
 
 ## Not built
 
-Jobs, invoices as a real product, settings content, and multi-location aggregate views.
+Jobs, invoices as a real product, settings content, booking-request tier gating, worker fatigue,
+hover profile previews, role-based entry nodes, and personas.

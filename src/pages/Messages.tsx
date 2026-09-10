@@ -9,11 +9,11 @@ import { Card } from '../components/ui/Card';
 import { EntityLink } from '../components/ui/EntityLink';
 import { IconButton } from '../components/ui/IconButton';
 import {
-  buildAllConversations,
-  totalUnreadMessages,
+  buildConversationsForLocation,
   type Conversation,
 } from '../data/conversations';
 import { formatTime } from '../lib/date';
+import type { Persona } from '../lib/informationArchitecture';
 import { EMPTY_STATES, workerProfilePath } from '../lib/pageContent';
 import { href } from '../lib/router';
 
@@ -59,12 +59,23 @@ function dividerLabel(date: Date): string {
   return `${WEEKDAYS[date.getDay()]} ${ordinal(date.getDate())} ${MONTHS[date.getMonth()]} ${date.getFullYear()}, ${formatTime(date)}`;
 }
 
+function previewForPersona(preview: string, personaName: string): string {
+  const ownPrefix = `${personaName}: `;
+  return preview.startsWith(ownPrefix)
+    ? `You: ${preview.slice(ownPrefix.length)}`
+    : preview;
+}
+
 type MessagesProps = {
+  locationId: string;
+  persona: Persona;
   onUnreadChange: (count: number) => void;
 };
 
-export function Messages({ onUnreadChange }: MessagesProps) {
-  const [conversations, setConversations] = useState(() => buildAllConversations());
+export function Messages({ locationId, persona, onUnreadChange }: MessagesProps) {
+  const [conversations, setConversations] = useState(() =>
+    buildConversationsForLocation(locationId),
+  );
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
@@ -72,10 +83,14 @@ export function Messages({ onUnreadChange }: MessagesProps) {
   const [showArchived, setShowArchived] = useState(false);
   const [visibleCount, setVisibleCount] = useState(8);
 
-  /* The list is universal, so switching location must not reset read state. */
   useEffect(() => {
-    onUnreadChange(totalUnreadMessages());
-  }, [onUnreadChange]);
+    onUnreadChange(
+      buildConversationsForLocation(locationId).reduce(
+        (sum, item) => sum + item.unread,
+        0,
+      ),
+    );
+  }, [locationId, onUnreadChange]);
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -117,9 +132,17 @@ export function Messages({ onUnreadChange }: MessagesProps) {
       if (item.id !== selected.id) return item;
       return {
         ...item,
-        preview: `You: ${text.length > 38 ? `${text.slice(0, 38).trim()}...` : text}`,
+        preview: `${persona.name}: ${text.length > 38 ? `${text.slice(0, 38).trim()}...` : text}`,
         at: new Date(),
-        messages: [...item.messages, { id: `${item.id}-${Date.now()}`, from: 'provider', text }],
+        messages: [
+          ...item.messages,
+          {
+            id: `${item.id}-${Date.now()}`,
+            from: 'provider',
+            senderName: persona.name,
+            text,
+          },
+        ],
       };
     });
     setConversations(next);
@@ -216,7 +239,10 @@ export function Messages({ onUnreadChange }: MessagesProps) {
                         </span>
                         <span className="mt-1 flex items-start justify-between gap-2">
                           <span className="line-clamp-1 text-sm text-text-secondary">
-                            {conversation.preview}
+                            {previewForPersona(
+                              conversation.preview,
+                              persona.name,
+                            )}
                           </span>
                           <Badge count={conversation.unread} />
                         </span>
@@ -293,15 +319,25 @@ export function Messages({ onUnreadChange }: MessagesProps) {
 
               <div className="min-h-0 flex-1 space-y-4 overflow-auto px-6 py-6">
                 <p className="text-center text-sm text-text-tertiary">{dividerLabel(selected.at)}</p>
-                {selected.messages.map((message) =>
-                  message.from === 'provider' ? (
-                    <div key={message.id} className="ml-auto max-w-4/5 text-right">
+                {selected.messages.map((message) => {
+                  if (message.from === 'provider') {
+                    const senderLabel =
+                      message.senderName === persona.name
+                        ? 'You'
+                        : message.senderName;
+                    return (
+                      <div key={message.id} className="ml-auto max-w-4/5 text-right">
+                      <p className="mb-1 text-xs text-text-secondary">
+                        {senderLabel}
+                      </p>
                       <p className="inline-block rounded bg-brand px-3 py-2 text-left text-sm text-surface">
                         {message.text}
                       </p>
                       <p className="mt-1 text-xs text-text-tertiary">{formatTime(selected.at)}</p>
                     </div>
-                  ) : (
+                    );
+                  }
+                  return (
                     <div key={message.id} className="flex max-w-4/5 gap-2">
                       <Avatar name={selected.workerName} size="sm" />
                       <div>
@@ -317,8 +353,8 @@ export function Messages({ onUnreadChange }: MessagesProps) {
                         <p className="mt-1 text-xs text-text-tertiary">{formatTime(selected.at)}</p>
                       </div>
                     </div>
-                  ),
-                )}
+                  );
+                })}
               </div>
 
               <form

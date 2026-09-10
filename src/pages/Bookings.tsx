@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Check, Clock3, MapPin, Moon, Repeat2, X } from 'lucide-react';
+import { Check, Clock3, MapPin, Moon, Repeat2, Users, X } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import { RequestBookingButton } from '../components/PageHeading';
 import { PinnedQuestion } from '../components/PinnedQuestion';
@@ -8,11 +8,18 @@ import { Tag } from '../components/ui/Tag';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { EntityLink } from '../components/ui/EntityLink';
-import type { Booking, LocationData } from '../data/locations';
+import {
+  bookingParticipantSummary,
+  bookingParticipants,
+  fatigueSignalForBooking,
+  fatigueSignalLabel,
+  type Booking,
+  type LocationData,
+} from '../data/locations';
 import { formatTime, startOfDay } from '../lib/date';
 import {
   EMPTY_STATES,
-  TEAM_ROUTE,
+  WORKERS_ROUTE,
   bookingsViewPath,
   workerProfilePath,
   type BookingViewId,
@@ -105,9 +112,22 @@ function bookingsForView(data: LocationData, view: BookingView): Booking[] {
   return [];
 }
 
-function BookingCard({ booking, data }: { booking: Booking; data: LocationData }) {
+function BookingCard({
+  booking,
+  data,
+  calendarBookings,
+  showFatigueQuestion,
+}: {
+  booking: Booking;
+  data: LocationData;
+  calendarBookings: Booking[];
+  showFatigueQuestion: boolean;
+}) {
   const hours = durationHours(booking);
   const worker = data.workers.find((item) => item.name === booking.workerName);
+  const fatigueSignal = fatigueSignalForBooking(booking, {
+    additionalBookings: calendarBookings,
+  });
   const detailHref =
     booking.status === 'requested'
       ? href(`/bookings/request/${booking.id}`)
@@ -120,15 +140,21 @@ function BookingCard({ booking, data }: { booking: Booking; data: LocationData }
           {bookingTitle(booking)}
         </a>
       </h3>
-      <Tag tone="neutral" className="mt-2">
-        {priceFor(booking)}
-      </Tag>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Tag tone="neutral">{priceFor(booking)}</Tag>
+        {fatigueSignal && (
+          <Tag tone="neutral">{fatigueSignalLabel(fatigueSignal)}</Tag>
+        )}
+        {showFatigueQuestion && (
+          <PinnedQuestion questionId="booking-card-fatigue" />
+        )}
+      </div>
 
       <Card tone="subtle" className="ui-inset-row mt-4 flex items-center gap-3">
         <Avatar name={booking.workerName} size="lg" />
         <div>
           <EntityLink
-            href={href(worker ? workerProfilePath(worker.id) : TEAM_ROUTE)}
+            href={href(worker ? workerProfilePath(worker.id) : WORKERS_ROUTE)}
             className="ui-target-row__action ui-target-row__link--text ui-nested-link"
           >
             {booking.workerName}
@@ -149,6 +175,19 @@ function BookingCard({ booking, data }: { booking: Booking; data: LocationData }
           <div className="flex items-center gap-2">
             <Moon className="h-5 w-5" />
             <span>Sleepover</span>
+          </div>
+        )}
+        {bookingParticipantSummary(booking, data.location) && (
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            <span>
+              {bookingParticipants(booking, data.location)
+                .map((person) => person.name)
+                .join(', ')}
+            </span>
+            {showFatigueQuestion && (
+              <PinnedQuestion questionId="booking-card-participants" />
+            )}
           </div>
         )}
         <div className="flex items-center gap-2">
@@ -182,7 +221,15 @@ function BookingCard({ booking, data }: { booking: Booking; data: LocationData }
   );
 }
 
-export function Bookings({ data, view }: { data: LocationData; view: BookingView }) {
+export function Bookings({
+  data,
+  view,
+  calendarBookings = [],
+}: {
+  data: LocationData;
+  view: BookingView;
+  calendarBookings?: Booking[];
+}) {
   const [worker, setWorker] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -346,8 +393,14 @@ export function Bookings({ data, view }: { data: LocationData; view: BookingView
       <section className="mt-6">
         {filteredBookings.length > 0 ? (
           <div className="space-y-4">
-            {filteredBookings.slice(0, 40).map((booking) => (
-              <BookingCard key={booking.id} booking={booking} data={data} />
+            {filteredBookings.slice(0, 40).map((booking, index) => (
+              <BookingCard
+                key={booking.id}
+                booking={booking}
+                data={data}
+                calendarBookings={calendarBookings}
+                showFatigueQuestion={index === 0}
+              />
             ))}
           </div>
         ) : (

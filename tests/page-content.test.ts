@@ -4,7 +4,7 @@ import test from 'node:test';
 import {
   EMPTY_STATES,
   NOTIFICATION_EMPTY_DESCRIPTIONS,
-  TEAM_ROUTE,
+  WORKERS_ROUTE,
 } from '../src/lib/pageContent.ts';
 
 function avatarSize(path: string): string {
@@ -14,16 +14,16 @@ function avatarSize(path: string): string {
   return match[1];
 }
 
-test('Team uses one public route', () => {
-  assert.equal(TEAM_ROUTE, '/team');
+test('Workers uses one public route', () => {
+  assert.equal(WORKERS_ROUTE, '/workers');
 });
 
-test('dashboard most-booked avatars match the Team list size', () => {
+test('dashboard most-booked avatars match the Workers list size', () => {
   assert.equal(
-    avatarSize('../src/pages/dashboard/TeamPanel.tsx'),
-    avatarSize('../src/pages/Team.tsx'),
+    avatarSize('../src/pages/dashboard/WorkersPanel.tsx'),
+    avatarSize('../src/pages/Workers.tsx'),
   );
-  assert.equal(avatarSize('../src/pages/Team.tsx'), 'md');
+  assert.equal(avatarSize('../src/pages/Workers.tsx'), 'md');
 });
 
 test('dashboard bookings collapse busy days and can reveal the rest', () => {
@@ -39,6 +39,26 @@ test('dashboard bookings collapse busy days and can reveal the rest', () => {
   assert.match(source, /more \$\{plural\(hiddenBookingCount, 'booking', 'bookings'\)\}/);
 });
 
+/* An empty day reads as detached when its label floats below its neighbours.
+   It carries the card's own box — 1px border plus the compact inset — so the
+   label lands on the same line as a card's first line of text, not above it. */
+test('an empty day in the week grid lines up with a card’s first line of text', () => {
+  const source = readFileSync(
+    new URL('../src/pages/dashboard/BookingsWeek.tsx', import.meta.url),
+    'utf8',
+  );
+  const emptyDay = source.slice(
+    source.indexOf('dayBookings.length === 0'),
+    source.indexOf('visibleDayBookings.map'),
+  );
+
+  assert.match(emptyDay, /No bookings/);
+  assert.match(emptyDay, /ui-inset-compact/);
+  assert.match(emptyDay, /border border-transparent/);
+  assert.match(emptyDay, /text-xs/);
+  assert.doesNotMatch(emptyDay, /py-4|items-center|justify-center|self-center/);
+});
+
 test('notification empty copy uses one contraction and one notification verb', () => {
   assert.deepEqual(NOTIFICATION_EMPTY_DESCRIPTIONS, {
     requests: "We'll let you know when a booking request needs your attention.",
@@ -52,9 +72,9 @@ test('every empty state explains what is absent and what makes it appear', () =>
     title: 'No bookings this week',
     description: 'Bookings scheduled for this week will appear here.',
   });
-  assert.deepEqual(EMPTY_STATES.team, {
-    title: 'No team members to show',
-    description: 'Team members booked for this location will appear here.',
+  assert.deepEqual(EMPTY_STATES.workers, {
+    title: 'No workers to show',
+    description: 'Workers will appear after they have booking history with this provider.',
   });
   assert.deepEqual(EMPTY_STATES.notifications, {
     title: 'No notifications',
@@ -68,9 +88,9 @@ test('every empty state explains what is absent and what makes it appear', () =>
     title: 'No bookings to show',
     description: 'Bookings will appear when they match this status and your filters.',
   });
-  assert.deepEqual(EMPTY_STATES.dashboardTeam, {
-    title: 'No team members yet',
-    description: 'Team members will appear after they’re booked for this location.',
+  assert.deepEqual(EMPTY_STATES.dashboardWorkers, {
+    title: 'No workers yet',
+    description: 'Workers will appear after they’re booked for this location.',
   });
   assert.deepEqual(EMPTY_STATES.archivedConversations, {
     title: 'No archived conversations',

@@ -1,12 +1,12 @@
-export const TEAM_ROUTE = '/team';
+export const WORKERS_ROUTE = '/workers';
 
 export function workerProfilePath(workerId: string): string {
-  return `${TEAM_ROUTE}/${workerId}`;
+  return `${WORKERS_ROUTE}/${workerId}`;
 }
 
 export function workerIdFromPath(path: string): string | null {
-  if (!path.startsWith(`${TEAM_ROUTE}/`)) return null;
-  return path.slice(TEAM_ROUTE.length + 1) || null;
+  if (!path.startsWith(`${WORKERS_ROUTE}/`)) return null;
+  return path.slice(WORKERS_ROUTE.length + 1) || null;
 }
 
 export const BOOKINGS_ROUTE = '/bookings';
@@ -54,9 +54,9 @@ export const EMPTY_STATES = {
     title: 'No bookings this week',
     description: 'Bookings scheduled for this week will appear here.',
   },
-  team: {
-    title: 'No team members to show',
-    description: 'Team members booked for this location will appear here.',
+  workers: {
+    title: 'No workers to show',
+    description: 'Workers will appear after they have booking history with this provider.',
   },
   notifications: {
     title: 'No notifications',
@@ -70,9 +70,9 @@ export const EMPTY_STATES = {
     title: 'No bookings to show',
     description: 'Bookings will appear when they match this status and your filters.',
   },
-  dashboardTeam: {
-    title: 'No team members yet',
-    description: 'Team members will appear after they’re booked for this location.',
+  dashboardWorkers: {
+    title: 'No workers yet',
+    description: 'Workers will appear after they’re booked for this location.',
   },
   archivedConversations: {
     title: 'No archived conversations',

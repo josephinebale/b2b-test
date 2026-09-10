@@ -1,70 +1,48 @@
-import { useEffect, useState } from 'react';
-import { Eye, EyeOff, RotateCcw } from 'lucide-react';
-import {
-  readSessionQuestions,
-  SESSION_QUESTIONS_CHANGE_EVENT,
-  writeSessionQuestions,
-  type SessionQuestionsState,
-} from '../lib/sessionQuestions';
+import { RotateCcw } from 'lucide-react';
+import type { PersonaId } from '../lib/informationArchitecture';
+import { PageVariantToggle } from './PageVariantToggle';
 import { IconButton } from './ui/IconButton';
 
-export function SessionQuestions({ onRestart }: { onRestart: () => void }) {
-  const [annotationsVisible, setAnnotationsVisible] = useState(
-    () => readSessionQuestions().annotationsVisible,
-  );
-
-  useEffect(() => {
-    const syncSession = (event: Event) => {
-      const state = (event as CustomEvent<SessionQuestionsState>).detail;
-      if (state) setAnnotationsVisible(state.annotationsVisible);
-    };
-
-    window.addEventListener(SESSION_QUESTIONS_CHANGE_EVENT, syncSession);
-    return () => {
-      window.removeEventListener(SESSION_QUESTIONS_CHANGE_EVENT, syncSession);
-    };
-  }, []);
-
-  const toggleAnnotations = () => {
-    const current = readSessionQuestions();
-    const next = !current.annotationsVisible;
-    setAnnotationsVisible(next);
-    writeSessionQuestions({ ...current, annotationsVisible: next });
-  };
-
-  /* This control sits beside one the moderator uses mid-session, and it throws
-     the run away, so it asks first. */
+/** One dock for every moderator control, away from participant chrome. */
+export function SessionQuestions({
+  path,
+  pageVariant,
+  onTogglePageVariant,
+  currentPersonaId,
+  onSwitchPersona,
+  onRestart,
+}: {
+  path: string;
+  pageVariant: boolean;
+  onTogglePageVariant: () => void;
+  currentPersonaId: PersonaId;
+  onSwitchPersona: (personaId: PersonaId) => void;
+  onRestart: () => void;
+}) {
+  /* The label says where this goes, so the dialog carries the cost. */
   const confirmRestart = () => {
     const confirmed = window.confirm(
-      'Restart the prototype? This clears the chosen location and anything created during this session.',
+      'Restart session? The persona you are signed in as, where you were up to, and any bookings created in this session will be discarded.',
     );
     if (confirmed) onRestart();
   };
-
   return (
     <div className="session-questions-dock pointer-events-none sticky z-50 h-0">
       <div className="session-questions-controls pointer-events-auto">
-        <IconButton
-          type="button"
-          onClick={toggleAnnotations}
-          aria-label={annotationsVisible ? 'Hide annotations' : 'Show annotations'}
-          data-tooltip={annotationsVisible ? 'Hide annotations' : 'Show annotations'}
-          aria-pressed={annotationsVisible}
-          className="ui-tooltip"
-        >
-          {/* The icon names the action, like the label: struck-out eye to hide. */}
-          {annotationsVisible ? (
-            <EyeOff className="h-5 w-5" />
-          ) : (
-            <Eye className="h-5 w-5" />
-          )}
-        </IconButton>
+        <PageVariantToggle
+          path={path}
+          active={pageVariant}
+          onToggle={onTogglePageVariant}
+          currentPersonaId={currentPersonaId}
+          onSwitchPersona={onSwitchPersona}
+        />
 
+        {/* Leaving sits last, furthest from the switches used mid-session. */}
         <IconButton
           type="button"
           onClick={confirmRestart}
-          aria-label="Restart prototype"
-          data-tooltip="Restart prototype"
+          aria-label="Restart session"
+          data-tooltip="Restart session"
           className="ui-tooltip"
         >
           <RotateCcw className="h-5 w-5" />

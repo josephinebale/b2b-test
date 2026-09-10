@@ -749,29 +749,12 @@ a.ui-entity-link--plain:hover {
 /* A centred tooltip on a corner button overhangs the viewport even while it is
    hidden, which widens the document and gives the page a horizontal scrollbar.
    Docked tooltips anchor to the inner edge and sit above the button instead. */
-.session-questions-controls .ui-tooltip::after,
-.page-variant-control .ui-tooltip::after {
+.session-questions-controls .ui-tooltip::after {
   top: auto;
   bottom: calc(100% + var(--space-2));
   transform: none;
-}
-
-.session-questions-controls .ui-tooltip::after {
   right: 0;
   left: auto;
-}
-
-.page-variant-control .ui-tooltip::after {
-  left: 0;
-}
-
-/* Opposite corner to the annotations pair: this one changes the prototype, they
-   do not, so it should never be reached for by mistake. */
-.page-variant-control {
-  position: absolute;
-  left: var(--space-4);
-  bottom: calc(var(--space-4) - var(--footer-gap));
-  display: flex;
 }
 
 .entity-row {

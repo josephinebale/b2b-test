@@ -42,7 +42,7 @@ test('the app renders Bookings for a status path and passes the view down', () =
   const app = source('../src/App.tsx');
 
   assert.match(app, /bookingViewFromPath/);
-  assert.match(app, /<Bookings data=\{visibleData\} view=\{/);
+  assert.match(app, /<Bookings[\s\S]*data=\{visibleData\}[\s\S]*view=\{/);
 });
 
 test('the rail writes the status into the address so it can be linked to', () => {

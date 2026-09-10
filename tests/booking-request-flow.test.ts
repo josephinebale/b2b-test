@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { addDays, startOfDay } from '../src/lib/date.ts';
+import {
+  LOCATIONS,
+  requestWorkerTiers,
+} from '../src/data/locations.ts';
 
 function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -23,7 +28,8 @@ test('the flow requires its essential fields before moving forward', () => {
   const flow = source('../src/pages/BookingRequest.tsx');
 
   assert.match(flow, /<select[\s\S]*value=\{data\.location\.id\}/);
-  assert.match(flow, /LOCATIONS\.map/);
+  assert.match(flow, /locations\.map/);
+  assert.doesNotMatch(flow, /LOCATIONS\.map/);
   assert.doesNotMatch(flow, /Booking location/);
   assert.doesNotMatch(flow, /This comes from the location selected in the header/);
   assert.doesNotMatch(flow, /placeholder="For example, 120 Pacific Highway/);
@@ -33,13 +39,62 @@ test('the flow requires its essential fields before moving forward', () => {
   assert.match(flow, /draft\.selectedWorkerIds\.length >= 10/);
 });
 
-test('worker selection comes from the current location team', () => {
+test('worker selection applies the requested time to location and grouping workers', () => {
   const app = source('../src/App.tsx');
   const flow = source('../src/pages/BookingRequest.tsx');
 
   assert.match(app, /<BookingRequest[\s\S]*onSelectLocation=\{selectLocation\}/);
-  assert.match(flow, /\[\.\.\.data\.workers\]\.sort/);
-  assert.match(flow, /workers in the \$\{data\.location\.name\} team/);
+  assert.match(flow, /requestWorkerTiers\(/);
+  assert.match(flow, /parseDateTime\(draft\.date, draft\.startTime\)/);
+  assert.match(flow, /parseDateTime\(draft\.date, draft\.endTime\)/);
+  assert.match(flow, /Your location team/);
+  assert.match(flow, /Worked elsewhere in \{grouping\.name\}/);
+  assert.match(flow, /requestWorkerTiers\(data\.location\.id, start, end, grouping\.id\)/);
+});
+
+test('a daytime request offers available workers from tiers one and two', () => {
+  const day = addDays(startOfDay(new Date()), 30);
+  day.setHours(12, 0, 0, 0);
+  const end = new Date(day);
+  end.setHours(13);
+
+  for (const location of LOCATIONS) {
+    const tiers = requestWorkerTiers(location.id, day, end);
+    assert.ok(tiers.knownHere.length > 0, `${location.name} has no available tier 1 workers`);
+    assert.ok(
+      tiers.workedElsewhere.length > 0,
+      `${location.name} has no available tier 2 workers`,
+    );
+  }
+});
+
+test('the demonstrator overnight window reaches nearby workers only', () => {
+  const start = addDays(startOfDay(new Date()), 1);
+  start.setHours(2, 0, 0, 0);
+  const end = new Date(start);
+  end.setHours(3);
+
+  for (const location of LOCATIONS) {
+    const tiers = requestWorkerTiers(location.id, start, end);
+    assert.equal(tiers.knownHere.length, 0);
+    assert.equal(tiers.workedElsewhere.length, 0);
+    assert.ok(tiers.nearby.length > 0);
+  }
+});
+
+test('nearby workers are a selectable and contactable fallback with honest context', () => {
+  const flow = source('../src/pages/BookingRequest.tsx');
+
+  assert.match(flow, /knownHere\.length === 0 && workedElsewhere\.length === 0/);
+  assert.match(
+    flow,
+    /Nobody known to this location or this grouping is available for that time\./,
+  );
+  assert.match(flow, /No history with this provider/);
+  assert.match(flow, /Support plan not shared/);
+  assert.match(flow, /Message \$\{worker\.name\}/);
+  assert.match(flow, /toggleWorker\(worker\.id\)/);
+  assert.doesNotMatch(flow, /induct|buddy shift/i);
 });
 
 test('submitting opens a requested booking detail screen', () => {
@@ -54,6 +109,16 @@ test('submitting opens a requested booking detail screen', () => {
   assert.match(flow, /Waiting for a worker to accept this booking request/);
   assert.match(flow, /onCreateBooking\(newBooking\)/);
   assert.match(flow, /navigate\(`\/bookings\/request\/\$\{newBooking\.id\}`\)/);
+});
+
+test('requested booking detail keeps workers selected from any tier', () => {
+  const flow = source('../src/pages/BookingRequest.tsx');
+
+  assert.match(flow, /groupingWorkers\(grouping\.id\)/);
+  assert.match(flow, /nearbyWorkers\(\)/);
+  assert.match(flow, /requestedWorkerNames\.map/);
+  assert.match(flow, /worker\.hasProfile/);
+  assert.doesNotMatch(flow, /Sent to \$\{selectedWorkers\.length \|\| 1\}[\s\S]*known at this location/);
 });
 
 test('requested booking cards link to their detail screens', () => {
@@ -89,11 +154,11 @@ test('Bookings remains active throughout request creation and detail routes', ()
   assert.match(header, /path\.startsWith\(BOOKING_DETAIL_ROUTE\)/);
 });
 
-test('the booking request layout includes empty, error, and summary states', () => {
+test('the booking request layout includes errors, tier fallback, and summary states', () => {
   const flow = source('../src/pages/BookingRequest.tsx');
 
   assert.match(flow, /role="alert"/);
-  assert.match(flow, /No team members are available/);
+  assert.match(flow, /Nobody known to this location or this grouping is available/);
   assert.match(flow, /BookingRequestSummary/);
   assert.match(flow, /Pricing estimate/);
   assert.match(flow, /Next step: \{step === 1 \? 'Details' : 'Select workers'\}/);
@@ -112,25 +177,24 @@ test('the richer worker list is driven from outside the page, not a hidden hotsp
   assert.doesNotMatch(flow, /useState\(false\);\s*\/\* Held here/);
 });
 
-test('the revealed worker list adds place, team, and training', () => {
+test('the revealed worker list adds comparison evidence, place, and training', () => {
   const flow = source('../src/pages/BookingRequest.tsx');
 
-  assert.match(flow, /Based in \{detail\.suburb\}, over 10km away/);
-  assert.match(flow, /\{data\.location\.name\} team/);
-  assert.match(flow, /Trained in \{detail\.training\.join\(', '\)\}/);
+  assert.match(flow, /Based in \{richerDetail\.suburb\}, over 10km away/);
+  assert.match(flow, /hours at this provider/);
+  assert.match(flow, /Medication assessment/);
+  assert.match(flow, /Driving assessment/);
+  assert.doesNotMatch(flow, /`Known at \$\{data\.location\.name\}`/);
+  assert.match(flow, /Trained in \{richerDetail\.training\.join\(', '\)\}/);
   assert.doesNotMatch(flow, /Show more|Show less|expandedWorkerIds|toggleExpanded/);
   assert.match(flow, /worker\$\{selectedNames\.length === 1 \? '' : 's'\} selected: /);
-  assert.match(flow, /Select up to 10 workers\./);
+  assert.match(flow, /Select up to 10 workers who are available for this booking\./);
 });
 
-test('unavailable workers keep a readable booked-at-this-time tag', () => {
+test('unavailable workers are omitted rather than shown as disabled rows', () => {
   const flow = source('../src/pages/BookingRequest.tsx');
-  const row = flow.slice(
-    flow.indexOf('const unavailable = index === 5'),
-    flow.indexOf('showErrors && draft.selectedWorkerIds.length === 0'),
-  );
 
-  assert.match(row, /<Tag tone="neutral">Booked at this time<\/Tag>/);
-  assert.doesNotMatch(row, /opacity-50/);
-  assert.match(row, /unavailable \? 'cursor-not-allowed text-text-secondary'/);
+  assert.doesNotMatch(flow, /const unavailable = index === 5/);
+  assert.doesNotMatch(flow, /Booked at this time/);
+  assert.doesNotMatch(flow, /cursor-not-allowed/);
 });

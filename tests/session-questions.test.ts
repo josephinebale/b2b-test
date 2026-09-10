@@ -35,6 +35,7 @@ test('older session payloads keep only the annotations visibility flag', () => {
 });
 
 test('new settings routes keep readable research-note labels', () => {
+  assert.equal(pageLabel('/workers'), 'Workers');
   assert.equal(pageLabel('/manage-location/people'), 'Location settings');
   assert.equal(pageLabel('/manage-house/people'), 'Location settings');
   assert.equal(pageLabel('/organisation-settings/documents'), 'Organisation settings');

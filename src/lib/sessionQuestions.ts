@@ -1,5 +1,5 @@
 import { ROUTES } from './informationArchitecture.ts';
-import { TEAM_ROUTE } from './pageContent.ts';
+import { WORKERS_ROUTE } from './pageContent.ts';
 
 export type SessionQuestionsState = {
   annotationsVisible: boolean;
@@ -11,7 +11,7 @@ export const SESSION_QUESTIONS_CHANGE_EVENT = 'hm.sessionQuestions:change';
 const PAGE_LABELS: Record<string, string> = {
   '/': 'Dashboard',
   '/bookings': 'Bookings',
-  [TEAM_ROUTE]: 'Team',
+  [WORKERS_ROUTE]: 'Workers',
   '/messages': 'Messages',
   '/notifications': 'Notifications',
   '/settings': 'Settings',

@@ -5,10 +5,10 @@ import { PinnedQuestion } from '../../components/PinnedQuestion';
 import { Card } from '../../components/ui/Card';
 import { EntityLink } from '../../components/ui/EntityLink';
 import { IconButton } from '../../components/ui/IconButton';
-import { EMPTY_STATES, TEAM_ROUTE, workerProfilePath } from '../../lib/pageContent';
+import { EMPTY_STATES, WORKERS_ROUTE, workerProfilePath } from '../../lib/pageContent';
 import { href } from '../../lib/router';
 
-export function TeamPanel({ data }: { data: LocationData }) {
+export function WorkersPanel({ data }: { data: LocationData }) {
   const workers = data.workers.slice(0, 10);
 
   return (
@@ -19,20 +19,20 @@ export function TeamPanel({ data }: { data: LocationData }) {
           <PinnedQuestion questionId="dashboard-worker-order" />
         </div>
         <a
-          href={href(TEAM_ROUTE)}
+          href={href(WORKERS_ROUTE)}
           className="ui-link rounded text-sm"
         >
-          View team
+          View workers
         </a>
       </div>
 
       {workers.length === 0 ? (
         <Card className="mt-3 p-4">
           <p className="text-lg font-bold text-text">
-            {EMPTY_STATES.dashboardTeam.title}
+            {EMPTY_STATES.dashboardWorkers.title}
           </p>
           <p className="mt-1 max-w-content text-sm text-text-secondary">
-            {EMPTY_STATES.dashboardTeam.description}
+            {EMPTY_STATES.dashboardWorkers.description}
           </p>
         </Card>
       ) : (

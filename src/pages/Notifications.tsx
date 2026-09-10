@@ -6,7 +6,7 @@ import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Card } from '../components/ui/Card';
 import { unreadMessagesFromDescription } from '../data/conversations';
 import { addDays, formatLongDate, startOfDay } from '../lib/date';
-import { EMPTY_STATES, TEAM_ROUTE, bookingsViewPath } from '../lib/pageContent';
+import { EMPTY_STATES, WORKERS_ROUTE, bookingsViewPath } from '../lib/pageContent';
 import { href } from '../lib/router';
 
 type Item = {
@@ -47,7 +47,7 @@ function buildItems(data: LocationData): Item[] {
       description: 'Remind them to read and confirm the latest support plan.',
       Icon: ClipboardList,
       date: addDays(today, -4),
-      path: TEAM_ROUTE,
+      path: WORKERS_ROUTE,
     },
   ];
 

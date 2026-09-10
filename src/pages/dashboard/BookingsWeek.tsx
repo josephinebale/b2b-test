@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
-import type { Booking, LocationData } from '../../data/locations';
+import {
+  fatigueSignalForBooking,
+  fatigueSignalLabel,
+  type Booking,
+  type LocationData,
+  bookingParticipantSummary,
+} from '../../data/locations';
 import { PinnedQuestion } from '../../components/PinnedQuestion';
 import { StatusPill } from '../../components/StatusPill';
 import { Button } from '../../components/ui/Button';
@@ -33,7 +39,24 @@ function plural(count: number, singular: string, pluralForm: string): string {
   return count === 1 ? singular : pluralForm;
 }
 
-function BookingCard({ booking, suburb, state }: { booking: Booking; suburb: string; state: string }) {
+function BookingCard({
+  booking,
+  suburb,
+  state,
+  location,
+  calendarBookings,
+}: {
+  booking: Booking;
+  suburb: string;
+  state: string;
+  location: LocationData['location'];
+  calendarBookings: Booking[];
+}) {
+  const fatigueSignal = fatigueSignalForBooking(booking, {
+    additionalBookings: calendarBookings,
+  });
+  const participantSummary = bookingParticipantSummary(booking, location);
+
   return (
     <a
       href={href(bookingDetailPath(booking.id))}
@@ -53,7 +76,19 @@ function BookingCard({ booking, suburb, state }: { booking: Booking; suburb: str
         <p className="mt-1 text-xs text-text-strong">
           {suburb}, {state}
         </p>
+        {participantSummary && (
+          <p className="mt-1 text-xs text-text-strong">{participantSummary}</p>
+        )}
         <p className="mt-1 text-xs text-text-strong">{booking.workerName}</p>
+        {/* A Tag holds one line and the card clips what overflows, so at a
+            seventh of the column the label lost its last word. The card already
+            states Sleepover as a plain bold line; this reads the same way and
+            can take a second line. */}
+        {fatigueSignal && (
+          <p className="mt-2 text-xs font-bold text-text break-words">
+            {fatigueSignalLabel(fatigueSignal)}
+          </p>
+        )}
         <div className="mt-3">
           <StatusPill status={booking.status} />
         </div>
@@ -62,7 +97,13 @@ function BookingCard({ booking, suburb, state }: { booking: Booking; suburb: str
   );
 }
 
-export function BookingsWeek({ data }: { data: LocationData }) {
+export function BookingsWeek({
+  data,
+  calendarBookings = [],
+}: {
+  data: LocationData;
+  calendarBookings?: Booking[];
+}) {
   const [weekOffset, setWeekOffset] = useState(0);
   const [expanded, setExpanded] = useState(false);
 
@@ -181,7 +222,10 @@ export function BookingsWeek({ data }: { data: LocationData }) {
                   className="ui-inset-compact space-y-2 border-l border-border-subtle first:border-l-0"
                 >
                   {dayBookings.length === 0 ? (
-                    <p className="py-4 text-center text-xs text-text-tertiary">
+                    /* Carries the card's own box — 1px border plus the compact
+                       inset — so the label sits on the line a card's first line
+                       of text would occupy, rather than above every neighbour. */
+                    <p className="ui-inset-compact border border-transparent text-center text-xs text-text-tertiary">
                       No bookings
                     </p>
                   ) : (
@@ -191,6 +235,8 @@ export function BookingsWeek({ data }: { data: LocationData }) {
                         booking={booking}
                         suburb={data.location.suburb}
                         state={data.location.state}
+                        location={data.location}
+                        calendarBookings={calendarBookings}
                       />
                     ))
                   )}

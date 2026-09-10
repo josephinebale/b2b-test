@@ -36,13 +36,33 @@ test('the catalogue covers every requested research context', () => {
     '/request-booking',
     '/notifications',
     '/messages',
+    '/workers',
     '/manage-location',
     '/organisation-settings',
   ]) {
     assert.ok(pages.has(page), `missing ${page}`);
   }
 
-  for (const hint of ['worker list sort order', 'frequency radios']) {
+  for (const hint of [
+    'worker list sort order',
+    'frequency radios',
+    'Messages in the location navigation',
+    'grouping dashboard houses, centres, and clients',
+    'grouping dashboard requests ordered by urgency',
+    'grouping dashboard booking volume',
+    'location worker tiers and row evidence',
+    'grouping worker ranking and row evidence',
+    'node-relative worker search',
+    'worker profile from another location',
+    'available worker tiers and row evidence',
+    'nearby worker fallback',
+    'fatigue signal beside worker availability',
+    'fatigue signal on booking card',
+    'fatigue signal on booking detail',
+    'location, grouping, and organisation access',
+    'who the booking covers',
+    'finance reference on a day-program request',
+  ]) {
     assert.ok(
       DISCUSSION_QUESTIONS.some((question) => question.elementHint === hint),
       `missing ${hint}`,
@@ -52,6 +72,10 @@ test('the catalogue covers every requested research context', () => {
 
 test('question lookup and page grouping use the canonical catalogue', () => {
   assert.equal(questionById('request-frequency')?.elementHint, 'frequency radios');
+  assert.equal(
+    questionById('persona-vantage')?.text,
+    'From this organisation, sector, role, and starting point, what work would you expect to be responsible for here?',
+  );
   assert.ok(
     questionsForPage('/', 'general').every(
       (question) => question.page === '/' && question.type === 'general',

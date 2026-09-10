@@ -8,6 +8,9 @@ function currentPath(): string {
 /** Old `#/manage-house` bookmarks keep working after the location rename. */
 export function canonicalPath(path: string): string {
   let next = path;
+  if (next === '/team' || next.startsWith('/team/')) {
+    next = `/workers${next.slice('/team'.length)}`;
+  }
   if (next === '/manage-house' || next.startsWith('/manage-house/')) {
     next = `/manage-location${next.slice('/manage-house'.length)}`;
   }
@@ -46,3 +49,7 @@ export function navigate(path: string): void {
 export function href(path: string): string {
   return `#${path}`;
 }
+
+/** Moderator research screens, reached from the session landing before login. */
+export const JOBS_TO_BE_DONE_ROUTE = '/jobs-to-be-done';
+export const INFORMATION_ARCHITECTURE_ROUTE = '/information-architecture';

@@ -14,12 +14,24 @@ test('location markers use the medium square token without a border or ring', ()
   assert.doesNotMatch(marker, /\b(?:border|ring)(?:-\S+)?\b/);
 });
 
-test('the account control shows a photo avatar without a text label', () => {
+test('the account trigger is avatar and chevron; name, role and team live in the open menu', () => {
   const header = source('../src/components/AppHeader.tsx');
   const avatars = source('../src/data/avatars.ts');
+  const trigger = header.slice(
+    header.indexOf('<Button'),
+    header.indexOf('{accountMenu.open &&'),
+  );
+  const menu = header.slice(header.indexOf('{accountMenu.open &&'));
 
-  assert.match(header, /<Avatar name=\{MANAGER_NAME\} size="sm" \/>/);
-  assert.doesNotMatch(header, />Helen<\/span>/);
+  assert.match(trigger, /<Avatar name=\{persona\.name\} size="sm" \/>/);
+  assert.match(trigger, /<ChevronDown/);
+  assert.doesNotMatch(trigger, /\{persona\.role\}/);
+  assert.doesNotMatch(trigger, /persona\.team/);
+  assert.doesNotMatch(trigger, /truncate text-sm font-bold/);
+
+  assert.match(menu, /\{persona\.name\}/);
+  assert.match(menu, /\{persona\.role\}/);
+  assert.match(menu, /persona\.team \? ` · \$\{persona\.team\}`/);
   assert.match(avatars, /import helenDawson from '\.\.\/assets\/avatars\/helen-dawson\.jpg';/);
   assert.match(avatars, /'Helen Dawson': helenDawson/);
 });
@@ -29,7 +41,7 @@ test('the account trigger is 36px tall with no extra vertical padding', () => {
   const css = source('../src/index.css');
   const avatar = source('../src/components/Avatar.tsx');
 
-  assert.match(header, /<Avatar name=\{MANAGER_NAME\} size="sm" \/>/);
+  assert.match(header, /<Avatar name=\{persona\.name\} size="sm" \/>/);
   assert.match(header, /size="default"/);
   assert.match(css, /\.ui-button--default \{\s*height: 2\.25rem;\s*padding: 0 var\(--space-4\);/);
   assert.match(avatar, /\bblock shrink-0\b/);
@@ -67,7 +79,7 @@ test('the selectors are contained, so their contents step down to 28px', () => {
     /\.header-menu-trigger \{[\s\S]*?border: 1px solid var\(--color-border\);[\s\S]*?background: var\(--color-surface\);/,
   );
   assert.match(css, /--avatar-sm: 1\.75rem;/);
-  assert.match(header, /<Avatar name=\{MANAGER_NAME\} size="sm" \/>/);
+  assert.match(header, /<Avatar name=\{persona\.name\} size="sm" \/>/);
   assert.match(switcher, /<LocationMarker location=\{location\} size="sm" \/>/);
 
   // Only the header trigger shrinks; list rows keep 36px next to a 36px avatar.

@@ -14,20 +14,43 @@ test('tier one utility controls are icon and badge, with no text label', () => {
   const header = source('../src/components/AppHeader.tsx');
   const [identityTier] = header.split('app-header-nav-row');
 
-  assert.match(identityTier, /<MessageSquare className="h-5 w-5"/);
+  assert.doesNotMatch(identityTier, /MessageSquare|href=\{\s*href\('\/messages'\)/);
   assert.match(identityTier, /<Bell className="h-5 w-5"/);
   assert.doesNotMatch(identityTier, /<span>Messages<\/span>|<span>Notifications<\/span>/);
-  assert.match(identityTier, /<Badge count=\{unreadMessages\}/);
+  assert.doesNotMatch(identityTier, /<Badge count=\{unreadMessages\}/);
   assert.match(identityTier, /<Badge count=\{unreadNotifications\}/);
+});
+
+test('Messages sits in the location nav with an inline badge like Bookings', () => {
+  const header = source('../src/components/AppHeader.tsx');
+  const navigation = source('../src/lib/informationArchitecture.ts');
+  const navTier = header.split('app-header-nav-row')[1] ?? '';
+
+  assert.match(
+    navigation,
+    /label: 'Messages',[\s\S]*?path: '\/messages',[\s\S]*?nodeTypes: \['location'\],[\s\S]*?placement: 'main'/,
+  );
+  assert.match(header, /NODE_NAV_ITEMS\.filter/);
+  assert.match(navTier, /<span>\{item\.label\}<\/span>/);
+  assert.match(header, /item\.label === 'Bookings'\s*\? bookingsBadge/);
+  assert.match(header, /item\.label === 'Messages'\s*\? unreadMessages/);
+  assert.match(header, /item\.label === 'Messages'\s*\? messagesAccessibleName\(unreadMessages\)/);
+  assert.doesNotMatch(navTier, /MessageSquare/);
 });
 
 test('the account trigger keeps its avatar and one rotating menu chevron', () => {
   const header = source('../src/components/AppHeader.tsx');
+  const trigger = header.slice(
+    header.indexOf('<Button'),
+    header.indexOf('{accountMenu.open &&'),
+  );
 
-  assert.match(header, /<Avatar name=\{MANAGER_NAME\} size="sm" \/>/);
-  assert.match(header, /<ChevronDown[\s\S]*?className=\{`h-5 w-5/);
+  assert.match(trigger, /<Avatar name=\{persona\.name\} size="sm" \/>/);
+  assert.match(trigger, /<ChevronDown[\s\S]*?className=\{`h-5 w-5/);
   assert.match(header, /accountMenu\.open \? 'rotate-180'/);
   assert.doesNotMatch(header, /ChevronUp/);
+  assert.doesNotMatch(trigger, /\{persona\.role\}/);
+  assert.doesNotMatch(trigger, /truncate text-sm font-bold/);
 });
 
 test('tier one controls share one height so their hover states align', () => {
@@ -46,7 +69,7 @@ test('the request booking action is a label without a plus icon', () => {
 });
 
 test('dashboard row actions are icons with accessible labels, not both', () => {
-  const panel = source('../src/pages/dashboard/TeamPanel.tsx');
+  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
 
   assert.match(panel, /<MessageSquare className="h-4 w-4"/);
   assert.match(panel, /<Calendar className="h-4 w-4"/);
@@ -67,7 +90,7 @@ test('dashboard row actions are icons with accessible labels, not both', () => {
 test('every icon-only button carries an outline at rest', () => {
   const css = source('../src/index.css');
   const iconButton = source('../src/components/ui/IconButton.tsx');
-  const panel = source('../src/pages/dashboard/TeamPanel.tsx');
+  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
 
   assert.match(
     css,
@@ -133,7 +156,7 @@ test('tooltips sit under their trigger, centred, inside cards too', () => {
  */
 test('icon size is paired to button size so the inset stays even', () => {
   const week = source('../src/pages/dashboard/BookingsWeek.tsx');
-  const panel = source('../src/pages/dashboard/TeamPanel.tsx');
+  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
   const messages = source('../src/pages/Messages.tsx');
 
   assert.match(week, /<ChevronLeft className="h-4 w-4" \/>/);
@@ -147,7 +170,7 @@ test('icon size is paired to button size so the inset stays even', () => {
   assert.match(panel, /<Calendar className="h-4 w-4" \/>/);
 
   // The 36px controls keep the 20px glyph.
-  assert.match(source('../src/pages/Team.tsx'), /<MoreHorizontal className="h-5 w-5" \/>/);
+  assert.match(source('../src/pages/Workers.tsx'), /<MoreHorizontal className="h-5 w-5" \/>/);
   assert.match(source('../src/components/AppHeader.tsx'), /<Bell className="h-5 w-5" \/>/);
 });
 
@@ -168,7 +191,7 @@ test('a row tooltip paints above the actions in the rows below it', () => {
 });
 
 test('dashboard worker rows keep actions on the avatar line, aligned right', () => {
-  const panel = source('../src/pages/dashboard/TeamPanel.tsx');
+  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
   const row = panel.slice(panel.indexOf('<li'), panel.indexOf('</li>'));
 
   assert.match(row, /ui-inset-row ui-target-row flex items-center gap-3/);

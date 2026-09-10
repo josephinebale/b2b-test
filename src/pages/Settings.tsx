@@ -8,16 +8,21 @@ import { Button } from '../components/ui/Button';
 import { Card as UiCard } from '../components/ui/Card';
 import { EntityLink } from '../components/ui/EntityLink';
 import { IconButton } from '../components/ui/IconButton';
-import { LOCATIONS, type LocationData } from '../data/locations';
+import {
+  locationsForOrganisation,
+  serviceTypeLabel,
+  type LocationData,
+} from '../data/locations';
 import {
   ACCOUNT_SECTIONS,
   CAN_EDIT_ORGANISATION_DETAILS,
   LOCATION_SECTIONS,
-  MANAGER_NAME,
-  ORGANISATION_NAME,
   ORGANISATION_SECTIONS,
   ROUTES,
+  personasForOrganisation,
   sectionFromPath,
+  type Organisation,
+  type Persona,
   type SettingsSection,
 } from '../lib/informationArchitecture';
 import { href } from '../lib/router';
@@ -114,8 +119,14 @@ function CheckRow({
   );
 }
 
-function OrganisationDetails({ canEdit }: { canEdit: boolean }) {
-  const [name, setName] = useState(ORGANISATION_NAME);
+function OrganisationDetails({
+  canEdit,
+  organisationName,
+}: {
+  canEdit: boolean;
+  organisationName: string;
+}) {
+  const [name, setName] = useState(organisationName);
   const [address, setAddress] = useState('7 Old South Head Rd, Vaucluse NSW 2030, Australia');
   const [cantFindAddress, setCantFindAddress] = useState(false);
   const [mobile, setMobile] = useState('');
@@ -193,9 +204,15 @@ function PreferenceList({ title, options }: { title: string; options: string[] }
   );
 }
 
-function FinancialDetails({ canEdit }: { canEdit: boolean }) {
+function FinancialDetails({
+  canEdit,
+  organisationName,
+}: {
+  canEdit: boolean;
+  organisationName: string;
+}) {
   const [abn, setAbn] = useState('12 345 678 901');
-  const [accountName, setAccountName] = useState(ORGANISATION_NAME);
+  const [accountName, setAccountName] = useState(organisationName);
 
   return (
     <SettingsCard title="Financial details" intro={<PrivacyNote />}>
@@ -232,8 +249,10 @@ function Documents({ canEdit }: { canEdit: boolean }) {
   );
 }
 
-function Account() {
-  const [email, setEmail] = useState('helen.dawson@hireupdemo.com');
+function Account({ persona }: { persona: Persona }) {
+  const [email, setEmail] = useState(
+    `${persona.name.toLowerCase().replace(/\s+/g, '.')}@hireupdemo.com`,
+  );
   const [password, setPassword] = useState('');
 
   return (
@@ -242,7 +261,7 @@ function Account() {
       <div>
         <p className="text-sm font-medium text-text">Profile photo</p>
         <div className="mt-1 flex items-center gap-4">
-          <Avatar name={MANAGER_NAME} size="lg" />
+          <Avatar name={persona.name} size="lg" />
           <Button type="button" size="small">
             Choose file
           </Button>
@@ -254,59 +273,88 @@ function Account() {
   );
 }
 
-function SupportPlan({ locationName }: { locationName: string }) {
+function SupportPlan({
+  locationName,
+  client,
+}: {
+  locationName: string;
+  client: boolean;
+}) {
   return (
     <SettingsCard title="Support plan">
       <p className="text-sm text-text-strong">
-        Manage the support plan shared with workers booked for {locationName}.
+        {client
+          ? `Manage the support plan shared with workers booked to support ${locationName}.`
+          : `Manage the support plan shared with workers booked at ${locationName}.`}
       </p>
       <Button type="button">View support plan</Button>
     </SettingsCard>
   );
 }
 
-function LocationName({ initialName }: { initialName: string }) {
+function LocationName({
+  initialName,
+  serviceType,
+  sector,
+  client,
+}: {
+  initialName: string;
+  serviceType: LocationData['location']['serviceType'];
+  sector: LocationData['location']['sector'];
+  client: boolean;
+}) {
   const [name, setName] = useState(initialName);
 
   return (
-    <SettingsCard title="Location name">
+    <SettingsCard title={client ? `${initialName} details` : 'Location name'}>
       <Field label="Name" value={name} onChange={setName} />
+      <Field
+        label={client ? 'Support type' : 'Service type'}
+        value={serviceTypeLabel(serviceType, sector)}
+        onChange={() => {}}
+        readOnly
+      />
       <SaveButton />
     </SettingsCard>
   );
 }
 
-const PEOPLE = [
-  {
-    name: MANAGER_NAME,
-    locationAccess: 'Can manage bookings, team and location settings',
-    visibleLocations: LOCATIONS.map(({ name }) => name),
-  },
-  {
-    name: 'Dom Green',
-    locationAccess: 'Can manage bookings and view the team',
-    visibleLocations: LOCATIONS.slice(0, 3).map(({ name }) => name),
-  },
-  {
-    name: 'Priya Shah',
-    locationAccess: 'Can view bookings and message the team',
-    visibleLocations: LOCATIONS.slice(0, 2).map(({ name }) => name),
-  },
+const PEOPLE_ACCESS = [
+  'Can manage bookings, workers and settings',
+  'Can manage bookings and view workers',
+  'Can view bookings and message workers',
 ];
 
 function PeopleList({
   scope,
   locationName,
+  organisation,
+  client = false,
   canEdit = true,
 }: {
   scope: 'location' | 'organisation';
   locationName: string;
+  organisation: Organisation;
+  client?: boolean;
   canEdit?: boolean;
 }) {
+  const organisationLocations = locationsForOrganisation(organisation);
+  const people = personasForOrganisation(organisation)
+    .slice(0, PEOPLE_ACCESS.length)
+    .map((persona, index) => ({
+      name: persona.name,
+      locationAccess: PEOPLE_ACCESS[index],
+      visibleLocations: (
+        index === 0
+          ? organisationLocations
+          : organisationLocations.slice(0, index === 1 ? 3 : 2)
+      ).map(({ name }) => name),
+    }));
+
   return (
     <SettingsCard title="People">
       <UiCard as="ul" divided>
-        {PEOPLE.map((person) => (
+        {people.map((person) => (
           <li
             key={person.name}
             className="ui-inset-row flex entity-row items-center gap-3"
@@ -316,7 +364,7 @@ function PeopleList({
               <EntityLink as="span">{person.name}</EntityLink>
               <p className="mt-1 text-sm text-text-secondary">
                 {scope === 'location'
-                  ? `${person.locationAccess} in ${locationName}.`
+                  ? `${person.locationAccess} ${client ? 'for' : 'at'} ${locationName}.`
                   : `Can see ${person.visibleLocations.join(', ')}.`}
               </p>
             </div>
@@ -343,6 +391,7 @@ function LocationSection({
   section: string;
   data: LocationData;
 }) {
+  const client = data.location.serviceType === 'home-community';
   switch (section) {
     case 'profile':
       return <LocationProfileSettings data={data} />;
@@ -359,11 +408,30 @@ function LocationSection({
         />
       );
     case 'support-plan':
-      return <SupportPlan locationName={data.location.name} />;
+      return (
+        <SupportPlan
+          locationName={data.location.name}
+          client={client}
+        />
+      );
     case 'location-name':
-      return <LocationName initialName={data.location.name} />;
+      return (
+        <LocationName
+          initialName={data.location.name}
+          serviceType={data.location.serviceType}
+          sector={data.location.sector}
+          client={client}
+        />
+      );
     case 'people':
-      return <PeopleList scope="location" locationName={data.location.name} />;
+      return (
+        <PeopleList
+          scope="location"
+          locationName={data.location.name}
+          organisation={data.location.organisation}
+          client={client}
+        />
+      );
     default:
       return null;
   }
@@ -380,9 +448,21 @@ function OrganisationSection({
 }) {
   switch (section) {
     case 'organisation':
-      return <OrganisationDetails canEdit={canEdit} />;
+      return (
+        <OrganisationDetails
+          key={data.location.organisation}
+          organisationName={data.location.organisation}
+          canEdit={canEdit}
+        />
+      );
     case 'financial':
-      return <FinancialDetails canEdit={canEdit} />;
+      return (
+        <FinancialDetails
+          key={data.location.organisation}
+          organisationName={data.location.organisation}
+          canEdit={canEdit}
+        />
+      );
     case 'documents':
       return <Documents canEdit={canEdit} />;
     case 'people':
@@ -390,6 +470,7 @@ function OrganisationSection({
         <PeopleList
           scope="organisation"
           locationName={data.location.name}
+          organisation={data.location.organisation}
           canEdit={canEdit}
         />
       );
@@ -398,10 +479,16 @@ function OrganisationSection({
   }
 }
 
-function AccountSection({ section }: { section: string }) {
+function AccountSection({
+  section,
+  persona,
+}: {
+  section: string;
+  persona: Persona;
+}) {
   switch (section) {
     case 'account':
-      return <Account />;
+      return <Account persona={persona} />;
     default:
       return null;
   }
@@ -464,12 +551,27 @@ export function ManageLocationSettings({
   data: LocationData;
   path: string;
 }) {
+  const client = data.location.serviceType === 'home-community';
+  const sections = client
+    ? LOCATION_SECTIONS.map((section) => {
+        if (section.id === 'profile') {
+          return { ...section, label: `${data.location.name} profile` };
+        }
+        if (section.id === 'location-name') {
+          return { ...section, label: 'Personal details' };
+        }
+        if (section.id === 'people') {
+          return { ...section, label: 'People with access' };
+        }
+        return section;
+      })
+    : LOCATION_SECTIONS;
   return (
     <SettingsPage
-      title="Location settings"
+      title={client ? `${data.location.name} settings` : 'Location settings'}
       path={path}
       basePath={ROUTES.manageLocation}
-      sections={LOCATION_SECTIONS}
+      sections={sections}
       renderSection={(section) => <LocationSection section={section} data={data} />}
     />
   );
@@ -501,14 +603,22 @@ export function OrganisationSettings({
   );
 }
 
-export function YourAccountSettings({ path }: { path: string }) {
+export function YourAccountSettings({
+  path,
+  persona,
+}: {
+  path: string;
+  persona: Persona;
+}) {
   return (
     <SettingsPage
       title="Your account"
       path={path}
       basePath={ROUTES.yourAccount}
       sections={ACCOUNT_SECTIONS}
-      renderSection={(section) => <AccountSection section={section} />}
+      renderSection={(section) => (
+        <AccountSection section={section} persona={persona} />
+      )}
     />
   );
 }

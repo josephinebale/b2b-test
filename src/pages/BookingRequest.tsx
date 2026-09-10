@@ -5,7 +5,6 @@ import {
   Clock3,
   MapPin,
   Navigation,
-  SquareCheck,
   Users,
 } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
@@ -15,7 +14,25 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { EntityLink } from '../components/ui/EntityLink';
 import { Tag } from '../components/ui/Tag';
-import { LOCATIONS, type Booking, type LocationData } from '../data/locations';
+import {
+  fatigueSignalForBooking,
+  fatigueSignalForWorker,
+  fatigueSignalLabel,
+  GROUPING,
+  bookingParticipantSummary,
+  bookingParticipants,
+  defaultParticipantIds,
+  groupingWorkers,
+  nearbyWorkers,
+  providerHoursForWorker,
+  requestWorkerTiers,
+  serviceTypeLabel,
+  type Booking,
+  type Grouping,
+  type Location,
+  type LocationData,
+  type WorkerAssessments,
+} from '../data/locations';
 import { formatTime } from '../lib/date';
 import { bookingIdFromDetailPath, workerProfilePath } from '../lib/pageContent';
 import { href, navigate } from '../lib/router';
@@ -34,6 +51,7 @@ type Draft = {
   driving: Driving;
   financeReference: string;
   selectedWorkerIds: string[];
+  selectedParticipantIds: string[];
 };
 
 /* Placeholder detail for the richer worker list, deterministic by roster index so
@@ -199,16 +217,19 @@ function StepOne({
   draft,
   setDraft,
   data,
+  locations,
   showErrors,
   onSelectLocation,
 }: {
   draft: Draft;
   setDraft: (next: Draft) => void;
   data: LocationData;
+  locations: Location[];
   showErrors: boolean;
   onSelectLocation: (locationId: string) => void;
 }) {
   const invalidTime = durationHours(draft) <= 0;
+  const client = data.location.serviceType === 'home-community';
 
   return (
     <div className="space-y-4">
@@ -218,20 +239,22 @@ function StepOne({
           className="absolute top-4 right-4"
         />
         <p className="text-sm text-text-secondary">Step 1 of 3</p>
-        <h2 className="mt-1 text-lg font-bold text-text">Location</h2>
+        <h2 className="mt-1 text-lg font-bold text-text">
+          {client ? data.location.name : 'Location'}
+        </h2>
         <div className="mt-4 flex items-center gap-3">
           <LocationMarker location={data.location} />
           <span className="relative min-w-0 flex-1">
             <select
-              aria-label="Location"
+              aria-label={client ? `Booking for ${data.location.name}` : 'Location'}
               value={data.location.id}
               onChange={(event) => {
                 onSelectLocation(event.target.value);
-                setDraft({ ...draft, selectedWorkerIds: [] });
+                setDraft({ ...draft, selectedWorkerIds: [], selectedParticipantIds: [] });
               }}
               className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
-              {LOCATIONS.map((location) => (
+              {locations.map((location) => (
                 <option key={location.id} value={location.id}>
                   {location.name} — {location.suburb}, {location.state}
                 </option>
@@ -240,6 +263,9 @@ function StepOne({
             <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 text-text-tertiary" />
           </span>
         </div>
+        <p className="mt-3 text-sm text-text-secondary">
+          {serviceTypeLabel(data.location.serviceType, data.location.sector)}
+        </p>
       </Card>
 
       <Card as="section" className="p-5">
@@ -250,7 +276,13 @@ function StepOne({
             <input
               type="date"
               value={draft.date}
-              onChange={(event) => setDraft({ ...draft, date: event.target.value })}
+              onChange={(event) =>
+                setDraft({
+                  ...draft,
+                  date: event.target.value,
+                  selectedWorkerIds: [],
+                })
+              }
               className={FIELD_CLASS}
               aria-invalid={showErrors && draft.date === ''}
             />
@@ -260,7 +292,13 @@ function StepOne({
             <input
               type="time"
               value={draft.startTime}
-              onChange={(event) => setDraft({ ...draft, startTime: event.target.value })}
+              onChange={(event) =>
+                setDraft({
+                  ...draft,
+                  startTime: event.target.value,
+                  selectedWorkerIds: [],
+                })
+              }
               className={FIELD_CLASS}
             />
           </label>
@@ -269,7 +307,13 @@ function StepOne({
             <input
               type="time"
               value={draft.endTime}
-              onChange={(event) => setDraft({ ...draft, endTime: event.target.value })}
+              onChange={(event) =>
+                setDraft({
+                  ...draft,
+                  endTime: event.target.value,
+                  selectedWorkerIds: [],
+                })
+              }
               className={FIELD_CLASS}
             />
           </label>
@@ -312,6 +356,70 @@ function StepOne({
           </div>
         </fieldset>
       </Card>
+
+      {data.location.serviceType === 'centre' && (
+        <Card as="section" className="relative p-5">
+          <PinnedQuestion
+            questionId="request-participants"
+            className="absolute top-4 right-4"
+          />
+          <fieldset>
+            <legend className="text-sm font-bold text-text">Who is attending</legend>
+            <p className="mt-1 text-sm text-text-secondary">
+              This session covers the people named here. It varies by session.
+            </p>
+            <div className="mt-3 divide-y divide-border-subtle rounded border border-border-subtle">
+              {data.location.participants.map((person) => {
+                const checked = draft.selectedParticipantIds.includes(person.id);
+                return (
+                  <label
+                    key={person.id}
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-text"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() =>
+                        setDraft({
+                          ...draft,
+                          selectedParticipantIds: checked
+                            ? draft.selectedParticipantIds.filter((id) => id !== person.id)
+                            : [...draft.selectedParticipantIds, person.id],
+                        })
+                      }
+                      className="h-4 w-4"
+                    />
+                    {person.name}
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+          {showErrors && draft.selectedParticipantIds.length === 0 && (
+            <p role="alert" className="mt-2 text-sm text-badge">
+              Select who is attending this session.
+            </p>
+          )}
+        </Card>
+      )}
+
+      {data.location.serviceType === 'home-community' && (
+        <Card as="section" className="relative p-5">
+          <PinnedQuestion
+            questionId="request-participants"
+            className="absolute top-4 right-4"
+          />
+          <h2 className="text-sm font-bold text-text">Who this booking is for</h2>
+          <p className="mt-2 text-sm text-text-strong">
+            {data.location.participants[0]?.name}
+          </p>
+          <p className="mt-1 text-sm text-text-secondary">
+            {data.location.sector === 'aged care'
+              ? 'Support at Home is booked for this person.'
+              : 'Home and community support is booked for this person.'}
+          </p>
+        </Card>
+      )}
     </div>
   );
 }
@@ -319,10 +427,12 @@ function StepOne({
 function StepTwo({
   draft,
   setDraft,
+  data,
   showErrors,
 }: {
   draft: Draft;
   setDraft: (next: Draft) => void;
+  data: LocationData;
   showErrors: boolean;
 }) {
   return (
@@ -387,7 +497,12 @@ function StepTwo({
         </fieldset>
       </Card>
 
-      <Card as="section" className="p-5">
+      {data.location.serviceType === 'centre' && (
+      <Card as="section" className="relative p-5">
+        <PinnedQuestion
+          questionId="request-finance"
+          className="absolute top-4 right-4"
+        />
         <label className="block text-sm font-medium text-text">
           Finance reference <span className="font-normal text-text-secondary">(optional)</span>
           <input
@@ -398,9 +513,10 @@ function StepTwo({
           />
         </label>
         <p className="mt-2 text-xs text-text-secondary">
-          Use a client name, location address, or purchase order number. This is for your records only.
+          Useful when the claim depends on who attended this session.
         </p>
       </Card>
+      )}
     </div>
   );
 }
@@ -411,21 +527,60 @@ function StepThree({
   data,
   showErrors,
   workerDetail,
+  calendarBookings,
+  grouping,
 }: {
   draft: Draft;
   setDraft: (next: Draft) => void;
   data: LocationData;
   showErrors: boolean;
   workerDetail: boolean;
+  calendarBookings: Booking[];
+  grouping: Grouping;
 }) {
-  const workers = useMemo(
-    () => [...data.workers].sort((a, b) => a.name.localeCompare(b.name)),
-    [data.workers],
-  );
-
-  const selectedNames = workers
+  const client = data.location.serviceType === 'home-community';
+  const requestedStart = parseDateTime(draft.date, draft.startTime);
+  const tiers = useMemo(() => {
+    const start = parseDateTime(draft.date, draft.startTime);
+    const end = parseDateTime(draft.date, draft.endTime);
+    return start && end
+      ? requestWorkerTiers(data.location.id, start, end, grouping.id)
+      : { knownHere: [], workedElsewhere: [], nearby: [] };
+  }, [
+    data.location.id,
+    grouping.id,
+    draft.date,
+    draft.startTime,
+    draft.endTime,
+  ]);
+  const { knownHere, workedElsewhere } = tiers;
+  const showNearby =
+    knownHere.length === 0 && workedElsewhere.length === 0;
+  const shownWorkers = showNearby
+    ? tiers.nearby
+    : [...knownHere, ...workedElsewhere];
+  const selectedNames = shownWorkers
     .filter((worker) => draft.selectedWorkerIds.includes(worker.id))
     .map((worker) => worker.name);
+
+  const supportPlanLabel = (confirmed: boolean) =>
+    confirmed ? 'Support plan confirmed' : 'Support plan needs review';
+  const assessmentSummary = (assessments: WorkerAssessments) =>
+    [
+      `Medication assessment ${assessments.medication ? 'current' : 'not current'}`,
+      `Driving assessment ${assessments.driving ? 'current' : 'not current'}`,
+    ].join(' · ');
+  const locationHistory = (
+    locations: { locationName: string; bookingCount: number }[],
+  ) =>
+    locations
+      .map(
+        (location) =>
+          `${location.locationName} (${location.bookingCount} ${
+            location.bookingCount === 1 ? 'shift' : 'shifts'
+          })`,
+      )
+      .join(', ');
 
   const toggleWorker = (workerId: string) => {
     const selected = draft.selectedWorkerIds.includes(workerId);
@@ -438,6 +593,77 @@ function StepThree({
     });
   };
 
+  const workerRow = (
+    worker: {
+      id: string;
+      name: string;
+      planConfirmed: boolean;
+      assessments: WorkerAssessments;
+    },
+    totalHours: number,
+    detail: string | null,
+    index: number,
+  ) => {
+    const selected = draft.selectedWorkerIds.includes(worker.id);
+    const atLimit = !selected && draft.selectedWorkerIds.length >= 10;
+    const richerDetail = workerDetailFor(index);
+    const fatigueSignal = requestedStart
+      ? fatigueSignalForWorker(worker.id, requestedStart, {
+          additionalBookings: calendarBookings,
+        })
+      : null;
+
+    return (
+      <li key={worker.id}>
+        <label className="flex cursor-pointer items-start gap-3 py-3">
+          <input
+            type="checkbox"
+            checked={selected}
+            disabled={atLimit}
+            onChange={() => toggleWorker(worker.id)}
+            className="mt-2 h-4 w-4 shrink-0"
+          />
+          <Avatar name={worker.name} size="md" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-bold text-text">
+              {worker.name}
+            </span>
+            <span className="mt-1 block text-xs text-text-secondary">
+              {totalHours} hours at this provider · {supportPlanLabel(worker.planConfirmed)}
+            </span>
+            {detail && (
+              <span className="mt-1 block text-xs text-text-secondary">
+                {detail}
+              </span>
+            )}
+            <span className="mt-1 block text-xs text-text-secondary">
+              {assessmentSummary(worker.assessments)}
+            </span>
+            {fatigueSignal && (
+              <Tag tone="neutral" className="mt-2">
+                {fatigueSignalLabel(fatigueSignal)}
+              </Tag>
+            )}
+            {workerDetail && (
+              <>
+                <span className="mt-1 flex items-center gap-2 text-xs text-text-secondary">
+                  <Navigation className="h-5 w-5 shrink-0" />
+                  Based in {richerDetail.suburb}, over 10km away
+                </span>
+                {richerDetail.training.length > 0 && (
+                  <span className="mt-1 flex items-start gap-2 text-xs text-text-secondary">
+                    <Check className="h-5 w-5 shrink-0" />
+                    <span>Trained in {richerDetail.training.join(', ')}</span>
+                  </span>
+                )}
+              </>
+            )}
+          </span>
+        </label>
+      </li>
+    );
+  };
+
   return (
     <Card as="section" className="relative p-5">
       <PinnedQuestion
@@ -447,9 +673,8 @@ function StepThree({
       <p className="text-sm text-text-secondary">Step 3 of 3</p>
       <h2 className="mt-1 text-lg font-bold text-text">Select workers</h2>
       <p className="mt-2 text-sm text-text-secondary">
-        {workerDetail
-          ? 'Select up to 10 workers.'
-          : `Send this request to up to 10 workers in the ${data.location.name} team.`}
+        Select up to 10 workers who are available for this booking.
+        <PinnedQuestion questionId="request-worker-fatigue" className="ml-2" />
       </p>
       <p className="mt-4 text-sm font-bold text-text">
         {workerDetail
@@ -459,91 +684,121 @@ function StepThree({
           : `${draft.selectedWorkerIds.length} of 10 workers selected`}
       </p>
 
-      {workers.length === 0 ? (
-        <div className="mt-4 rounded border border-border-subtle px-4 py-8 text-center">
-          <p className="font-bold text-text">No team members are available</p>
-          <p className="mt-1 text-sm text-text-secondary">
-            Add workers to this location before requesting a booking.
-          </p>
+      {showNearby ? (
+        <div className="mt-5">
+          <div className="relative rounded bg-surface-selected p-4">
+            <PinnedQuestion
+              questionId="request-worker-fallback"
+              className="absolute top-3 right-3"
+            />
+            <h3 className="text-sm font-bold text-text">Available nearby</h3>
+            <p className="mt-1 pr-8 text-sm text-text-secondary">
+              {client
+                ? `Nobody who knows ${data.location.name} or works elsewhere in this grouping is available for that time.`
+                : 'Nobody known to this location or this grouping is available for that time.'}
+            </p>
+          </div>
+          <ul className="mt-3 divide-y divide-border-subtle rounded border border-border-subtle">
+            {tiers.nearby.map((worker) => {
+              const selected = draft.selectedWorkerIds.includes(worker.id);
+              const atLimit = !selected && draft.selectedWorkerIds.length >= 10;
+              const fatigueSignal = requestedStart
+                ? fatigueSignalForWorker(worker.id, requestedStart, {
+                    additionalBookings: calendarBookings,
+                  })
+                : null;
+              return (
+                <li key={worker.id} className="flex items-center gap-3 py-3 px-4">
+                  <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      disabled={atLimit}
+                      onChange={() => toggleWorker(worker.id)}
+                      className="h-4 w-4 shrink-0"
+                    />
+                    <Avatar name={worker.name} size="md" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-text">
+                        {worker.name}
+                      </span>
+                      <span className="mt-1 block text-xs text-text-secondary">
+                        {worker.suburb} · {worker.distanceKm} km away · No history with this provider · Support plan not shared
+                      </span>
+                      <span className="mt-1 block text-xs text-text-secondary">
+                        {assessmentSummary(worker.assessments)}
+                      </span>
+                      {fatigueSignal && (
+                        <Tag tone="neutral" className="mt-2">
+                          {fatigueSignalLabel(fatigueSignal)}
+                        </Tag>
+                      )}
+                    </span>
+                  </label>
+                  <Button
+                    href={href('/messages')}
+                    size="small"
+                    variant="secondary"
+                    aria-label={`Message ${worker.name}`}
+                  >
+                    Message
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
         </div>
-      ) : workerDetail ? (
-        <ul className="mt-3 divide-y divide-border-subtle">
-          {workers.map((worker, index) => {
-            const unavailable = index === 5;
-            const selected = draft.selectedWorkerIds.includes(worker.id);
-            const atLimit = !selected && draft.selectedWorkerIds.length >= 10;
-            const detail = workerDetailFor(index);
-            return (
-              <li key={worker.id} className="flex items-start gap-3 py-4">
-                <input
-                  type="checkbox"
-                  checked={selected}
-                  disabled={unavailable || atLimit}
-                  onChange={() => toggleWorker(worker.id)}
-                  aria-label={worker.name}
-                  className="mt-6 h-4 w-4 shrink-0"
-                />
-                <Avatar name={worker.name} size="md" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-text">{worker.name}</p>
-                  <p className="mt-1 flex items-center gap-2 text-xs text-text-secondary">
-                    <Navigation className="h-5 w-5 shrink-0" />
-                    Based in {detail.suburb}, over 10km away
-                  </p>
-                  <p className="mt-1 flex items-center gap-2 text-xs text-text-secondary">
-                    <SquareCheck className="h-5 w-5 shrink-0" />
-                    {data.location.name} team
-                  </p>
-                  {detail.training.length > 0 && (
-                    <p className="mt-1 flex items-start gap-2 text-xs text-text-secondary">
-                      <Check className="h-5 w-5 shrink-0" />
-                      <span>Trained in {detail.training.join(', ')}</span>
-                    </p>
-                  )}
-                </div>
-                {unavailable && <Tag tone="neutral">Booked at this time</Tag>}
-              </li>
-            );
-          })}
-        </ul>
       ) : (
-        <ul className="mt-3 divide-y divide-border-subtle">
-          {workers.map((worker, index) => {
-            const unavailable = index === 5;
-            const selected = draft.selectedWorkerIds.includes(worker.id);
-            const atLimit = !selected && draft.selectedWorkerIds.length >= 10;
-            return (
-              <li key={worker.id}>
-                <label
-                  className={`flex items-center gap-3 py-3 ${
-                    unavailable ? 'cursor-not-allowed text-text-secondary' : 'cursor-pointer'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selected}
-                    disabled={unavailable || atLimit}
-                    onChange={() => toggleWorker(worker.id)}
-                    className="h-4 w-4 shrink-0"
-                  />
-                  <Avatar name={worker.name} size="md" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold text-text">
-                      {worker.name}
-                    </span>
-                    <span className="block text-xs text-text-secondary">
-                      {worker.planConfirmed ? 'Support plan confirmed' : 'Support plan needs review'}
-                    </span>
-                  </span>
-                  {unavailable && (
-                    <Tag tone="neutral">Booked at this time</Tag>
-                  )}
-                </label>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="mt-5 space-y-6">
+          {knownHere.length > 0 && (
+            <section>
+              <h3 className="text-sm font-bold text-text">
+                {client ? `Workers who know ${data.location.name}` : 'Your location team'}
+              </h3>
+              <p className="mt-1 text-sm text-text-secondary">
+                {client
+                  ? `Available workers who have supported ${data.location.name}.`
+                  : `Available workers known at ${data.location.name}.`}
+              </p>
+              <ul className="mt-3 divide-y divide-border-subtle rounded border border-border-subtle">
+                {knownHere.map((worker, index) =>
+                  workerRow(
+                    worker,
+                    providerHoursForWorker(
+                      worker.id,
+                      data.location.organisation,
+                    ),
+                    null,
+                    index,
+                  ),
+                )}
+              </ul>
+            </section>
+          )}
+
+          {workedElsewhere.length > 0 && (
+            <section>
+              <h3 className="text-sm font-bold text-text">
+                Worked elsewhere in {grouping.name}
+              </h3>
+              <p className="mt-1 text-sm text-text-secondary">
+                Available workers who know another location at this provider.
+              </p>
+              <ul className="mt-3 divide-y divide-border-subtle rounded border border-border-subtle">
+                {workedElsewhere.map((worker, index) =>
+                  workerRow(
+                    worker,
+                    worker.totalHours,
+                    locationHistory(worker.locations),
+                    knownHere.length + index,
+                  ),
+                )}
+              </ul>
+            </section>
+          )}
+        </div>
       )}
+
       {showErrors && draft.selectedWorkerIds.length === 0 && (
         <p role="alert" className="mt-3 text-sm text-badge">
           Select at least one worker to send the request.
@@ -591,16 +846,25 @@ function BookingRequestDetail({
   booking,
   draft,
   data,
+  calendarBookings,
+  grouping,
 }: {
   booking: Booking | null;
   draft: Draft;
   data: LocationData;
+  calendarBookings: Booking[];
+  grouping: Grouping;
 }) {
   const draftStart = parseDateTime(draft.date, draft.startTime);
   const draftEnd = parseDateTime(draft.date, draft.endTime);
   const start = booking?.start ?? draftStart ?? new Date();
   const end = booking?.end ?? draftEnd ?? new Date(start.getTime() + 2 * 36e5);
   const hours = Math.max(0, (end.getTime() - start.getTime()) / 36e5);
+  const fatigueSignal = booking
+    ? fatigueSignalForBooking(booking, {
+        additionalBookings: calendarBookings,
+      })
+    : null;
   const estimate = hours * HOURLY_RATE;
   const isRequested = !booking || booking.status === 'requested';
   const isConfirmed = booking?.status === 'confirmed';
@@ -609,12 +873,32 @@ function BookingRequestDetail({
     : isConfirmed
       ? 'Confirmed booking'
       : 'Completed booking';
+  const providerWorkers = groupingWorkers(grouping.id).map((worker) => ({
+    id: worker.id,
+    name: worker.name,
+    hasProfile: true,
+  }));
+  const nearby = nearbyWorkers().map((worker) => ({
+    id: worker.id,
+    name: worker.name,
+    hasProfile: false,
+  }));
+  const workerCatalogue = [...providerWorkers, ...nearby];
   const requestedWorkerNames = booking?.requestedWorkerNames ?? (
-    booking ? [booking.workerName] : []
+    booking
+      ? [booking.workerName]
+      : draft.selectedWorkerIds
+          .map((id) => workerCatalogue.find((worker) => worker.id === id)?.name)
+          .filter((name): name is string => Boolean(name))
   );
-  const selectedWorkers = booking
-    ? data.workers.filter((worker) => requestedWorkerNames.includes(worker.name))
-    : data.workers.filter((worker) => draft.selectedWorkerIds.includes(worker.id));
+  const selectedWorkers = requestedWorkerNames.map(
+    (name) =>
+      workerCatalogue.find((worker) => worker.name === name) ?? {
+        id: name,
+        name,
+        hasProfile: false,
+      },
+  );
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -626,17 +910,34 @@ function BookingRequestDetail({
         <p className="mt-3 text-lg font-bold text-text">
           {longDate(`${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`)}, {formatTime(start)}–{formatTime(end)}
         </p>
-        <p className="mt-1 text-sm text-text-secondary">Times shown in the location’s local time.</p>
+        <p className="mt-1 text-sm text-text-secondary">Times shown in local time.</p>
 
         <dl className="mt-5 space-y-2 text-sm text-text-strong">
           <div className="flex items-center gap-2">
             <Clock3 className="h-5 w-5" />
             <span>{hours} {hours === 1 ? 'hour' : 'hours'}</span>
           </div>
+          {fatigueSignal && (
+            <div className="flex items-center gap-2">
+              <Clock3 className="h-5 w-5" />
+              <Tag tone="neutral">{fatigueSignalLabel(fatigueSignal)}</Tag>
+              <PinnedQuestion questionId="booking-detail-fatigue" />
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
             <span>{booking?.address || `${data.location.name}, ${data.location.suburb} ${data.location.state}`}</span>
           </div>
+          {booking && bookingParticipantSummary(booking, data.location) && (
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              <span>
+                {bookingParticipants(booking, data.location)
+                  .map((person) => person.name)
+                  .join(', ')}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5" />
             <span>{(booking?.driving ?? draft.driving) === 'not-required' ? 'No driving required' : 'Driving required'}</span>
@@ -656,7 +957,11 @@ function BookingRequestDetail({
         <div className="mt-6">
           <h2 className="text-md font-bold text-text">Support details</h2>
           <p className="mt-2 text-sm text-text-strong">
-            {booking?.description || draft.description || 'Support with daily routines and activities at this location.'}
+            {booking?.description ||
+              draft.description ||
+              (data.location.serviceType === 'home-community'
+                ? 'Support with daily routines and activities at home.'
+                : 'Support with daily routines and activities at this location.')}
           </p>
           {(booking?.financeReference || draft.financeReference) && (
             <p className="mt-3 text-sm text-text-secondary">
@@ -670,7 +975,7 @@ function BookingRequestDetail({
           <Card tone="subtle" className="mt-3 p-4">
             <p className="text-sm font-bold text-text">
               {isRequested
-                ? `Sent to ${selectedWorkers.length || 1} ${selectedWorkers.length === 1 ? 'worker' : 'workers'} in your team`
+                ? `Sent to ${selectedWorkers.length || 1} ${selectedWorkers.length === 1 ? 'worker' : 'workers'}`
                 : 'Support worker'}
             </p>
             <p className="mt-1 text-sm text-text-secondary">
@@ -683,13 +988,21 @@ function BookingRequestDetail({
             <div className="mt-4 space-y-3">
               {(selectedWorkers.length > 0
                 ? selectedWorkers
-                : data.workers.slice(0, 1)
+                : data.workers.slice(0, 1).map((worker) => ({
+                    id: worker.id,
+                    name: worker.name,
+                    hasProfile: true,
+                  }))
               ).map((worker) => (
                 <div key={worker.id} className="flex items-center gap-3">
                   <Avatar name={worker.name} size="md" />
-                  <EntityLink href={href(workerProfilePath(worker.id))}>
-                    {worker.name}
-                  </EntityLink>
+                  {worker.hasProfile ? (
+                    <EntityLink href={href(workerProfilePath(worker.id))}>
+                      {worker.name}
+                    </EntityLink>
+                  ) : (
+                    <EntityLink as="span">{worker.name}</EntityLink>
+                  )}
                 </div>
               ))}
             </div>
@@ -718,15 +1031,21 @@ function BookingRequestDetail({
 export function BookingRequest({
   path,
   data,
+  locations,
   onCreateBooking,
   onSelectLocation,
   workerDetail,
+  calendarBookings = [],
+  grouping = GROUPING,
 }: {
   path: string;
   data: LocationData;
+  locations: Location[];
   onCreateBooking: (booking: Booking) => void;
   onSelectLocation: (locationId: string) => void;
   workerDetail: boolean;
+  calendarBookings?: Booking[];
+  grouping?: Grouping;
 }) {
   const [step, setStep] = useState<Step>(1);
   const [showErrors, setShowErrors] = useState(false);
@@ -740,6 +1059,7 @@ export function BookingRequest({
     driving: 'not-required',
     financeReference: '',
     selectedWorkerIds: [],
+    selectedParticipantIds: [],
   });
 
   const requestId = path.startsWith('/bookings/request/')
@@ -766,10 +1086,21 @@ export function BookingRequest({
   }
 
   if (bookingId) {
-    return <BookingRequestDetail booking={existingBooking} draft={draft} data={data} />;
+    return (
+      <BookingRequestDetail
+        booking={existingBooking}
+        draft={draft}
+        data={data}
+        calendarBookings={calendarBookings}
+        grouping={grouping}
+      />
+    );
   }
 
-  const firstStepValid = draft.date !== '' && durationHours(draft) > 0;
+  const firstStepValid =
+    draft.date !== '' && durationHours(draft) > 0 &&
+    (data.location.serviceType !== 'centre' ||
+      draft.selectedParticipantIds.length > 0);
   const secondStepValid =
     draft.description.trim() !== '' && draft.supportPlansConfirmed;
   const thirdStepValid = draft.selectedWorkerIds.length > 0;
@@ -789,14 +1120,26 @@ export function BookingRequest({
     const start = parseDateTime(draft.date, draft.startTime);
     const end = parseDateTime(draft.date, draft.endTime);
     if (!start || !end) return;
-    const requestedWorkerNames = data.workers
-      .filter((worker) => draft.selectedWorkerIds.includes(worker.id))
-      .map((worker) => worker.name);
+    const availableTiers = requestWorkerTiers(
+      data.location.id,
+      start,
+      end,
+      grouping.id,
+    );
+    const selectableWorkers =
+      availableTiers.knownHere.length === 0 &&
+      availableTiers.workedElsewhere.length === 0
+        ? availableTiers.nearby
+        : [...availableTiers.knownHere, ...availableTiers.workedElsewhere];
+    const requestedWorkers = selectableWorkers.filter((worker) =>
+      draft.selectedWorkerIds.includes(worker.id),
+    );
     const newBooking: Booking = {
       id: `${data.location.id}-request-${Date.now()}`,
       locationId: data.location.id,
-      workerName: requestedWorkerNames[0],
-      requestedWorkerNames,
+      workerId: requestedWorkers[0]?.id ?? draft.selectedWorkerIds[0],
+      workerName: requestedWorkers[0]?.name ?? '',
+      requestedWorkerNames: requestedWorkers.map((worker) => worker.name),
       start,
       end,
       status: 'requested',
@@ -807,6 +1150,11 @@ export function BookingRequest({
       driving: draft.driving,
       financeReference: draft.financeReference,
       frequency: draft.frequency,
+      requestedAt: new Date(),
+      participantIds:
+        data.location.serviceType === 'centre'
+          ? draft.selectedParticipantIds
+          : defaultParticipantIds(data.location),
     };
     onCreateBooking(newBooking);
     navigate(`/bookings/request/${newBooking.id}`);
@@ -838,12 +1186,18 @@ export function BookingRequest({
               draft={draft}
               setDraft={setDraft}
               data={data}
+              locations={locations}
               showErrors={showErrors}
               onSelectLocation={onSelectLocation}
             />
           )}
           {step === 2 && (
-            <StepTwo draft={draft} setDraft={setDraft} showErrors={showErrors} />
+            <StepTwo
+              draft={draft}
+              setDraft={setDraft}
+              data={data}
+              showErrors={showErrors}
+            />
           )}
           {step === 3 && (
             <StepThree
@@ -852,6 +1206,8 @@ export function BookingRequest({
               data={data}
               showErrors={showErrors}
               workerDetail={workerDetail}
+              calendarBookings={calendarBookings}
+              grouping={grouping}
             />
           )}
           {step < 3 && (
