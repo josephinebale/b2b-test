@@ -71,6 +71,11 @@ test('pre-session screens use the product page shell and left-align inside it', 
 
   for (const page of [landing, jobs, architecture]) {
     assert.match(page, /<main className="mx-auto w-full max-w-page flex-1 px-8 py-8">/);
+    assert.match(page, /<header className="app-header">/);
     assert.doesNotMatch(page, /className="mx-auto max-w-content"/);
+    assert.doesNotMatch(page, /AppFooter/);
   }
+
+  const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+  assert.match(app, /<AppFooter \/>/);
 });

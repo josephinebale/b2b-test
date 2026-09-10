@@ -85,6 +85,7 @@ test('play opens a pre-session persona picker grouped like the moderator menu', 
   );
 
   assert.match(landing, /title="Choose a persona"/);
+  assert.doesNotMatch(landing, /<AppFooter/);
   assert.doesNotMatch(landing, /Pick who you will enter as/);
   /* Same grouping heading as the location switcher: more space above than
      below, so it attaches to the rows it governs rather than reading as one. */

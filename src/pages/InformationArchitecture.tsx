@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Building2, ChevronDown } from 'lucide-react';
-import { AppFooter } from '../components/AppFooter';
 import { LocationMarker } from '../components/LocationMarker';
 import { Logo } from '../components/Logo';
 import { PageHeading } from '../components/PageHeading';
@@ -103,7 +102,7 @@ function LocationNode({
     selectedPersona.entry.groupingId === grouping.id;
 
   return (
-    <div className="rounded border border-border-subtle bg-surface p-3">
+    <div className="ui-inset-row rounded border border-border-subtle bg-surface">
       <div className="flex items-center gap-3">
         <LocationMarker location={location} />
         <div className="min-w-0 flex-1">
@@ -141,7 +140,7 @@ function GroupingNode({
       open={isEntryBranch(grouping, selectedPersona)}
       className="rounded border border-border-subtle bg-surface open:[&>summary>:last-child]:rotate-180"
     >
-      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+      <summary className="ui-inset-row flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden">
         <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-location-surface text-location-foreground">
           <Building2 className="h-5 w-5" />
         </span>
@@ -159,7 +158,7 @@ function GroupingNode({
         <ChevronDown className="h-5 w-5 shrink-0 text-text-tertiary transition-transform" />
       </summary>
 
-      <div className="space-y-3 border-t border-border-subtle px-4 py-4">
+      <div className="ui-inset-card space-y-3 border-t border-border-subtle">
         <NodePages nodeType="grouping" />
 
         {children.length > 0 && (
@@ -234,8 +233,8 @@ export function InformationArchitecture() {
           />
 
           <div className="max-w-content">
-            <h2 className="text-lg font-bold text-text">Assumptions</h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-text-strong">
+            <h2 className="text-sm font-bold text-text">Assumptions</h2>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-text-secondary">
               <li>Organisation is a hard boundary</li>
               <li>
                 Role does not hide anything: everyone at a provider can access and edit anything in their provider’s tree. This is an MVP assumption based on current understanding, not an established finding, and it may change as more organisations come into view.
@@ -247,33 +246,36 @@ export function InformationArchitecture() {
           </div>
 
           <Card as="section" className="mt-8 p-4">
-            <label className="block max-w-content text-xs font-medium text-text">
-              Persona
-              <span className="relative mt-1 block">
-                <select
-                  value={personaFilter}
-                  onChange={(event) =>
-                    setPersonaFilter(event.target.value as PersonaId | '')
-                  }
-                  className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-                >
-                  <option value="">All organisations and personas</option>
-                  {ORGANISATIONS.map((organisation) => (
-                    <optgroup key={organisation} label={organisation}>
-                      {PERSONAS.filter(
-                        (persona) => persona.organisation === organisation,
-                      ).map((persona) => (
-                        <option key={persona.id} value={persona.id}>
-                          {persona.name} — {persona.role}
-                          {persona.team ? ` · ${persona.team}` : ''}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 text-text-tertiary" />
-              </span>
-            </label>
+            <h2 className="text-sm font-bold text-text">Filter tree</h2>
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              <label className="block text-xs font-medium text-text">
+                Persona
+                <span className="relative mt-1 block">
+                  <select
+                    value={personaFilter}
+                    onChange={(event) =>
+                      setPersonaFilter(event.target.value as PersonaId | '')
+                    }
+                    className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                  >
+                    <option value="">All organisations and personas</option>
+                    {ORGANISATIONS.map((organisation) => (
+                      <optgroup key={organisation} label={organisation}>
+                        {PERSONAS.filter(
+                          (persona) => persona.organisation === organisation,
+                        ).map((persona) => (
+                          <option key={persona.id} value={persona.id}>
+                            {persona.name} — {persona.role}
+                            {persona.team ? ` · ${persona.team}` : ''}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 text-text-tertiary" />
+                </span>
+              </label>
+            </div>
           </Card>
 
           <div className="mt-8 space-y-4">
@@ -287,13 +289,13 @@ export function InformationArchitecture() {
                   as="section"
                 >
                   <details open className="open:[&>summary>:last-child]:rotate-180">
-                    <summary className="flex cursor-pointer list-none items-center gap-3 px-6 py-4 [&::-webkit-details-marker]:hidden">
-                      <span className="min-w-0 flex-1 text-lg font-bold text-text">
+                    <summary className="ui-inset-card flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden">
+                      <span className="min-w-0 flex-1 text-md font-bold text-text">
                         {organisation}
                       </span>
                       <ChevronDown className="h-5 w-5 shrink-0 text-text-tertiary transition-transform" />
                     </summary>
-                    <div className="space-y-3 border-t border-border-subtle px-6 py-6">
+                    <div className="ui-inset-card space-y-3 border-t border-border-subtle">
                       {roots.map((grouping) => (
                         <GroupingNode
                           key={grouping.id}
@@ -323,8 +325,6 @@ export function InformationArchitecture() {
           </div>
         </div>
       </main>
-
-      <AppFooter />
     </div>
   );
 }

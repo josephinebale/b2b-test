@@ -83,10 +83,21 @@ test('the IA screen matches other pre-session screens and uses product chevrons'
   assert.match(page, /<header className="app-header">/);
   assert.match(page, /<Logo \/>/);
   assert.match(page, /title="Information architecture"/);
+  assert.doesNotMatch(page, /<AppFooter/);
   assert.doesNotMatch(page, /description=/);
   assert.doesNotMatch(page, /Organisations are open by default/);
-  assert.match(page, /<h2 className="text-lg font-bold text-text">\s*Assumptions\s*<\/h2>/);
-  assert.match(page, /<ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-text-strong">/);
+  /* One page title carries the page. Section titles take the card-title step,
+     so nothing competes with it. */
+  assert.match(page, /<h2 className="text-sm font-bold text-text">\s*Assumptions\s*<\/h2>/);
+  assert.match(page, /<ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-text-secondary">/);
+  assert.doesNotMatch(page, /text-lg font-bold/);
+  assert.match(page, /text-md font-bold text-text/);
+  /* Filter cards are titled on the other list screens, and every inset comes
+     from the shared scale rather than one-off padding. */
+  assert.match(page, /<h2 className="text-sm font-bold text-text">Filter tree<\/h2>/);
+  assert.match(page, /ui-inset-card/);
+  assert.match(page, /ui-inset-row/);
+  assert.doesNotMatch(page, /px-6 py-/);
   assert.doesNotMatch(page, /tone="subtle"/);
   assert.match(page, /\[&::-webkit-details-marker\]:hidden/);
   assert.match(page, /open:\[&>summary>:last-child\]:rotate-180/);

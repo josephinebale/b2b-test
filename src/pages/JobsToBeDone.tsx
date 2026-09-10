@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { AppFooter } from '../components/AppFooter';
 import { Logo } from '../components/Logo';
 import { PageHeading } from '../components/PageHeading';
 import { Button } from '../components/ui/Button';
@@ -36,6 +35,12 @@ function JobRow({ job }: { job: Job }) {
         <Tag>{sectorLabel(job.sector)}</Tag>
         <Tag>{job.iaRelevant ? 'IA relevant' : 'Not IA relevant'}</Tag>
       </div>
+
+      {job.resolvesAt ? (
+        <p className="mt-3 text-xs text-text-secondary">
+          <span className="font-bold text-text">Where it resolves:</span> {job.resolvesAt}
+        </p>
+      ) : null}
     </li>
   );
 }
@@ -190,8 +195,6 @@ export function JobsToBeDone() {
           <JobSection jobs={filteredJobs} />
         </div>
       </main>
-
-      <AppFooter />
     </div>
   );
 }

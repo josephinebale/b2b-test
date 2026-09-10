@@ -16,11 +16,14 @@ test('the workbook snapshot is seeded as typed jobs data', async () => {
   assert.match(dataSource, /job: string/);
   assert.match(dataSource, /saidBy: string/);
   assert.match(dataSource, /iaRelevant: boolean/);
-  assert.doesNotMatch(dataSource, /kind:|whatWasSaid:|resolvesAt:|state:/);
+  assert.match(dataSource, /resolvesAt: string/);
+  assert.doesNotMatch(dataSource, /kind:|whatWasSaid:|state:/);
 
   assert.equal(JOBS_TO_BE_DONE.length, 119);
   assert.equal(JOBS_TO_BE_DONE.filter((job) => job.iaRelevant).length, 70);
   assert.equal(JOBS_TO_BE_DONE.filter((job) => !job.iaRelevant).length, 49);
+  assert.equal(JOBS_TO_BE_DONE.filter((job) => job.resolvesAt).length, 58);
+  assert.equal(JOBS_TO_BE_DONE.filter((job) => !job.resolvesAt).length, 61);
   assert.equal(new Set(JOBS_TO_BE_DONE.map((job) => job.id)).size, 119);
   assert.ok(
     JOBS_TO_BE_DONE.every(
@@ -30,8 +33,13 @@ test('the workbook snapshot is seeded as typed jobs data', async () => {
         job.theme &&
         job.job &&
         job.saidBy &&
-        typeof job.iaRelevant === 'boolean',
+        typeof job.iaRelevant === 'boolean' &&
+        typeof job.resolvesAt === 'string',
     ),
+  );
+  assert.equal(
+    JOBS_TO_BE_DONE[0].resolvesAt,
+    'Location > Bookings > Request',
   );
 });
 
@@ -45,6 +53,7 @@ test('the jobs screen restores the product header and uses one jobs list', () =>
   assert.match(page, /<header className="app-header">/);
   assert.match(page, /<Logo \/>/);
   assert.match(page, /<JobSection jobs=\{filteredJobs\} \/>/);
+  assert.doesNotMatch(page, /<AppFooter/);
   assert.doesNotMatch(page, /description=/);
   assert.doesNotMatch(page, /IA jobs|Parked jobs|kind="ia"|kind="parked"/);
 });
@@ -79,9 +88,31 @@ test('rows show every public workbook field without the removed detail expand', 
   assert.match(page, /\{sectorLabel\(job\.sector\)\}/);
   assert.match(page, /\{job\.theme\}/);
   assert.match(page, /job\.iaRelevant \? 'IA relevant' : 'Not IA relevant'/);
-  assert.doesNotMatch(
+  assert.match(
     page,
-    /<details|What they said|Where it resolves|\{job\.state\}/,
+    /<span className="font-bold text-text">Where it resolves:<\/span> \{job\.resolvesAt\}/,
   );
+  assert.doesNotMatch(page, /<details|What they said|\{job\.state\}/);
   assert.doesNotMatch(page, /Validated|validated|Notes/);
+});
+
+test('the resolves path reads as row metadata below the tags', () => {
+  const page = source('../src/pages/JobsToBeDone.tsx');
+
+  assert.match(page, /<p className="mt-3 text-xs text-text-secondary">/);
+  assert.ok(
+    page.indexOf("job.iaRelevant ? 'IA relevant'") <
+      page.indexOf('Where it resolves'),
+  );
+});
+
+test('a job with no resolves value renders no label', () => {
+  const page = source('../src/pages/JobsToBeDone.tsx');
+
+  assert.match(page, /job\.resolvesAt \? \(/);
+  assert.match(
+    page,
+    /<span className="font-bold text-text">Where it resolves:<\/span> \{job\.resolvesAt\}/,
+  );
+  assert.doesNotMatch(page, /not addressed|Not addressed/);
 });

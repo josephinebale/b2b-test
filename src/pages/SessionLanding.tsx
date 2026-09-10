@@ -1,6 +1,5 @@
 import { Fragment } from 'react';
 import { AppWindow, ChevronRight, ListChecks, Network } from 'lucide-react';
-import { AppFooter } from '../components/AppFooter';
 import { Logo } from '../components/Logo';
 import { PageHeading } from '../components/PageHeading';
 import { Button } from '../components/ui/Button';
@@ -123,8 +122,6 @@ export function SessionLanding({
           </>
         )}
       </main>
-
-      <AppFooter />
     </div>
   );
 }
