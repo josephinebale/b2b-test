@@ -12,7 +12,8 @@ export function messagesAccessibleName(count: number): string {
 }
 
 export function notificationsAccessibleName(count: number): string {
-  return count > 0 ? `Notifications, ${count} unread` : 'Notifications';
+  if (count <= 0) return 'Notifications';
+  return `Notifications, ${count > 99 ? '99 or more' : count} need attention`;
 }
 
 export function accountAccessibleName(name: string): string {

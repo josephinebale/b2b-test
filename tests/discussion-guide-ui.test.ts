@@ -55,14 +55,12 @@ test('PinnedQuestion renders its popover outside clipping cards and panes', () =
 
 test('element questions are pinned to every requested page and context', () => {
   const placements: Record<string, string[]> = {
-    '../src/pages/dashboard/NotificationStrip.tsx': ['dashboard-attention'],
-    '../src/pages/dashboard/BookingsWeek.tsx': ['dashboard-week'],
-    '../src/pages/dashboard/WorkersPanel.tsx': ['dashboard-worker-order'],
+    '../src/pages/dashboard/BookingsWeek.tsx': ['bookings-week'],
     '../src/pages/Workers.tsx': [
       'workers-location-tiers',
-      'workers-grouping-order',
       'workers-search',
     ],
+    '../src/pages/dashboard/WorkersPanel.tsx': ['workers-grouping-order'],
     '../src/pages/WorkerProfile.tsx': ['workers-profile-context'],
     '../src/pages/Dashboard.tsx': [
       'grouping-locations',
@@ -70,6 +68,7 @@ test('element questions are pinned to every requested page and context', () => {
       'grouping-usage',
     ],
     '../src/pages/Bookings.tsx': [
+      'bookings-actions',
       'bookings-status',
       'bookings-filters',
       'booking-card-fatigue',
@@ -89,7 +88,7 @@ test('element questions are pinned to every requested page and context', () => {
     '../src/pages/Messages.tsx': ['messages-conversations'],
     '../src/components/AppHeader.tsx': ['messages-nav'],
     '../src/pages/Settings.tsx': ['settings-sections'],
-    '../src/components/LocationSwitcher.tsx': ['access-context'],
+    '../src/components/NodeBreadcrumb.tsx': ['access-context'],
   };
 
   for (const [path, questionIds] of Object.entries(placements)) {

@@ -26,21 +26,52 @@ function sectorLabel(sector: Sector): string {
 function JobRow({ job }: { job: Job }) {
   return (
     <li className="ui-inset-card">
-      <h3 className="max-w-content text-md font-bold text-text">{job.job}</h3>
-      <p className="mt-1 text-sm text-text-secondary">Raised by {job.saidBy}</p>
+      <h3 className="max-w-job-title text-md font-bold text-text">{job.job}</h3>
+      {job.saidBy ? (
+        <p className="mt-1 text-sm text-text-secondary">Raised by {job.saidBy}</p>
+      ) : (
+        <></>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-2">
+        {job.origin === 'inferred' ? (
+          <Tag tone="pending">Inferred</Tag>
+        ) : (
+          <Tag tone="validated">Validated</Tag>
+        )}
         <Tag>{job.theme}</Tag>
-        <Tag>{job.organisation}</Tag>
-        <Tag>{sectorLabel(job.sector)}</Tag>
-        <Tag>{job.iaRelevant ? 'IA relevant' : 'Not IA relevant'}</Tag>
+        {job.organisation ? <Tag>{job.organisation}</Tag> : <></>}
+        {job.sector ? <Tag>{sectorLabel(job.sector)}</Tag> : <></>}
       </div>
 
       {job.resolvesAt ? (
         <p className="mt-3 text-xs text-text-secondary">
-          <span className="font-bold text-text">Where it resolves:</span> {job.resolvesAt}
+          <span className="font-bold text-text">Addressed, where it resolves:</span> {job.resolvesAt}
         </p>
-      ) : null}
+      ) : job.notAddressedReason ? (
+        <p className="mt-3 text-xs text-text-secondary">
+          <span className="font-bold text-text">Not addressed yet:</span> {job.notAddressedReason}
+        </p>
+      ) : (
+        <p className="mt-3 text-xs text-text-secondary">
+          <span className="font-bold text-text">Not addressed yet</span>
+        </p>
+      )}
+
+      {job.quote ? (
+        <details className="mt-3 open:[&>summary>:last-child]:rotate-180">
+          <summary className="ui-link inline-flex cursor-pointer list-none items-center gap-1 [&::-webkit-details-marker]:hidden">
+            <span>Source</span>
+            <ChevronDown className="h-4 w-4 shrink-0 transition-transform" />
+          </summary>
+          <div className="ui-inset-compact">
+            <p className="text-sm text-text-secondary">{job.quote}</p>
+            <p className="mt-1 text-xs text-text-secondary">{job.quoteSource}</p>
+          </div>
+        </details>
+      ) : (
+        <></>
+      )}
     </li>
   );
 }
@@ -76,13 +107,20 @@ export function JobsToBeDone() {
   >('');
   const [sectorFilter, setSectorFilter] = useState<Sector | ''>('');
   const [themeFilter, setThemeFilter] = useState('');
-  const [iaFilter, setIaFilter] = useState<'' | 'yes' | 'no'>('');
+  const [originFilter, setOriginFilter] = useState<'' | 'research' | 'inferred'>(
+    '',
+  );
+  const [statusFilter, setStatusFilter] = useState<'' | 'addressed' | 'unaddressed'>(
+    '',
+  );
   const filteredJobs = JOBS_TO_BE_DONE.filter(
     (job) =>
       (!organisationFilter || job.organisation === organisationFilter) &&
       (!sectorFilter || job.sector === sectorFilter) &&
       (!themeFilter || job.theme === themeFilter) &&
-      (!iaFilter || job.iaRelevant === (iaFilter === 'yes')),
+      (!originFilter || job.origin === originFilter) &&
+      (!statusFilter ||
+        (statusFilter === 'addressed' ? Boolean(job.resolvesAt) : !job.resolvesAt)),
   );
 
   return (
@@ -107,7 +145,7 @@ export function JobsToBeDone() {
 
         <Card as="section" className="p-4">
             <h2 className="text-sm font-bold text-text">Filter jobs</h2>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <label className="block text-xs font-medium text-text">
                 Organisation
                 <span className="relative mt-1 block">
@@ -172,18 +210,40 @@ export function JobsToBeDone() {
               </label>
 
               <label className="block text-xs font-medium text-text">
-                IA relevance
+                Origin
                 <span className="relative mt-1 block">
                   <select
-                    value={iaFilter}
+                    value={originFilter}
                     onChange={(event) =>
-                      setIaFilter(event.target.value as '' | 'yes' | 'no')
+                      setOriginFilter(
+                        event.target.value as '' | 'research' | 'inferred',
+                      )
                     }
                     className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                   >
-                    <option value="">All IA relevance</option>
-                    <option value="yes">IA relevant</option>
-                    <option value="no">Not IA relevant</option>
+                    <option value="">All origins</option>
+                    <option value="research">Validated</option>
+                    <option value="inferred">Inferred</option>
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 text-text-tertiary" />
+                </span>
+              </label>
+
+              <label className="block text-xs font-medium text-text">
+                Status
+                <span className="relative mt-1 block">
+                  <select
+                    value={statusFilter}
+                    onChange={(event) =>
+                      setStatusFilter(
+                        event.target.value as '' | 'addressed' | 'unaddressed',
+                      )
+                    }
+                    className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                  >
+                    <option value="">All statuses</option>
+                    <option value="addressed">Addressed</option>
+                    <option value="unaddressed">Not addressed yet</option>
                   </select>
                   <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 text-text-tertiary" />
                 </span>

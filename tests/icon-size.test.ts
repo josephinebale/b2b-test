@@ -30,10 +30,12 @@ function iconNames(source: string): string[] {
 }
 
 /*
- * One size everywhere, with a single sanctioned exception: a glyph inside the
- * 32px IconButton drops to 16px so it keeps the same 8px inset that a 20px glyph
- * gets in the 36px one. The exception is checked against its enclosing control
- * rather than allowed outright, so 16px cannot spread to loose icons.
+ * One size everywhere, with two sanctioned pairings rather than a second free
+ * size: a glyph inside the 32px IconButton drops to 16px so it keeps the same
+ * 8px inset that a 20px glyph gets in the 36px one; a chevron immediately
+ * following an inline text label is 16px because it is a companion to the text
+ * rather than a glyph inside a control. Each exception is checked against its
+ * neighbour rather than allowed outright, so 16px cannot leak out to loose icons.
  */
 test('every icon renders at the size its control calls for', () => {
   const offenders: string[] = [];
@@ -56,9 +58,20 @@ test('every icon renders at the size its control calls for', () => {
         if (className.includes(SMALL_ICON)) {
           const before = source.slice(0, usage.index);
           const opening = before.lastIndexOf('<IconButton');
-          if (opening === -1 || !/size="small"/.test(before.slice(opening))) {
-            offenders.push(`${where} — ${SMALL_ICON} outside a small IconButton`);
+          if (opening !== -1 && /size="small"/.test(before.slice(opening))) {
+            continue;
           }
+          const chunk = before.slice(-600);
+          const besideLabel =
+            />([^<]*[A-Za-z][^<]*)<\/span>\s*$/.test(chunk) ||
+            />\s*[A-Za-z][^<]*\s*$/.test(chunk);
+          const inInlineFlex = /className="[^"]*\binline-flex\b[^"]*"/.test(
+            chunk,
+          );
+          if (besideLabel && inInlineFlex) continue;
+          offenders.push(
+            `${where} — ${SMALL_ICON} outside a small IconButton or an inline text-label companion`,
+          );
           continue;
         }
 
@@ -70,6 +83,6 @@ test('every icon renders at the size its control calls for', () => {
   assert.deepEqual(
     offenders,
     [],
-    `icons must be ${DEFAULT_ICON}, or ${SMALL_ICON} inside a small IconButton`,
+    `icons must be ${DEFAULT_ICON}, or ${SMALL_ICON} inside a small IconButton or beside an inline text label`,
   );
 });

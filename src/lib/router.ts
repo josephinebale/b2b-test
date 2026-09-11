@@ -19,6 +19,14 @@ export function canonicalPath(path: string): string {
     .replace(/\/house-picture$/, '/location-picture');
 }
 
+/* Subscribers are held here as well as on `hashchange` so `navigate` can tell
+   them straight away. The browser fires `hashchange` in a later task, so a
+   caller that changes app state and navigates in the same handler would
+   otherwise commit one render with the new state and the old route — which is
+   how the header nav came to paint a frame with no active tab while entering a
+   location. */
+const routeListeners = new Set<() => void>();
+
 export function useHashRoute(): string {
   const [path, setPath] = useState(() => canonicalPath(currentPath()));
 
@@ -34,8 +42,12 @@ export function useHashRoute(): string {
     };
 
     window.addEventListener('hashchange', onChange);
+    routeListeners.add(onChange);
     onChange();
-    return () => window.removeEventListener('hashchange', onChange);
+    return () => {
+      window.removeEventListener('hashchange', onChange);
+      routeListeners.delete(onChange);
+    };
   }, []);
 
   return path;
@@ -44,6 +56,12 @@ export function useHashRoute(): string {
 export function navigate(path: string): void {
   window.location.hash = path;
   window.scrollTo(0, 0);
+  /* Read in the same tick as the caller's own state updates, so React batches
+     the route and the node into one render. The native event still arrives
+     later and resolves to the same path, which is a no-op re-render. */
+  for (const listener of [...routeListeners]) {
+    listener();
+  }
 }
 
 export function href(path: string): string {

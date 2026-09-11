@@ -10,32 +10,29 @@ function source(path: string): string {
    they are not decoration: an avatar is identity, and a chevron says that a
    menu opens. */
 
-test('tier one utility controls are icon and badge, with no text label', () => {
+test('header utility controls are icon and badge, with no text label', () => {
   const header = source('../src/components/AppHeader.tsx');
-  const [identityTier] = header.split('app-header-nav-row');
 
-  assert.doesNotMatch(identityTier, /MessageSquare|href=\{\s*href\('\/messages'\)/);
-  assert.match(identityTier, /<Bell className="h-5 w-5"/);
-  assert.doesNotMatch(identityTier, /<span>Messages<\/span>|<span>Notifications<\/span>/);
-  assert.doesNotMatch(identityTier, /<Badge count=\{unreadMessages\}/);
-  assert.match(identityTier, /<Badge count=\{unreadNotifications\}/);
+  assert.doesNotMatch(header, /MessageSquare|href=\{\s*href\('\/messages'\)/);
+  assert.match(header, /<Bell className="h-5 w-5"/);
+  assert.doesNotMatch(header, /<span>Messages<\/span>|<span>Notifications<\/span>/);
+  assert.match(header, /<Badge count=\{unreadNotifications\}/);
 });
 
-test('Messages sits in the location nav with an inline badge like Bookings', () => {
+test('Messages sits in location section navigation with an inline badge like Bookings', () => {
   const header = source('../src/components/AppHeader.tsx');
   const navigation = source('../src/lib/informationArchitecture.ts');
-  const navTier = header.split('app-header-nav-row')[1] ?? '';
 
   assert.match(
     navigation,
     /label: 'Messages',[\s\S]*?path: '\/messages',[\s\S]*?nodeTypes: \['location'\],[\s\S]*?placement: 'main'/,
   );
   assert.match(header, /NODE_NAV_ITEMS\.filter/);
-  assert.match(navTier, /<span>\{item\.label\}<\/span>/);
+  assert.match(header, /<span>\{visibleLabel\}<\/span>/);
   assert.match(header, /item\.label === 'Bookings'\s*\? bookingsBadge/);
   assert.match(header, /item\.label === 'Messages'\s*\? unreadMessages/);
   assert.match(header, /item\.label === 'Messages'\s*\? messagesAccessibleName\(unreadMessages\)/);
-  assert.doesNotMatch(navTier, /MessageSquare/);
+  assert.doesNotMatch(header, /MessageSquare/);
 });
 
 test('the account trigger keeps its avatar and one rotating menu chevron', () => {
@@ -53,11 +50,10 @@ test('the account trigger keeps its avatar and one rotating menu chevron', () =>
   assert.doesNotMatch(trigger, /truncate text-sm font-bold/);
 });
 
-test('tier one controls share one height so their hover states align', () => {
+test('one-row header controls share one height so their hover states align', () => {
   const header = source('../src/components/AppHeader.tsx');
-  const [identityTier] = header.split('app-header-nav-row');
 
-  assert.doesNotMatch(identityTier, /size="small"/);
+  assert.doesNotMatch(header, /size="small"/);
 });
 
 test('the request booking action is a label without a plus icon', () => {
@@ -68,8 +64,8 @@ test('the request booking action is a label without a plus icon', () => {
   assert.match(heading, /Request booking/);
 });
 
-test('dashboard row actions are icons with accessible labels, not both', () => {
-  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
+test('location worker row actions are icons with accessible labels, not both', () => {
+  const panel = source('../src/pages/Workers.tsx');
 
   assert.match(panel, /<MessageSquare className="h-4 w-4"/);
   assert.match(panel, /<Calendar className="h-4 w-4"/);
@@ -90,7 +86,7 @@ test('dashboard row actions are icons with accessible labels, not both', () => {
 test('every icon-only button carries an outline at rest', () => {
   const css = source('../src/index.css');
   const iconButton = source('../src/components/ui/IconButton.tsx');
-  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
+  const panel = source('../src/pages/Workers.tsx');
 
   assert.match(
     css,
@@ -156,21 +152,20 @@ test('tooltips sit under their trigger, centred, inside cards too', () => {
  */
 test('icon size is paired to button size so the inset stays even', () => {
   const week = source('../src/pages/dashboard/BookingsWeek.tsx');
-  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
+  const workers = source('../src/pages/Workers.tsx');
   const messages = source('../src/pages/Messages.tsx');
 
   assert.match(week, /<ChevronLeft className="h-4 w-4" \/>/);
   assert.match(week, /<ChevronRight className="h-4 w-4" \/>/);
   assert.match(messages, /<MoreHorizontal className="h-4 w-4" \/>/);
 
-  // The dashboard row actions take the same 32px control as the week arrows.
-  const actions = panel.slice(panel.indexOf('ui-target-row__action'));
+  // The repeated worker-row actions take the same 32px control as the week arrows.
+  const actions = workers.slice(workers.indexOf('ui-target-row__action'));
   assert.equal(actions.match(/size="small"/g)?.length, 2);
-  assert.match(panel, /<MessageSquare className="h-4 w-4" \/>/);
-  assert.match(panel, /<Calendar className="h-4 w-4" \/>/);
+  assert.match(workers, /<MessageSquare className="h-4 w-4" \/>/);
+  assert.match(workers, /<Calendar className="h-4 w-4" \/>/);
 
   // The 36px controls keep the 20px glyph.
-  assert.match(source('../src/pages/Workers.tsx'), /<MoreHorizontal className="h-5 w-5" \/>/);
   assert.match(source('../src/components/AppHeader.tsx'), /<Bell className="h-5 w-5" \/>/);
 });
 
@@ -190,13 +185,19 @@ test('a row tooltip paints above the actions in the rows below it', () => {
   );
 });
 
-test('dashboard worker rows keep actions on the avatar line, aligned right', () => {
-  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
+test('location worker rows keep actions on the avatar line, aligned right', () => {
+  const panel = source('../src/pages/Workers.tsx');
   const row = panel.slice(panel.indexOf('<li'), panel.indexOf('</li>'));
 
-  assert.match(row, /ui-inset-row ui-target-row flex items-center gap-3/);
+  assert.match(row, /ui-inset-row ui-target-row flex[^"]*items-center gap-3/);
   assert.match(row, /ui-target-row__action ml-auto flex shrink-0 items-center gap-2/);
   assert.doesNotMatch(row, /mt-3/);
   // Repeated actions in a dense list take the 32px control, like the week arrows.
   assert.equal(row.match(/size="small"/g)?.length, 2);
+});
+
+test('grouping dashboard worker rows remain oversight without row actions', () => {
+  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
+
+  assert.doesNotMatch(panel, /IconButton|MessageSquare|Calendar|ui-target-row__action/);
 });

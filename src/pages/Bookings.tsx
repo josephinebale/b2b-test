@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Check, Clock3, MapPin, Moon, Repeat2, Users, X } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
-import { RequestBookingButton } from '../components/PageHeading';
+import { PageHeading, RequestBookingButton } from '../components/PageHeading';
 import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Badge } from '../components/ui/Badge';
 import { Tag } from '../components/ui/Tag';
@@ -20,11 +20,13 @@ import { formatTime, startOfDay } from '../lib/date';
 import {
   EMPTY_STATES,
   WORKERS_ROUTE,
+  bookingActionItems,
   bookingsViewPath,
   workerProfilePath,
   type BookingViewId,
 } from '../lib/pageContent';
 import { href, navigate } from '../lib/router';
+import { BookingsWeek } from './dashboard/BookingsWeek';
 
 type BookingView = BookingViewId;
 
@@ -91,9 +93,13 @@ function priceFor(booking: Booking): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
-function bookingsForView(data: LocationData, view: BookingView): Booking[] {
+function bookingsForView(
+  data: LocationData,
+  view: BookingView | null,
+): Booking[] {
   const today = startOfDay(new Date());
 
+  if (!view) return [];
   if (view === 'confirmed') {
     return data.bookings.filter(
       (booking) => booking.status === 'confirmed' && booking.end >= today,
@@ -105,6 +111,7 @@ function bookingsForView(data: LocationData, view: BookingView): Booking[] {
     );
   }
   if (view === 'approve') {
+    if (data.bookingsToApprove === 0) return [];
     return data.bookings
       .filter((booking) => booking.status === 'ended')
       .slice(-data.bookingsToApprove);
@@ -161,7 +168,11 @@ function BookingCard({
           </EntityLink>
           <p className="mt-1 flex items-center gap-1 text-xs text-text-secondary">
             {booking.status === 'confirmed' && <Check className="h-5 w-5 text-success" />}
-            {booking.status === 'confirmed' ? 'Worker confirmed' : 'Waiting for worker response'}
+            {booking.status === 'confirmed'
+              ? 'Worker confirmed'
+              : booking.status === 'cancelled'
+                ? `${booking.cancelledBy ?? booking.workerName} cancelled`
+                : 'Waiting for worker response'}
           </p>
         </div>
       </Card>
@@ -227,7 +238,7 @@ export function Bookings({
   calendarBookings = [],
 }: {
   data: LocationData;
-  view: BookingView;
+  view: BookingView | null;
   calendarBookings?: Booking[];
 }) {
   const [worker, setWorker] = useState('');
@@ -254,6 +265,56 @@ export function Bookings({
     setDateTo('');
     setCreatedByMe(false);
   };
+
+  const shiftActions = bookingActionItems(
+    data.requestsToAccept,
+    data.bookingsToApprove,
+  );
+
+  if (!view) {
+    return (
+      <div>
+        {/* Waiting work is the page's secondary line, not a block of its own:
+            the same middot-separated line a grouping row uses under a location
+            name, carried by the heading it belongs to. As a standalone block —
+            boxed or bare — it belonged to nothing on either side of it. */}
+        <PageHeading
+          title="Bookings"
+          description={
+            shiftActions.length > 0 ? (
+              <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                {shiftActions.map((action, index) => (
+                  <Fragment key={action.path}>
+                    {index > 0 && <span aria-hidden="true">·</span>}
+                    <a href={href(action.path)} className="ui-link rounded">
+                      {action.label}
+                    </a>
+                  </Fragment>
+                ))}
+                <PinnedQuestion questionId="bookings-actions" />
+              </span>
+            ) : undefined
+          }
+          actions={
+            <>
+              <Button
+                href={href(bookingsViewPath('confirmed'))}
+                variant="secondary"
+              >
+                View by status
+              </Button>
+              <RequestBookingButton />
+            </>
+          }
+        />
+
+        <BookingsWeek
+          data={data}
+          calendarBookings={calendarBookings}
+        />
+      </div>
+    );
+  }
 
   const activeLabel = VIEWS.find((item) => item.id === view)?.label ?? 'Bookings';
 

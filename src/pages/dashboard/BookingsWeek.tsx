@@ -31,6 +31,7 @@ const CARD_TONES: Record<Booking['status'], 'default' | 'pending'> = {
   confirmed: 'default',
   requested: 'pending',
   ended: 'default',
+  cancelled: 'pending',
 };
 
 const COLLAPSED_BOOKINGS_PER_DAY = 4;
@@ -130,7 +131,7 @@ export function BookingsWeek({
           <h2 className="flex items-center gap-2 text-md font-bold text-text">
             <span>Bookings for {formatWeekRange(weekStart, weekEnd)}:</span>
             <Tag>{inWeek.length}</Tag>
-            <PinnedQuestion questionId="dashboard-week" />
+            <PinnedQuestion questionId="bookings-week" />
           </h2>
           <p className="mt-1 max-w-content text-sm text-text-secondary">
             Times are displayed in the local time of the booking.
@@ -210,7 +211,7 @@ export function BookingsWeek({
           </div>
         ) : (
           <>
-            <div id="dashboard-bookings-grid" className="grid booking-grid grid-cols-7">
+            <div id="bookings-week-grid" className="grid booking-grid grid-cols-7">
             {days.map((day, index) => {
               const dayBookings = bookingsByDay[index];
               const visibleDayBookings = expanded
@@ -248,7 +249,7 @@ export function BookingsWeek({
               <button
                 type="button"
                 aria-expanded={expanded}
-                aria-controls="dashboard-bookings-grid"
+                aria-controls="bookings-week-grid"
                 onClick={() => setExpanded((value) => !value)}
                 className="ui-link ui-link--flush flex w-full items-center justify-center gap-1 border-t border-border-subtle px-4 py-3 text-sm font-medium"
               >

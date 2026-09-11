@@ -6,6 +6,7 @@ import {
   CAN_EDIT_ORGANISATION_DETAILS,
   LOCATION_SECTIONS,
   MANAGER_NAME,
+  NODE_NAV_ITEMS,
   ORGANISATION_NAME,
   ORGANISATION_SECTIONS,
   PERSONAL_MENU_ITEMS,
@@ -33,10 +34,40 @@ test('settings sections are split by scope without changing existing labels', ()
   ]);
 });
 
-test('the account menu exposes one account destination', () => {
+test('the account menu exposes person and organisation settings together', () => {
   assert.deepEqual(PERSONAL_MENU_ITEMS, [
     { label: 'Your account', path: '/your-account' },
+    { label: 'Organisation settings', path: '/organisation-settings' },
   ]);
+});
+
+test('location navigation follows work frequency and grouping has only Dashboard', () => {
+  const mainLabelsFor = (nodeType: 'grouping' | 'location') =>
+    NODE_NAV_ITEMS.filter(
+      (item) =>
+        item.placement === 'main' &&
+        item.nodeTypes.some((itemNodeType) => itemNodeType === nodeType),
+    ).map(({ label }) => label);
+
+  assert.deepEqual(mainLabelsFor('location'), [
+    'Bookings',
+    'Workers',
+    'Messages',
+    'Location settings',
+  ]);
+  assert.deepEqual(mainLabelsFor('grouping'), ['Dashboard']);
+});
+
+test('client settings are named for the person in the location navigation', () => {
+  const header = readFileSync(
+    new URL('../src/components/AppHeader.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(
+    header,
+    /location\?\.serviceType === 'home-community'[\s\S]*?`\$\{location\.name\} settings`/,
+  );
 });
 
 test('the account menu is persona identity, account destination, divider, then log out', () => {
@@ -113,15 +144,15 @@ test('location settings exclude consumer matching, COVID, and picture sections',
   );
 });
 
-test('the node menu scrolls rather than running off a short window', () => {
-  const switcher = readFileSync(
-    new URL('../src/components/LocationSwitcher.tsx', import.meta.url),
+test('the account menu keeps organisation settings beside Your account', () => {
+  const header = readFileSync(
+    new URL('../src/components/AppHeader.tsx', import.meta.url),
     'utf8',
   );
 
-  /* Five grouping rows, nested caseloads, twelve locations, and settings rows are taller than a
-     laptop window, and a clipped menu hides the rows at the bottom. */
-  assert.match(switcher, /role="menu"[\s\S]*?max-h-\[70vh\] overflow-y-auto/);
+  const menu = header.slice(header.indexOf('{accountMenu.open &&'));
+  assert.match(menu, /PERSONAL_MENU_ITEMS\.map/);
+  assert.doesNotMatch(menu, /ROUTES\.organisationSettings|Building2/);
 });
 
 test('arrow keys wrap through menu items', () => {

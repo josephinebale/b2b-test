@@ -29,9 +29,11 @@ test('Card exposes a quiet nested-surface tone without changing its shape', () =
   );
 });
 
-test('Tag exposes the two tones the product labels use', () => {
+test('Tag exposes the tones the product labels use', () => {
   assert.equal(tagClasses('neutral'), 'ui-tag ui-tag--neutral');
   assert.equal(tagClasses('success'), 'ui-tag ui-tag--success');
+  assert.equal(tagClasses('validated'), 'ui-tag ui-tag--validated');
+  assert.equal(tagClasses('pending'), 'ui-tag ui-tag--pending');
 });
 
 test('Avatar names map to exactly three token values', () => {

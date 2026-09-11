@@ -13,8 +13,12 @@ test('worker profile routes use the worker id under Workers', () => {
   assert.equal(workerIdFromPath('/workers'), null);
 });
 
-test('the app renders worker profiles from either node', () => {
+test('the app renders worker profiles at a location, not from grouping oversight', () => {
   const app = source('../src/App.tsx');
+  const groupingBranch = app.slice(
+    app.indexOf("if (nodeType === 'grouping')"),
+    app.indexOf('if (!activeLocation)'),
+  );
 
   assert.match(app, /import \{ WorkerProfile \}/);
   assert.match(app, /path\.startsWith\(`\$\{WORKERS_ROUTE\}\/`\)/);
@@ -22,8 +26,8 @@ test('the app renders worker profiles from either node', () => {
     app,
     /<WorkerProfile[\s\S]*data=\{visibleData\}[\s\S]*workerId=\{workerIdFromPath\(path\)\}/,
   );
-  assert.match(app, /nodeType="grouping"/);
   assert.match(app, /grouping=\{grouping\}/);
+  assert.doesNotMatch(groupingBranch, /WorkerProfile|WORKERS_ROUTE/);
 });
 
 test('the worker profile adapts the reference into existing product primitives', () => {
@@ -41,14 +45,14 @@ test('the worker profile adapts the reference into existing product primitives',
   assert.match(profile, /Worker not found/);
 });
 
-test('safe worker-name links open profiles without replacing selection controls', () => {
+test('worker-name links open profiles where action is supported, not on grouping oversight', () => {
   const workers = source('../src/pages/Workers.tsx');
   const dashboardWorkers = source('../src/pages/dashboard/WorkersPanel.tsx');
   const bookings = source('../src/pages/Bookings.tsx');
   const messages = source('../src/pages/Messages.tsx');
 
   assert.match(workers, /href=\{href\(workerProfilePath\(worker\.id\)\)\}/);
-  assert.match(dashboardWorkers, /href=\{href\(workerProfilePath\(worker\.id\)\)\}/);
+  assert.doesNotMatch(dashboardWorkers, /workerProfilePath|href=\{href\(/);
   assert.match(bookings, /workerProfilePath\(worker\.id\)/);
   assert.match(messages, /href=\{href\(workerProfilePath\(selected\.id\)\)\}/);
   assert.match(messages, /selectConversation\(conversation\)/);

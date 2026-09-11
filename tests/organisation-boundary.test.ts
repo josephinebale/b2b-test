@@ -2,15 +2,16 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
+  GROUPINGS,
   LOCATIONS,
   findLocationForOrganisation,
   getLocationData,
   locationHistoryForWorker,
   locationWorkerTiers,
-  orderedGroupingsForMenu,
 } from '../src/data/locations.ts';
 import {
   ORGANISATIONS,
+  personasForOrganisation,
   personaById,
 } from '../src/lib/informationArchitecture.ts';
 
@@ -18,28 +19,17 @@ function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
 }
 
-test('a persona can reach only locations and groupings in their organisation', () => {
-  for (const personaId of [
-    'house-manager',
-    'northcott-service-coordinator',
-    'lwb-reactive-rostering-officer',
-  ] as const) {
-    const persona = personaById(personaId);
-    const menuGroupings = orderedGroupingsForMenu(persona.entry.groupingId);
-    assert.ok(menuGroupings.length > 0);
+test('the moderator persona picker covers every organisation after the node menu is removed', () => {
+  const picker = source('../src/components/PageVariantToggle.tsx');
+
+  assert.match(picker, /ORGANISATIONS\.map/);
+  assert.match(picker, /personasForOrganisation\(organisation\)\.map/);
+  for (const organisation of ORGANISATIONS) {
+    assert.ok(personasForOrganisation(organisation).length > 0);
     assert.ok(
-      menuGroupings.every(
-        (grouping) => grouping.organisation === persona.organisation,
-      ),
-    );
-    assert.ok(
-      menuGroupings
-        .flatMap((grouping) => grouping.locationIds)
-        .every(
-          (locationId) =>
-            LOCATIONS.find((location) => location.id === locationId)
-              ?.organisation === persona.organisation,
-        ),
+      GROUPINGS.filter(
+        (grouping) => grouping.organisation === organisation,
+      ).length > 0,
     );
   }
 });

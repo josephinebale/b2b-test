@@ -207,12 +207,12 @@ export const ROUTES = {
 } as const;
 
 export type NavigationNodeType = 'grouping' | 'location';
-export type NodeNavigationPlacement = 'main' | 'utility' | 'settings';
+export type NodeNavigationPlacement = 'main' | 'utility';
 
 export const NOTIFICATIONS_NODE_ITEM = {
   label: 'Notifications',
   path: '/notifications',
-  nodeTypes: ['location'],
+  nodeTypes: ['grouping', 'location'],
   placement: 'utility',
 } as const;
 
@@ -220,7 +220,7 @@ export const LOCATION_SETTINGS_NODE_ITEM = {
   label: 'Location settings',
   path: ROUTES.manageLocation,
   nodeTypes: ['location'],
-  placement: 'settings',
+  placement: 'main',
 } as const;
 
 /** One definition for what can be reached from each node. */
@@ -228,7 +228,7 @@ export const NODE_NAV_ITEMS = [
   {
     label: 'Dashboard',
     path: '/',
-    nodeTypes: ['grouping', 'location'],
+    nodeTypes: ['grouping'],
     placement: 'main',
   },
   {
@@ -238,19 +238,19 @@ export const NODE_NAV_ITEMS = [
     placement: 'main',
   },
   {
+    label: 'Workers',
+    path: '/workers',
+    nodeTypes: ['location'],
+    placement: 'main',
+  },
+  {
     label: 'Messages',
     path: '/messages',
     nodeTypes: ['location'],
     placement: 'main',
   },
-  NOTIFICATIONS_NODE_ITEM,
-  {
-    label: 'Workers',
-    path: '/workers',
-    nodeTypes: ['grouping', 'location'],
-    placement: 'main',
-  },
   LOCATION_SETTINGS_NODE_ITEM,
+  NOTIFICATIONS_NODE_ITEM,
 ] as const;
 
 export type SettingsSection = {
@@ -279,6 +279,7 @@ export const ACCOUNT_SECTIONS: SettingsSection[] = [
 
 export const PERSONAL_MENU_ITEMS = [
   { label: 'Your account', path: '/your-account' },
+  { label: 'Organisation settings', path: '/organisation-settings' },
 ] as const;
 
 const LEGACY_SECTION_IDS: Record<string, string> = {

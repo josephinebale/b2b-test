@@ -37,16 +37,18 @@ test('the IA screen derives every node instead of hardcoding the tree', () => {
 test('node pages come from one definition shared with signed-in navigation', () => {
   const model = source('../src/lib/informationArchitecture.ts');
   const header = source('../src/components/AppHeader.tsx');
-  const switcher = source('../src/components/LocationSwitcher.tsx');
   const page = source('../src/pages/InformationArchitecture.tsx');
 
   assert.match(model, /export const NODE_NAV_ITEMS/);
-  assert.match(model, /nodeTypes: \['grouping', 'location'\]/);
+  assert.match(
+    model,
+    /label: 'Workers',[\s\S]*?nodeTypes: \['location'\]/,
+  );
   assert.match(model, /label: 'Notifications'/);
   assert.match(model, /label: 'Location settings'/);
   assert.match(header, /NODE_NAV_ITEMS/);
   assert.doesNotMatch(header, /const NAV_ITEMS/);
-  assert.match(switcher, /LOCATION_SETTINGS_NODE_ITEM/);
+  assert.match(header, /location\?\.serviceType === 'home-community'/);
   assert.match(page, /NODE_NAV_ITEMS\.filter/);
 });
 

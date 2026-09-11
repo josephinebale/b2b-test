@@ -49,15 +49,37 @@ test('platform-held medication and driving assessments are seeded for provider w
   assert.ok(workers.some((worker) => !worker.assessments.driving));
 });
 
-test('tier one and tier two rows show depth, breadth, support plan, and assessments', () => {
+test('worker rows lead with varied evidence and demote repeated statuses', () => {
   const workers = source('../src/pages/Workers.tsx');
+  const row = workers.slice(
+    workers.indexOf('function renderWorkerRow'),
+    workers.indexOf('function SearchWorkers'),
+  );
 
   assert.match(workers, /hours at this provider/);
   assert.match(workers, /Medication assessment/);
   assert.match(workers, /Driving assessment/);
-  assert.match(workers, /supportPlanLabel\(worker\.planConfirmed\)/);
+  assert.match(workers, /supportPlanStatus: supportPlanLabel\(worker\.planConfirmed\)/);
   assert.match(workers, /location\.bookingCount/);
+  assert.match(row, /\{worker\.evidence\}[\s\S]*?\{worker\.supportPlanStatus\}[\s\S]*?assessmentSummary/);
+  assert.match(workers, /needsAttentionClass\(worker\.supportPlanNeedsAttention\)/);
+  assert.match(workers, /needsAttentionClass\(!assessments\.medication\)/);
+  assert.match(workers, /needsAttentionClass\(!assessments\.driving\)/);
   assert.doesNotMatch(workers, /detail: `Known at \$\{data\.location\.name\}/);
+});
+
+test('every location worker row carries message and book actions', () => {
+  const workers = source('../src/pages/Workers.tsx');
+  const row = workers.slice(
+    workers.indexOf('function renderWorkerRow'),
+    workers.indexOf('function SearchWorkers'),
+  );
+
+  assert.match(row, /href=\{href\('\/messages'\)\}/);
+  assert.match(row, /aria-label=\{`Message \$\{worker\.name\}`\}/);
+  assert.match(row, /href=\{href\('\/request-booking'\)\}/);
+  assert.match(row, /aria-label=\{`Book \$\{worker\.name\}`\}/);
+  assert.equal(row.match(/size="small"/g)?.length, 2);
 });
 
 test('worker selection uses the same provider hours and assessment evidence', () => {

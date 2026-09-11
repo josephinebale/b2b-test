@@ -65,7 +65,6 @@ test('a session landing appears before login on a fresh or restarted run', () =>
 test('play opens a pre-session persona picker grouped like the moderator menu', () => {
   const landing = source('../src/pages/SessionLanding.tsx');
   const dock = source('../src/components/PageVariantToggle.tsx');
-  const switcher = source('../src/components/LocationSwitcher.tsx');
   const app = source('../src/App.tsx');
 
   assert.match(landing, /personasForOrganisation/);
@@ -87,11 +86,11 @@ test('play opens a pre-session persona picker grouped like the moderator menu', 
   assert.match(landing, /title="Choose a persona"/);
   assert.doesNotMatch(landing, /<AppFooter/);
   assert.doesNotMatch(landing, /Pick who you will enter as/);
-  /* Same grouping heading as the location switcher: more space above than
+  /* Same grouping heading as the moderator menu: more space above than
      below, so it attaches to the rows it governs rather than reading as one. */
   const groupingHeading =
     /px-3 pb-1 pt-2 text-xs font-bold text-text-secondary/;
-  assert.match(switcher, groupingHeading);
+  assert.match(dock, /px-3 pb-1 text-xs font-bold text-text-secondary/);
   assert.match(landing, groupingHeading);
   assert.doesNotMatch(landing, /<Card divided>/);
   assert.doesNotMatch(landing, /SessionQuestions/);

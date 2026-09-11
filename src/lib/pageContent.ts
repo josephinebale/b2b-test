@@ -37,6 +37,72 @@ export function bookingsViewPath(view: BookingViewId): string {
   return `${BOOKINGS_ROUTE}/${view}`;
 }
 
+export type BookingActionItem = {
+  label: string;
+  path: string;
+};
+
+export function bookingActionItems(
+  requestsToAccept: number,
+  bookingsToApprove: number,
+): BookingActionItem[] {
+  const actions: BookingActionItem[] = [];
+
+  if (requestsToAccept > 0) {
+    actions.push({
+      label: `${requestsToAccept} ${
+        requestsToAccept === 1 ? 'request' : 'requests'
+      } waiting to be accepted`,
+      path: bookingsViewPath('requested'),
+    });
+  }
+
+  if (bookingsToApprove > 0) {
+    actions.push({
+      label: `${bookingsToApprove} ${
+        bookingsToApprove === 1 ? 'booking' : 'bookings'
+      } to approve`,
+      path: bookingsViewPath('approve'),
+    });
+  }
+
+  return actions;
+}
+
+/* A grouping row states the same waiting work as the location's own action
+   line, so it drops a zero the same way: a quiet location reads as quiet in
+   both places rather than as "0 requests · 0 approvals · 0 unread messages".
+   Messages stay in this summary — a grouping has no nav badge to carry them. */
+export function pendingWorkParts(counts: {
+  requests: number;
+  approvals: number;
+  messages: number;
+}): string[] {
+  const parts: string[] = [];
+
+  if (counts.requests > 0) {
+    parts.push(
+      `${counts.requests} ${counts.requests === 1 ? 'request' : 'requests'}`,
+    );
+  }
+
+  if (counts.approvals > 0) {
+    parts.push(
+      `${counts.approvals} ${counts.approvals === 1 ? 'approval' : 'approvals'}`,
+    );
+  }
+
+  if (counts.messages > 0) {
+    parts.push(
+      `${counts.messages} unread ${
+        counts.messages === 1 ? 'message' : 'messages'
+      }`,
+    );
+  }
+
+  return parts;
+}
+
 export function bookingViewFromPath(path: string): BookingViewId | null {
   if (!path.startsWith(`${BOOKINGS_ROUTE}/`)) return null;
   const candidate = path.slice(BOOKINGS_ROUTE.length + 1);

@@ -1,30 +1,48 @@
-import { Calendar, MessageSquare } from 'lucide-react';
-import type { LocationData } from '../../data/locations';
 import { Avatar } from '../../components/Avatar';
 import { PinnedQuestion } from '../../components/PinnedQuestion';
 import { Card } from '../../components/ui/Card';
 import { EntityLink } from '../../components/ui/EntityLink';
-import { IconButton } from '../../components/ui/IconButton';
-import { EMPTY_STATES, WORKERS_ROUTE, workerProfilePath } from '../../lib/pageContent';
-import { href } from '../../lib/router';
+import {
+  groupingWorkers,
+  type Grouping,
+  type WorkerAssessments,
+} from '../../data/locations';
+import { EMPTY_STATES } from '../../lib/pageContent';
 
-export function WorkersPanel({ data }: { data: LocationData }) {
-  const workers = data.workers.slice(0, 10);
+function supportPlanLabel(confirmed: boolean): string {
+  return confirmed ? 'Support plan confirmed' : 'Support plan needs review';
+}
+
+function needsAttentionClass(needsAttention: boolean): string {
+  return needsAttention ? 'font-medium text-text' : 'text-text-tertiary';
+}
+
+function assessmentSummary(assessments: WorkerAssessments) {
+  return (
+    <>
+      <span className={needsAttentionClass(!assessments.medication)}>
+        Medication assessment {assessments.medication ? 'current' : 'not current'}
+      </span>
+      <span aria-hidden="true" className="text-text-tertiary">·</span>
+      <span className={needsAttentionClass(!assessments.driving)}>
+        Driving assessment {assessments.driving ? 'current' : 'not current'}
+      </span>
+    </>
+  );
+}
+
+export function WorkersPanel({ grouping }: { grouping: Grouping }) {
+  const workers = groupingWorkers(grouping.id);
 
   return (
-    <div>
-      <div className="flex items-baseline justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-md font-bold text-text">Most booked workers</h2>
-          <PinnedQuestion questionId="dashboard-worker-order" />
-        </div>
-        <a
-          href={href(WORKERS_ROUTE)}
-          className="ui-link rounded text-sm"
-        >
-          View workers
-        </a>
+    <section>
+      <div className="flex items-center gap-2">
+        <h2 className="text-md font-bold text-text">Workers used regularly</h2>
+        <PinnedQuestion questionId="workers-grouping-order" />
       </div>
+      <p className="mt-1 text-sm text-text-secondary">
+        Ranked by completed shifts, then locations worked.
+      </p>
 
       {workers.length === 0 ? (
         <Card className="mt-3 p-4">
@@ -40,39 +58,32 @@ export function WorkersPanel({ data }: { data: LocationData }) {
           {workers.map((worker) => (
             <li
               key={worker.id}
-              className="ui-inset-row ui-target-row flex items-center gap-3"
+              className="ui-inset-row flex items-center gap-3"
             >
               <Avatar name={worker.name} size="md" />
-              <EntityLink
-                href={href(workerProfilePath(worker.id))}
-                className="ui-target-row__link ui-target-row__link--text min-w-0 flex-1 truncate"
-              >
-                {worker.name}
-              </EntityLink>
-              <div className="ui-target-row__action ml-auto flex shrink-0 items-center gap-2">
-                <IconButton
-                  href={href('/messages')}
-                  size="small"
-                  aria-label={`Message ${worker.name}`}
-                  data-tooltip={`Message ${worker.name}`}
-                  className="ui-tooltip"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                </IconButton>
-                <IconButton
-                  href={href('/request-booking')}
-                  size="small"
-                  aria-label={`Book ${worker.name}`}
-                  data-tooltip={`Book ${worker.name}`}
-                  className="ui-tooltip"
-                >
-                  <Calendar className="h-4 w-4" />
-                </IconButton>
+              <div className="min-w-0 flex-1">
+                <EntityLink as="span">{worker.name}</EntityLink>
+                <p className="mt-1 text-sm text-text-secondary">
+                  {worker.totalHours} hours at this provider · {worker.shiftCount}{' '}
+                  shifts across {worker.locations.length} locations:{' '}
+                  {worker.locations
+                    .map((location) => location.locationName)
+                    .join(', ')}
+                </p>
+                <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs">
+                  <span
+                    className={needsAttentionClass(!worker.planConfirmed)}
+                  >
+                    {supportPlanLabel(worker.planConfirmed)}
+                  </span>
+                  <span aria-hidden="true" className="text-text-tertiary">·</span>
+                  {assessmentSummary(worker.assessments)}
+                </p>
               </div>
             </li>
           ))}
         </Card>
       )}
-    </div>
+    </section>
   );
 }

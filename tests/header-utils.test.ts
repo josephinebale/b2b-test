@@ -25,9 +25,16 @@ test('Messages accessible name includes unread count', () => {
   assert.equal(messagesAccessibleName(1), 'Messages, 1 unread');
 });
 
-test('Notifications accessible name includes unread count', () => {
+test('Notifications accessible name describes attention count and its cap', () => {
   assert.equal(notificationsAccessibleName(0), 'Notifications');
-  assert.equal(notificationsAccessibleName(2), 'Notifications, 2 unread');
+  assert.equal(
+    notificationsAccessibleName(2),
+    'Notifications, 2 need attention',
+  );
+  assert.equal(
+    notificationsAccessibleName(100),
+    'Notifications, 99 or more need attention',
+  );
 });
 
 test('Account accessible name starts with the visible signed-in name', () => {

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AppFooter } from './components/AppFooter';
 import { AppHeader } from './components/AppHeader';
 import { SessionQuestions } from './components/SessionQuestions';
@@ -55,7 +55,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Bookings } from './pages/Bookings';
 import { BookingRequest } from './pages/BookingRequest';
 import { Messages } from './pages/Messages';
-import { Notifications } from './pages/Notifications';
+import { Notifications, notificationCount } from './pages/Notifications';
 import { LocationProfilePreview } from './pages/LocationProfilePreview';
 import { InformationArchitecture } from './pages/InformationArchitecture';
 import { JobsToBeDone } from './pages/JobsToBeDone';
@@ -102,6 +102,26 @@ export default function App() {
   );
   const groupingLocationId =
     descendantLocationIds(grouping)[0] ?? organisationLocations[0].id;
+  const notificationLocationIds =
+    persona.entry.nodeType === 'location'
+      ? [persona.entry.locationId]
+      : descendantLocationIds(entryGrouping);
+  const notificationData = notificationLocationIds.map((notificationLocationId) => {
+    const locationData = getLocationData(notificationLocationId);
+    const createdForLocation = createdBookings.filter(
+      (booking) => booking.locationId === notificationLocationId,
+    );
+
+    return {
+      ...locationData,
+      requestsToAccept:
+        locationData.requestsToAccept + createdForLocation.length,
+      unreadMessages:
+        activeLocation?.id === notificationLocationId
+          ? unreadOverride ?? locationData.unreadMessages
+          : locationData.unreadMessages,
+    };
+  });
 
   const selectLocation = useCallback(
     (nextLocationId: string, preferredGroupingId?: string) => {
@@ -164,7 +184,9 @@ export default function App() {
     } else {
       setLocationId(null);
     }
-    navigate('/');
+    navigate(
+      persona.entry.nodeType === 'location' ? '/bookings' : '/',
+    );
   }, []);
 
   const onUnreadChange = useCallback((count: number) => {
@@ -195,6 +217,20 @@ export default function App() {
     writeSignedIn(false);
     setSignedIn(false);
   }, []);
+
+  /* `/` is the grouping Dashboard. Old location bookmarks and remembered
+     sessions land on the location's primary page instead. */
+  useEffect(() => {
+    if (
+      started &&
+      signedIn &&
+      nodeType === 'location' &&
+      activeLocation &&
+      path === '/'
+    ) {
+      navigate('/bookings');
+    }
+  }, [activeLocation, nodeType, path, signedIn, started]);
 
   if (path === JOBS_TO_BE_DONE_ROUTE) {
     return <JobsToBeDone />;
@@ -260,7 +296,7 @@ export default function App() {
         locations={organisationLocations}
         onSelect={(nextLocationId) => {
           selectLocation(nextLocationId);
-          navigate('/');
+          navigate('/bookings');
         }}
       />
     );
@@ -277,38 +313,29 @@ export default function App() {
           path={path}
           unreadMessages={0}
           bookingsBadge={0}
-          unreadNotifications={0}
-          onSelectLocation={(nextLocationId) => {
-            selectLocation(nextLocationId);
-            navigate('/');
-          }}
+          unreadNotifications={notificationCount(notificationData)}
           onSelectGrouping={selectGrouping}
           onSignOut={signOut}
         />
 
         <div className="relative flex flex-1 flex-col">
           <main className="mx-auto w-full max-w-page flex-1 px-8 pt-8 pb-4">
-            {path.startsWith(ROUTES.organisationSettings) ? (
+            {path === '/notifications' ? (
+              <Notifications
+                data={notificationData}
+                onSelectLocation={selectLocation}
+              />
+            ) : path.startsWith(ROUTES.organisationSettings) ? (
               <OrganisationSettings
                 data={getLocationData(groupingLocationId)}
                 path={path}
               />
             ) : path.startsWith(ROUTES.yourAccount) || path === '/settings' ? (
               <YourAccountSettings path={path} persona={persona} />
-            ) : path === WORKERS_ROUTE ? (
-              <Workers nodeType="grouping" grouping={grouping} />
-            ) : path.startsWith(`${WORKERS_ROUTE}/`) ? (
-              <WorkerProfile
-                data={getLocationData(groupingLocationId)}
-                workerId={workerIdFromPath(path)}
-                nodeType="grouping"
-                grouping={grouping}
-              />
             ) : (
               <Dashboard
-                nodeType="grouping"
                 grouping={grouping}
-                onSelectLocation={(nextLocationId, path = '/') => {
+                onSelectLocation={(nextLocationId, path = '/bookings') => {
                   selectLocation(nextLocationId);
                   navigate(path);
                 }}
@@ -354,15 +381,7 @@ export default function App() {
         path={path}
         unreadMessages={unreadOverride ?? visibleData.unreadMessages}
         bookingsBadge={visibleData.bookingsToApprove}
-        unreadNotifications={
-          [
-            unreadOverride ?? visibleData.unreadMessages,
-            visibleData.requestsToAccept,
-            visibleData.bookingsToApprove,
-            visibleData.plansToReview,
-          ].filter((count) => count > 0).length
-        }
-        onSelectLocation={selectLocation}
+        unreadNotifications={notificationCount(notificationData)}
         onSelectGrouping={selectGrouping}
         onSignOut={signOut}
       />
@@ -384,10 +403,10 @@ export default function App() {
               calendarBookings={createdBookings}
               grouping={grouping}
             />
-          ) : path === '/bookings' || bookingViewFromPath(path) ? (
+          ) : path === '/' || path === '/bookings' || bookingViewFromPath(path) ? (
             <Bookings
               data={visibleData}
-              view={bookingViewFromPath(path) ?? 'confirmed'}
+              view={bookingViewFromPath(path)}
               calendarBookings={createdBookings}
             />
           ) : path === WORKERS_ROUTE ? (
@@ -406,7 +425,10 @@ export default function App() {
               onUnreadChange={onUnreadChange}
             />
           ) : path === '/notifications' ? (
-            <Notifications data={visibleData} />
+            <Notifications
+              data={notificationData}
+              onSelectLocation={selectLocation}
+            />
           ) : path === LOCATION_PROFILE_PREVIEW_ROUTE ? (
             <LocationProfilePreview data={visibleData} />
           ) : path.startsWith(ROUTES.manageLocation) ? (
@@ -418,10 +440,10 @@ export default function App() {
           ) : stubTitle ? (
             <Stub title={stubTitle} location={visibleData.location} />
           ) : (
-            <Dashboard
+            <Bookings
               data={visibleData}
+              view={null}
               calendarBookings={createdBookings}
-              grouping={grouping}
             />
           )}
         </main>

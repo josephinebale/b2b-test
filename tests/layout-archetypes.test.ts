@@ -30,24 +30,29 @@ test('all split layouts share one 320px narrow-column token', () => {
   assert.doesNotMatch(css, /--messages-list-width/);
 });
 
-test('page shell is 1440px with a two-tier header', () => {
+test('page shell is 1440px with 56px identity and 48px navigation rows', () => {
   assert.match(css, /--container-page:\s*90rem/);
   assert.match(css, /--header-identity-height:\s*3\.5rem/);
   assert.match(css, /--header-nav-height:\s*3rem/);
 });
 
-test('the Dashboard heading keeps Request booking and drops Report incident', () => {
-  assert.match(dashboard, /<RequestBookingButton \/>/);
+test('Bookings owns Request booking while the grouping Dashboard stays analytical', () => {
+  assert.doesNotMatch(dashboard, /RequestBookingButton/);
   assert.doesNotMatch(dashboard, /Report incident/);
   assert.doesNotMatch(dashboard, /report-incident/);
+  assert.match(bookings, /<RequestBookingButton \/>/);
   assert.match(bookings, /Report incident/);
 });
 
 test('pages declare their distinct layout archetype', () => {
+  const app = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8');
+
+  assert.doesNotMatch(app, /<ScopeRail|<SectionNavigation/);
   assert.match(bookings, /layout-rail-content/);
   assert.match(settings, /layout-rail-content/);
   assert.match(messages, /layout-master-detail/);
-  assert.match(dashboard, /layout-content-aside/);
+  assert.match(dashboard, /width-main-column/);
+  assert.doesNotMatch(dashboard, /layout-content-aside/);
 });
 
 test('Workers keeps a narrow measure without centring its left edge', () => {

@@ -9,9 +9,9 @@ import {
   findGrouping,
   getLocationData,
   groupingOpenRequests,
+  groupingPath,
   groupingUsageLast7Days,
   groupingsForLocation,
-  orderedGroupingsForMenu,
   pendingCountsForLocation,
 } from '../src/data/locations.ts';
 import {
@@ -76,43 +76,20 @@ test('regions, lifestyles, caseloads, and areas use one recursive grouping model
   }
 });
 
-test('the node menu leads with the entry branch and keeps nested groupings recursive', () => {
+test('grouping paths preserve recursive ancestry', () => {
   assert.deepEqual(
-    orderedGroupingsForMenu('careforce-caseload').map((grouping) => grouping.id),
-    [
-      'careforce-area',
-      'northern-sydney',
-      'northern-lifestyles',
-    ],
+    groupingPath(findGrouping('careforce-caseload')!).map(({ id }) => id),
+    ['careforce-area', 'careforce-caseload'],
   );
   assert.deepEqual(
-    orderedGroupingsForMenu('northern-sydney').map((grouping) => grouping.id),
-    [
-      'northern-sydney',
-      'northern-lifestyles',
-      'careforce-area',
-    ],
+    groupingPath(findGrouping('lwb-western-sydney')!).map(({ id }) => id),
+    ['lwb-greater-sydney', 'lwb-western-sydney'],
   );
   assert.deepEqual(
-    orderedGroupingsForMenu('northern-lifestyles').map((grouping) => grouping.id),
-    [
-      'northern-lifestyles',
-      'northern-sydney',
-      'careforce-area',
-    ],
-  );
-  assert.deepEqual(
-    orderedGroupingsForMenu('northcott-individual-services').map(
-      (grouping) => grouping.id,
+    groupingPath(findGrouping('northcott-individual-services')!).map(
+      ({ id }) => id,
     ),
-    [
-      'northcott-individual-services',
-      'northcott-sil-services',
-    ],
-  );
-  assert.deepEqual(
-    orderedGroupingsForMenu('lwb-northern-sydney').map((grouping) => grouping.id),
-    ['lwb-greater-sydney'],
+    ['northcott-individual-services'],
   );
 });
 
@@ -347,19 +324,16 @@ test('persona switching is moderator-only, changes entry, and roles do not gate 
   assert.match(session, /clearSession[\s\S]*clearLastLocationId\(\)/);
 });
 
-test('the node switcher leads with the persona’s entry grouping and nests locations under each parent', () => {
-  const switcher = source('../src/components/LocationSwitcher.tsx');
+test('the grouping dashboard and breadcrumb keep grouping and location context reachable', () => {
+  const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
   const header = source('../src/components/AppHeader.tsx');
   const dashboard = source('../src/pages/Dashboard.tsx');
   const app = source('../src/App.tsx');
 
-  assert.match(header, /<LocationSwitcher[\s\S]*persona=\{persona\}/);
-  assert.match(switcher, /orderedGroupingsForMenu\(persona\.entry\.groupingId\)/);
-  assert.match(switcher, /onSelectGrouping\(grouping\.id\)/);
-  assert.match(switcher, /grouping\.locationIds\.map/);
-  assert.match(switcher, /onSelect\(option\.id, grouping\.id\)/);
-  assert.doesNotMatch(switcher, /GROUPINGS\.map/);
-  assert.doesNotMatch(switcher, /LOCATIONS\.map/);
+  assert.match(header, /NodeBreadcrumb/);
+  assert.match(breadcrumb, /groupingPath\(grouping\)/);
+  assert.match(breadcrumb, /onSelectGrouping\(segment\.id\)/);
+  assert.match(breadcrumb, /\{location\.name\}/);
   assert.match(dashboard, /partitionGroupingLocations\(grouping\)/);
   assert.match(dashboard, /groupingOpenRequests\(grouping\.id\)/);
   assert.match(dashboard, /groupingUsageLast7Days\(grouping\.id\)/);

@@ -1,7 +1,7 @@
 import { addDays, startOfDay, startOfWeek } from '../lib/date.ts';
 import type { Organisation, Sector } from '../lib/informationArchitecture.ts';
 
-export type BookingStatus = 'confirmed' | 'requested' | 'ended';
+export type BookingStatus = 'confirmed' | 'requested' | 'ended' | 'cancelled';
 export type FatigueSignal = 'no-break' | 'short-rest' | null;
 export type ServiceType = 'sil' | 'centre' | 'home-community';
 
@@ -36,12 +36,15 @@ export type Worker = {
   name: string;
   bookingCount: number;
   planConfirmed: boolean;
+  supportPlanReviewDueAt: Date | null;
   assessments: WorkerAssessments;
 };
 
 export type WorkerAssessments = {
   medication: boolean;
+  medicationExpiresAt: Date;
   driving: boolean;
+  drivingExpiresAt: Date;
 };
 
 export type Booking = {
@@ -53,6 +56,8 @@ export type Booking = {
   start: Date;
   end: Date;
   status: BookingStatus;
+  cancelledBy?: string;
+  cancelledAt?: Date;
   sleepover: boolean;
   createdByMe: boolean;
   address?: string;
@@ -77,6 +82,15 @@ export type GroupingUsage = {
   locations: { locationId: string; locationName: string; bookingCount: number }[];
 };
 
+export type InvoiceApprovalState = 'ready-for-approval' | 'approved';
+
+export type Invoice = {
+  id: string;
+  locationId: string;
+  submittedAt: Date;
+  approvalState: InvoiceApprovalState;
+};
+
 export type LocationData = {
   location: Location;
   workers: Worker[];
@@ -85,6 +99,7 @@ export type LocationData = {
   bookingsToApprove: number;
   plansToReview: number;
   unreadMessages: number;
+  invoices: Invoice[];
 };
 
 export type WorkerLocationHistory = {
@@ -118,6 +133,7 @@ type WorkerSeed = {
   sites: Set<number>;
   core: boolean;
   planConfirmed: boolean;
+  supportPlanReviewDueAt: Date | null;
   assessments: WorkerAssessments;
 };
 function people(locationId: string, names: string[]): Participant[] {
@@ -624,41 +640,55 @@ const WORKER_POOL: Record<Organisation, string[]> = {
   ],
 };
 
+function workerAssessments(
+  medication: boolean,
+  driving: boolean,
+  seed: number,
+): WorkerAssessments {
+  const today = startOfDay(new Date());
+  return {
+    medication,
+    medicationExpiresAt: addDays(today, medication ? 60 + (seed % 30) : -(1 + (seed % 9))),
+    driving,
+    drivingExpiresAt: addDays(today, driving ? 90 + (seed % 30) : -(2 + (seed % 11))),
+  };
+}
+
 const NEARBY_WORKERS: NearbyWorker[] = [
   {
     id: 'leah-c',
     name: 'Leah C',
     suburb: 'Chatswood',
     distanceKm: 4,
-    assessments: { medication: true, driving: true },
+    assessments: workerAssessments(true, true, 1),
   },
   {
     id: 'omar-h',
     name: 'Omar H',
     suburb: 'Frenchs Forest',
     distanceKm: 6,
-    assessments: { medication: true, driving: false },
+    assessments: workerAssessments(true, false, 2),
   },
   {
     id: 'rachel-t',
     name: 'Rachel T',
     suburb: 'Ryde',
     distanceKm: 8,
-    assessments: { medication: false, driving: true },
+    assessments: workerAssessments(false, true, 3),
   },
   {
     id: 'samira-a',
     name: 'Samira A',
     suburb: 'Epping',
     distanceKm: 9,
-    assessments: { medication: true, driving: true },
+    assessments: workerAssessments(true, true, 4),
   },
   {
     id: 'will-j',
     name: 'Will J',
     suburb: 'Mona Vale',
     distanceKm: 12,
-    assessments: { medication: false, driving: false },
+    assessments: workerAssessments(false, false, 5),
   },
 ];
 
@@ -713,17 +743,22 @@ function buildWorkerSeeds(): WorkerSeed[] {
       names.map((name) => {
         const index = seedIndex;
         seedIndex += 1;
+        const planConfirmed = index % 3 !== 0;
         return {
           id: slugName(name),
           name,
           organisation: organisation as Organisation,
           sites: new Set<number>(),
           core: false,
-          planConfirmed: index % 3 !== 0,
-          assessments: {
-            medication: index % 3 !== 1,
-            driving: index % 4 !== 1,
-          },
+          planConfirmed,
+          supportPlanReviewDueAt: planConfirmed
+            ? null
+            : addDays(startOfDay(new Date()), -(1 + (index % 14))),
+          assessments: workerAssessments(
+            index % 3 !== 1,
+            index % 4 !== 1,
+            index,
+          ),
         };
       }),
   );
@@ -868,7 +903,10 @@ const UNREAD_MESSAGES = LOCATIONS.map(
 );
 const APPROVAL_PATTERN = [2, 1, 3, 1, 4, 2, 2, 4, 1, 3, 5, 0];
 const APPROVALS_WAITING = LOCATIONS.map(
-  (_, index) => APPROVAL_PATTERN[index % APPROVAL_PATTERN.length],
+  (location, index) =>
+    location.id === 'galston-1'
+      ? 0
+      : APPROVAL_PATTERN[index % APPROVAL_PATTERN.length],
 );
 
 function markRequestedInWeek(
@@ -933,6 +971,25 @@ function assignRequested(bookings: Booking[], locationIndex: number, now: Date):
     pressure.unansweredHours,
     hourIndex,
   );
+}
+
+function assignCancellation(
+  bookings: Booking[],
+  location: Location,
+  now: Date,
+): void {
+  if (location.id !== 'dee-why-1') return;
+
+  const booking = bookings.find(
+    (candidate) =>
+      candidate.status === 'confirmed' &&
+      candidate.start >= addDays(startOfDay(now), 1),
+  );
+  if (!booking) return;
+
+  booking.status = 'cancelled';
+  booking.cancelledBy = booking.workerName;
+  booking.cancelledAt = new Date(now.getTime() - 2 * 3600 * 1000);
 }
 
 function participantIdsForShift(
@@ -1043,7 +1100,23 @@ function buildBookings(
   }
 
   assignRequested(bookings, locationIndex, now);
+  assignCancellation(bookings, location, now);
   return bookings.sort((a, b) => a.start.getTime() - b.start.getTime());
+}
+
+function invoicesForLocation(
+  location: Location,
+  locationIndex: number,
+): Invoice[] {
+  return [
+    {
+      id: `${location.id}-invoice-${locationIndex + 1}`,
+      locationId: location.id,
+      submittedAt: addDays(startOfDay(new Date()), -(1 + (locationIndex % 4))),
+      approvalState:
+        location.id === 'north-ryde-1' ? 'ready-for-approval' : 'approved',
+    },
+  ];
 }
 
 function buildLocationData(location: Location, locationIndex: number): LocationData {
@@ -1063,6 +1136,7 @@ function buildLocationData(location: Location, locationIndex: number): LocationD
       name: worker.name,
       bookingCount: counts.get(worker.id) ?? 0,
       planConfirmed: worker.planConfirmed,
+      supportPlanReviewDueAt: worker.supportPlanReviewDueAt,
       assessments: worker.assessments,
     }))
     .sort((a, b) => b.bookingCount - a.bookingCount || a.name.localeCompare(b.name));
@@ -1079,6 +1153,7 @@ function buildLocationData(location: Location, locationIndex: number): LocationD
     bookingsToApprove: endedRecently.slice(0, APPROVALS_WAITING[locationIndex] ?? 0).length,
     plansToReview: workers.filter((worker) => !worker.planConfirmed).length,
     unreadMessages: UNREAD_MESSAGES[locationIndex] ?? 0,
+    invoices: invoicesForLocation(location, locationIndex),
   };
 }
 
@@ -1232,6 +1307,25 @@ export function childGroupings(grouping: Grouping): Grouping[] {
     .filter((child): child is Grouping => child !== null);
 }
 
+/** The current grouping and any grouping ancestors, ordered root first. */
+export function groupingPath(grouping: Grouping): Grouping[] {
+  const path: Grouping[] = [];
+  const seen = new Set<string>();
+  let current: Grouping | undefined = grouping;
+
+  while (current && !seen.has(current.id)) {
+    path.unshift(current);
+    seen.add(current.id);
+    current = GROUPINGS.find(
+      (candidate) =>
+        candidate.organisation === grouping.organisation &&
+        candidate.groupingIds?.includes(current!.id),
+    );
+  }
+
+  return path;
+}
+
 /** Houses and centres first, then home-and-community clients, in grouping order. */
 export function partitionGroupingLocations(grouping: Grouping): {
   housesAndCentres: Location[];
@@ -1283,29 +1377,6 @@ export function locationsForOrganisation(
   organisation: Organisation,
 ): Location[] {
   return LOCATIONS.filter((location) => location.organisation === organisation);
-}
-
-function groupingContainsGrouping(grouping: Grouping, groupingId: string): boolean {
-  if (grouping.id === groupingId) return true;
-  return childGroupings(grouping).some((child) =>
-    groupingContainsGrouping(child, groupingId),
-  );
-}
-
-/** Only the entry organisation, with its entry branch leading. */
-export function orderedGroupingsForMenu(entryGroupingId: string): Grouping[] {
-  const childIds = new Set(GROUPINGS.flatMap((grouping) => grouping.groupingIds ?? []));
-  const entryGrouping = findGrouping(entryGroupingId) ?? GROUPING;
-  const roots = GROUPINGS.filter(
-    (grouping) =>
-      !childIds.has(grouping.id) &&
-      grouping.organisation === entryGrouping.organisation,
-  );
-  const entryRoot = roots.find((grouping) =>
-    groupingContainsGrouping(grouping, entryGroupingId),
-  );
-  if (!entryRoot) return roots;
-  return [entryRoot, ...roots.filter((grouping) => grouping.id !== entryRoot.id)];
 }
 
 export function locationHistoryForWorker(
@@ -1396,8 +1467,20 @@ export function locationWorkerTiers(
   workedElsewhere: ProviderWorkerSummary[];
   nearby: NearbyWorker[];
 } {
-  const knownHere = [...getLocationData(locationId).workers].sort((a, b) =>
-    a.name.localeCompare(b.name),
+  const data = getLocationData(locationId);
+  const completedShifts = new Map<string, number>();
+  for (const booking of data.bookings) {
+    if (booking.status !== 'ended') continue;
+    completedShifts.set(
+      booking.workerId,
+      (completedShifts.get(booking.workerId) ?? 0) + 1,
+    );
+  }
+  const knownHere = [...data.workers].sort(
+    (a, b) =>
+      (completedShifts.get(b.id) ?? 0) -
+        (completedShifts.get(a.id) ?? 0) ||
+      a.name.localeCompare(b.name),
   );
   const knownIds = new Set(knownHere.map((worker) => worker.id));
 
@@ -1586,7 +1669,13 @@ export function fatigueSignalForBooking(
   options: { additionalBookings?: Booking[]; now?: Date } = {},
 ): FatigueSignal {
   const now = options.now ?? new Date();
-  if (booking.status === 'ended' || booking.start <= now) return null;
+  if (
+    booking.status === 'ended' ||
+    booking.status === 'cancelled' ||
+    booking.start <= now
+  ) {
+    return null;
+  }
 
   return fatigueSignalForWorker(booking.workerId, booking.start, {
     excludeBookingId: booking.id,

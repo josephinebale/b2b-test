@@ -47,9 +47,8 @@ test('the account trigger is 36px tall with no extra vertical padding', () => {
   assert.match(avatar, /\bblock shrink-0\b/);
 });
 
-test('the account and location triggers share one centred treatment', () => {
+test('the account remains a centred trigger in the identity row', () => {
   const header = source('../src/components/AppHeader.tsx');
-  const switcher = source('../src/components/LocationSwitcher.tsx');
   const css = source('../src/index.css');
   const avatar = source('../src/components/Avatar.tsx');
 
@@ -58,19 +57,14 @@ test('the account and location triggers share one centred treatment', () => {
     /\.header-menu-trigger \{[\s\S]*?height: 2\.25rem;[\s\S]*?align-items: center;[\s\S]*?gap: var\(--space-3\);/,
   );
   assert.match(header, /className="header-menu-trigger"/);
-  assert.match(switcher, /className="header-menu-trigger location-switcher-trigger/);
+  assert.match(header, /NodeBreadcrumb|app-header-nav-row/);
   assert.doesNotMatch(header, /items-baseline/);
   assert.doesNotMatch(avatar, /\balign-(?:middle|baseline|top|bottom|text-\S+)\b/);
 });
 
-/*
- * Both selectors are contained like the icon buttons beside them. At 36px the
- * avatar and location marker filled the 36px trigger edge to edge, so the border
- * would cut through them — both step down to 28px to leave a content box.
- */
-test('the selectors are contained, so their contents step down to 28px', () => {
+test('the account stays at 28px while the breadcrumb uses text only', () => {
   const header = source('../src/components/AppHeader.tsx');
-  const switcher = source('../src/components/LocationSwitcher.tsx');
+  const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
   const marker = source('../src/components/LocationMarker.tsx');
   const css = source('../src/index.css');
 
@@ -80,15 +74,14 @@ test('the selectors are contained, so their contents step down to 28px', () => {
   );
   assert.match(css, /--avatar-sm: 1\.75rem;/);
   assert.match(header, /<Avatar name=\{persona\.name\} size="sm" \/>/);
-  assert.match(switcher, /<LocationMarker location=\{location\} size="sm" \/>/);
-
-  // Only the header trigger shrinks; list rows keep 36px next to a 36px avatar.
-  assert.match(marker, /sm: 'h-7 w-7'/);
-  assert.match(marker, /md: 'h-9 w-9'/);
+  assert.doesNotMatch(breadcrumb, /LocationMarker/);
+  assert.match(marker, /sm: 'h-7 w-7/);
+  assert.match(marker, /md: 'h-9 w-9/);
   assert.match(marker, /size = 'md'/);
+  assert.match(marker, /\{initials\(location\.name\)\}/);
 });
 
-test('the identity tier is 56px and the nav tier is 48px', () => {
+test('the header has a 56px identity row and 48px location navigation row', () => {
   const header = source('../src/components/AppHeader.tsx');
   const css = source('../src/index.css');
   const row = header.match(/className="app-header-row[^"]*"/)?.[0] ?? '';
@@ -99,6 +92,7 @@ test('the identity tier is 56px and the nav tier is 48px', () => {
   assert.match(header, /height: 'var\(--header-identity-height\)'/);
   assert.match(row, /app-header-row/);
   assert.doesNotMatch(row, /\bpy-\d/);
+  assert.match(header, /app-header-identity|app-header-nav-row/);
 });
 
 test('the header scrolls with the page rather than staying pinned', () => {
@@ -118,7 +112,7 @@ test('header and footer logos keep their distinct compact sizes', () => {
   assert.match(logo, /const height = compact \? 18 : 24;/);
 });
 
-test('tier one explicitly centres the block logo between shared edges', () => {
+test('the one header row centres the block logo between shared edges', () => {
   const header = source('../src/components/AppHeader.tsx');
   const logo = source('../src/components/Logo.tsx');
 
@@ -132,14 +126,80 @@ test('tier one explicitly centres the block logo between shared edges', () => {
   );
 });
 
-test('nav labels carry weight, and the active one is bold with a 3px underline', () => {
-  const header = source('../src/components/AppHeader.tsx');
+test('section labels carry weight, and the active one is bold with a 3px underline', () => {
+  const navigation = source('../src/components/AppHeader.tsx');
   const css = source('../src/index.css');
 
-  assert.match(header, /main-nav-link--active font-bold text-text/);
-  assert.match(header, /font-medium text-text-strong/);
+  assert.match(navigation, /main-nav-link--active font-bold text-text/);
+  assert.match(navigation, /font-medium text-text-strong/);
   assert.match(css, /\.main-nav-link--active\s*\{\s*border-bottom-color: var\(--color-text\);/);
   assert.match(css, /\.main-nav-link \{[\s\S]*?border-bottom: 3px solid transparent;/);
+  /* The hover fill keeps the 150ms ease the product uses for row and card
+     colour changes (there is no motion token to point at), but the underline
+     is left out of it: it arrives with the label's step to 700, and font
+     weight cannot be timed to match. */
+  assert.match(
+    css,
+    /\.main-nav-link \{[^}]*transition: background-color 150ms ease;/,
+  );
+  assert.doesNotMatch(css, /\.main-nav-link \{[^}]*border-color 150ms/);
+});
+
+/* The nav used to paint one frame with nothing selected while entering a
+   location: the node changed in a click handler, and the hash the same handler
+   wrote only reached the router when the browser fired `hashchange` in a later
+   task. Two things close that: `navigate` tells the route subscribers itself,
+   and the nav resolves a location's `/` to the page App redirects it to. */
+test('the section nav knows its active item on the first render of a location', () => {
+  const navigation = source('../src/components/AppHeader.tsx');
+  const router = source('../src/lib/router.ts');
+
+  assert.match(
+    navigation,
+    /const navPath = nodeType === 'location' && path === '\/' \? '\/bookings' : path;/,
+  );
+  assert.match(navigation, /navPath\.startsWith\(item\.path\)/);
+  assert.match(router, /const routeListeners = new Set<\(\) => void>\(\);/);
+  assert.match(router, /routeListeners\.add\(onChange\)/);
+  assert.match(router, /routeListeners\.delete\(onChange\)/);
+  assert.match(
+    router,
+    /export function navigate\([\s\S]*?for \(const listener of \[\.\.\.routeListeners\]\) \{\s*listener\(\);/,
+  );
+});
+
+/* A label that steps from 500 to 700 changes width, so every item after it
+   moved along the row on each nav change. */
+test('each section label reserves its bold width so the row cannot shift', () => {
+  const navigation = source('../src/components/AppHeader.tsx');
+  const css = source('../src/index.css');
+
+  assert.match(
+    navigation,
+    /<span className="main-nav-label" data-label=\{visibleLabel\}>/,
+  );
+  assert.match(css, /\.main-nav-label \{[^}]*display: grid;/);
+  assert.match(
+    css,
+    /\.main-nav-label::after \{\s*content: attr\(data-label\);\s*font-weight: var\(--font-weight-bold\);\s*visibility: hidden;/,
+  );
+});
+
+/* The bottom edge used to be a box-shadow on the header, drawn to sit under the
+   active underline. With no nav row at a grouping it was the only thing at that
+   edge and read as a shadow; at a location the 3px underline swallowed it. */
+test('one hairline closes the header at both node types', () => {
+  const css = source('../src/index.css');
+
+  assert.match(
+    css,
+    /\.app-header \{[^}]*border-bottom: 1px solid var\(--color-border-subtle\);/,
+  );
+  assert.doesNotMatch(css, /\.app-header \{[^}]*box-shadow/);
+  assert.match(
+    css,
+    /\.app-header-identity:not\(:last-child\) \{\s*border-bottom: 1px solid var\(--color-border-subtle\);/,
+  );
 });
 
 test('badges are 18px square so two digits keep air around them', () => {
@@ -160,17 +220,11 @@ test('the account control is a flex child so no baseline gap offsets it', () => 
   assert.match(header, /<div className="relative flex items-center">/);
 });
 
-/*
- * The hairline between the logo and the location switcher is gone. It existed to
- * separate the logo from a borderless trigger; now the trigger is a bordered box,
- * so the line and the border were two separators doing one job.
- */
-test('tier one separates the logo from the switcher with the trigger border alone', () => {
+test('the header carries hierarchy in the breadcrumb', () => {
   const header = source('../src/components/AppHeader.tsx');
-  const [identityTier] = header.split('app-header-nav-row');
 
-  assert.doesNotMatch(identityTier, /h-6 w-px/);
-  assert.match(identityTier, /<Logo \/>[\s\S]*?<LocationSwitcher/);
+  assert.match(header, /<Logo \/>/);
+  assert.match(header, /NodeBreadcrumb|h-6 w-px[^"]*bg-border-subtle/);
 });
 
 test('badge digits sit on a zero line-height flex centre', () => {
@@ -182,24 +236,16 @@ test('badge digits sit on a zero line-height flex centre', () => {
   );
 });
 
-test('the location switcher sits in tier one without a negative margin', () => {
+test('the breadcrumb is inline hierarchy rather than a menu', () => {
   const header = source('../src/components/AppHeader.tsx');
-  const switcher = source('../src/components/LocationSwitcher.tsx');
-  const [identityTier, navTier] = header.split('app-header-nav-row');
+  const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
 
-  assert.match(identityTier, /<LocationSwitcher/);
-  assert.doesNotMatch(navTier, /<LocationSwitcher|h-6 w-px/);
-  assert.doesNotMatch(switcher, /-ml-2/);
+  assert.match(header, /NodeBreadcrumb/);
+  assert.match(breadcrumb, /aria-label="Breadcrumb"/);
+  assert.doesNotMatch(breadcrumb, /useKeyboardMenu|role="menu"|aria-haspopup/);
 });
 
-/*
- * Both pull-backs are gone. They existed because each trigger's inset was
- * invisible, so the marker and avatar had to be dragged out to the page edge and
- * the lockup gap to line up with the logo. Now the bordered box is the visible
- * edge and aligns on those itself; keeping the pulls would overhang the page
- * padding and crowd the divider.
- */
-test('the contained selectors align on their own edges, with no pull-back', () => {
+test('the logo and account align without pull-backs', () => {
   const header = source('../src/components/AppHeader.tsx');
   const css = source('../src/index.css');
 
@@ -210,25 +256,24 @@ test('the contained selectors align on their own edges, with no pull-back', () =
   assert.doesNotMatch(header, /-mr-4/);
   assert.doesNotMatch(css, /margin-inline-start: calc\(-1 \* var\(--space-2\)\)/);
 
-  // One 24px gap token governs both sides of the divider. The outer row stays
-  // at 16px — that gap is between the lockup cluster and the utilities.
   assert.match(header, /items-center justify-between gap-4 px-8/);
-  assert.match(header, /<div className="flex min-w-0 items-center gap-6">/);
+  assert.doesNotMatch(header, /-ml-/);
+  assert.match(header, /NodeBreadcrumb/);
 });
 
-test('every nav link fills the row so one underline serves them all', () => {
-  const header = source('../src/components/AppHeader.tsx');
+test('every section link fills its row so one underline serves it', () => {
+  const navigation = source('../src/components/AppHeader.tsx');
   const css = source('../src/index.css');
 
-  assert.match(header, /<nav className="flex h-full w-max items-stretch"/);
-  assert.match(header, /main-nav-link h-full shrink-0 text-sm/);
+  assert.match(navigation, /app-header-nav-row[^"]*items-stretch/);
+  assert.match(navigation, /main-nav-link h-full shrink-0 text-sm/);
   assert.match(
     css,
     /\.main-nav-link \{[\s\S]*?align-items: center;[\s\S]*?border-bottom: 3px solid transparent;/,
   );
 });
 
-test('hovering a nav link fills the whole block in an existing quiet surface', () => {
+test('hovering a section link fills the whole block in an existing quiet surface', () => {
   const css = source('../src/index.css');
 
   assert.match(css, /\.main-nav-link \{[\s\S]*?padding-inline: var\(--space-3\);/);
@@ -236,13 +281,13 @@ test('hovering a nav link fills the whole block in an existing quiet surface', (
   assert.doesNotMatch(css, /\.main-nav-link:hover \{[^}]*border-bottom-color/);
 });
 
-test('the nav block starts on the same line as the lockup and page heading', () => {
-  const header = source('../src/components/AppHeader.tsx');
+test('the section block starts on the content line without a pull-back', () => {
+  const navigation = source('../src/components/AppHeader.tsx');
   const css = source('../src/index.css');
 
-  // No pull-left on the nav, and no per-item padding exception, so every hover
+  // No pull-left on the section nav, and no per-item padding exception, so every hover
   // fill and underline is the same shape and the first one starts on the line.
-  assert.doesNotMatch(header, /<nav className="-ml-3/);
+  assert.doesNotMatch(navigation, /<nav[^>]*-ml-3/);
   assert.doesNotMatch(css, /\.main-nav-link:first-child/);
 });
 

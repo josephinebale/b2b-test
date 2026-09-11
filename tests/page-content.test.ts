@@ -18,7 +18,7 @@ test('Workers uses one public route', () => {
   assert.equal(WORKERS_ROUTE, '/workers');
 });
 
-test('dashboard most-booked avatars match the Workers list size', () => {
+test('grouping dashboard worker avatars match the location Workers list size', () => {
   assert.equal(
     avatarSize('../src/pages/dashboard/WorkersPanel.tsx'),
     avatarSize('../src/pages/Workers.tsx'),

@@ -3,7 +3,7 @@ export type ButtonSize = 'default' | 'small';
 export type IconButtonSize = 'default' | 'small';
 export type AvatarSize = 'sm' | 'md' | 'lg';
 export type CardTone = 'default' | 'success' | 'pending' | 'neutral' | 'subtle';
-export type TagTone = 'neutral' | 'success';
+export type TagTone = 'neutral' | 'success' | 'validated' | 'pending';
 
 export function buttonClasses(variant: ButtonVariant, size: ButtonSize): string {
   return `ui-button ui-button--${variant} ui-button--${size}`;

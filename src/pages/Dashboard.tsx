@@ -1,25 +1,20 @@
 import { ChevronRight } from 'lucide-react';
 import {
-  GROUPING,
   groupingOpenRequests,
   groupingUsageLast7Days,
   partitionGroupingLocations,
   pendingCountsForLocation,
   serviceTypeLabel,
-  type Booking,
   type Grouping,
   type Location,
-  type LocationData,
 } from '../data/locations';
 import { LocationMarker } from '../components/LocationMarker';
-import { PageHeading, RequestBookingButton } from '../components/PageHeading';
+import { PageHeading } from '../components/PageHeading';
 import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Card } from '../components/ui/Card';
 import { EntityLink } from '../components/ui/EntityLink';
 import { formatLongDate, formatTime } from '../lib/date';
-import { bookingsViewPath } from '../lib/pageContent';
-import { BookingsWeek } from './dashboard/BookingsWeek';
-import { NotificationStrip } from './dashboard/NotificationStrip';
+import { bookingsViewPath, pendingWorkParts } from '../lib/pageContent';
 import { WorkersPanel } from './dashboard/WorkersPanel';
 
 function plural(count: number, singular: string, pluralForm: string): string {
@@ -42,11 +37,11 @@ function GroupingLocationRow({
   location: Location;
   onSelectLocation?: (locationId: string, path?: string) => void;
 }) {
-  const counts = pendingCountsForLocation(location.id);
+  const pendingWork = pendingWorkParts(pendingCountsForLocation(location.id));
   return (
     <button
       type="button"
-      onClick={() => onSelectLocation?.(location.id)}
+      onClick={() => onSelectLocation?.(location.id, '/bookings')}
       className="ui-inset-row flex w-full items-center gap-3 text-left hover:bg-surface-subtle"
     >
       <LocationMarker location={location} />
@@ -57,11 +52,13 @@ function GroupingLocationRow({
         <span className="mt-1 block text-sm text-text-secondary">
           {serviceTypeLabel(location.serviceType, location.sector)} · {location.suburb}
         </span>
-        <span className="mt-1 block text-sm text-text-secondary">
-          {counts.requests} {plural(counts.requests, 'request', 'requests')} ·{' '}
-          {counts.approvals} {plural(counts.approvals, 'approval', 'approvals')} ·{' '}
-          {counts.messages} unread {plural(counts.messages, 'message', 'messages')}
-        </span>
+        {/* Nothing waiting shows nothing: the name and type above already carry
+            the row, and the location's own page reads the same way. */}
+        {pendingWork.length > 0 && (
+          <span className="mt-1 block text-sm text-text-secondary">
+            {pendingWork.join(' · ')}
+          </span>
+        )}
       </span>
       <ChevronRight className="h-5 w-5 shrink-0 text-text-tertiary" />
     </button>
@@ -69,24 +66,17 @@ function GroupingLocationRow({
 }
 
 export function Dashboard({
-  data,
-  nodeType = 'location',
-  grouping = GROUPING,
+  grouping,
   onSelectLocation,
-  calendarBookings = [],
 }: {
-  data?: LocationData;
-  nodeType?: 'grouping' | 'location';
-  grouping?: Grouping;
+  grouping: Grouping;
   onSelectLocation?: (locationId: string, path?: string) => void;
-  calendarBookings?: Booking[];
 }) {
-  if (nodeType === 'grouping') {
-    const { housesAndCentres, clients } = partitionGroupingLocations(grouping);
-    const requests = groupingOpenRequests(grouping.id);
-    const usage = groupingUsageLast7Days(grouping.id);
+  const { housesAndCentres, clients } = partitionGroupingLocations(grouping);
+  const requests = groupingOpenRequests(grouping.id);
+  const usage = groupingUsageLast7Days(grouping.id);
 
-    return (
+  return (
       <div className="width-main-column space-y-8">
         <PageHeading
           title="Dashboard"
@@ -189,28 +179,8 @@ export function Dashboard({
             ))}
           </Card>
         </section>
+
+        <WorkersPanel grouping={grouping} />
       </div>
-    );
-  }
-
-  if (!data) return null;
-
-  return (
-    <div className="layout-content-aside flex items-baseline gap-6">
-      <div className="min-w-0 flex-1">
-        <PageHeading
-          title="Dashboard"
-          actions={<RequestBookingButton />}
-        />
-        <div className="space-y-6">
-          <NotificationStrip data={data} />
-          <BookingsWeek data={data} calendarBookings={calendarBookings} />
-        </div>
-      </div>
-
-      <aside className="shrink-0">
-        <WorkersPanel data={data} />
-      </aside>
-    </div>
   );
 }

@@ -76,18 +76,18 @@ test('client settings use the person’s name and person-specific navigation', (
 
 test('mixed selectors enumerate clients and locations instead of inventing an umbrella noun', () => {
   const chooser = source('../src/pages/ChooseLocation.tsx');
-  const switcher = source('../src/components/LocationSwitcher.tsx');
+  const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
 
   assert.match(chooser, /Choose where you work/);
   assert.match(chooser, /house, centre, day program or client/);
-  assert.match(switcher, /Switch location, client or grouping/);
+  assert.match(breadcrumb, /aria-label="Breadcrumb"/);
+  assert.doesNotMatch(breadcrumb, />Supportables?</);
 });
 
 test('every rendered type label receives sector context', () => {
   for (const path of [
     '../src/pages/Dashboard.tsx',
     '../src/pages/ChooseLocation.tsx',
-    '../src/components/LocationSwitcher.tsx',
     '../src/pages/BookingRequest.tsx',
     '../src/pages/Settings.tsx',
   ]) {

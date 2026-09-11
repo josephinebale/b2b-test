@@ -809,14 +809,27 @@ function StepThree({
 }
 
 function StatusSteps({ status }: { status: Booking['status'] }) {
-  const steps = [
-    'Booking was requested',
-    status === 'requested' ? 'Worker to accept request' : 'Worker accepted request',
-    status === 'ended' ? 'Shift ended' : 'Worker to submit their hours and shift notes',
-    'Location manager to review and approve booking',
-    'Payment to be processed',
-  ];
-  const currentStep = status === 'requested' ? 0 : status === 'confirmed' ? 1 : 2;
+  const steps =
+    status === 'cancelled'
+      ? [
+          'Booking was requested',
+          'Worker accepted request',
+          'Worker cancelled booking',
+          'Replacement worker needed',
+        ]
+      : [
+          'Booking was requested',
+          status === 'requested'
+            ? 'Worker to accept request'
+            : 'Worker accepted request',
+          status === 'ended'
+            ? 'Shift ended'
+            : 'Worker to submit their hours and shift notes',
+          'Location manager to review and approve booking',
+          'Payment to be processed',
+        ];
+  const currentStep =
+    status === 'requested' ? 0 : status === 'confirmed' ? 1 : 2;
 
   return (
     <Card as="aside" className="p-5">
@@ -868,11 +881,14 @@ function BookingRequestDetail({
   const estimate = hours * HOURLY_RATE;
   const isRequested = !booking || booking.status === 'requested';
   const isConfirmed = booking?.status === 'confirmed';
+  const isCancelled = booking?.status === 'cancelled';
   const heading = isRequested
     ? 'Requested booking'
     : isConfirmed
       ? 'Confirmed booking'
-      : 'Completed booking';
+      : isCancelled
+        ? 'Cancelled booking'
+        : 'Completed booking';
   const providerWorkers = groupingWorkers(grouping.id).map((worker) => ({
     id: worker.id,
     name: worker.name,

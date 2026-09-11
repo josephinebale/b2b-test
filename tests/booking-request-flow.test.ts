@@ -149,9 +149,9 @@ test('Bookings remains active throughout request creation and detail routes', ()
   const header = source('../src/components/AppHeader.tsx');
 
   assert.match(header, /item\.path === '\/bookings'/);
-  assert.match(header, /path === '\/request-booking'/);
-  assert.match(header, /path\.startsWith\('\/bookings\/request\/'\)/);
-  assert.match(header, /path\.startsWith\(BOOKING_DETAIL_ROUTE\)/);
+  assert.match(header, /navPath === '\/request-booking'/);
+  assert.match(header, /navPath\.startsWith\('\/bookings\/request\/'\)/);
+  assert.match(header, /navPath\.startsWith\(BOOKING_DETAIL_ROUTE\)/);
 });
 
 test('the booking request layout includes errors, tier fallback, and summary states', () => {

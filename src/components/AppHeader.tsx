@@ -1,13 +1,11 @@
 import { Fragment, useEffect, useRef } from 'react';
-import {
-  Bell,
-  ChevronDown,
-} from 'lucide-react';
+import { Bell, ChevronDown } from 'lucide-react';
 import type { Grouping, Location } from '../data/locations';
 import {
   NODE_NAV_ITEMS,
   NOTIFICATIONS_NODE_ITEM,
   PERSONAL_MENU_ITEMS,
+  ROUTES,
   type Persona,
 } from '../lib/informationArchitecture';
 import { BOOKING_DETAIL_ROUTE } from '../lib/pageContent';
@@ -20,8 +18,8 @@ import {
   messagesAccessibleName,
   notificationsAccessibleName,
 } from './header-utils';
-import { LocationSwitcher } from './LocationSwitcher';
 import { Logo } from './Logo';
+import { NodeBreadcrumb } from './NodeBreadcrumb';
 import { PinnedQuestion } from './PinnedQuestion';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
@@ -37,7 +35,6 @@ type AppHeaderProps = {
   unreadMessages: number;
   bookingsBadge: number;
   unreadNotifications: number;
-  onSelectLocation: (locationId: string, groupingId?: string) => void;
   onSelectGrouping: (groupingId: string) => void;
   onSignOut: () => void;
 };
@@ -51,7 +48,6 @@ export function AppHeader({
   unreadMessages,
   bookingsBadge,
   unreadNotifications,
-  onSelectLocation,
   onSelectGrouping,
   onSignOut,
 }: AppHeaderProps) {
@@ -69,6 +65,7 @@ export function AppHeader({
       item.placement === 'main' &&
       item.nodeTypes.some((itemNodeType) => itemNodeType === nodeType),
   );
+  const navPath = nodeType === 'location' && path === '/' ? '/bookings' : path;
 
   return (
     <header className="app-header z-20">
@@ -79,24 +76,29 @@ export function AppHeader({
         >
           <div className="flex min-w-0 items-center gap-6">
             <a
-              href={href('/')}
-              aria-label="Hireup for Providers dashboard"
+              href={href(nodeType === 'location' ? '/bookings' : '/')}
+              aria-label={
+                nodeType === 'location'
+                  ? 'Hireup for Providers bookings'
+                  : 'Hireup for Providers dashboard'
+              }
               className="shrink-0 rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
               <Logo />
             </a>
-          <LocationSwitcher
-            location={location}
-            grouping={grouping}
-            persona={persona}
-            nodeType={nodeType}
-            onSelect={onSelectLocation}
-            onSelectGrouping={onSelectGrouping}
-          />
+            <span
+              aria-hidden="true"
+              className="h-6 w-px shrink-0 bg-border-subtle"
+            />
+            <NodeBreadcrumb
+              location={location}
+              grouping={grouping}
+              nodeType={nodeType}
+              onSelectGrouping={onSelectGrouping}
+            />
           </div>
 
           <div className="flex flex-1 items-center justify-end gap-3">
-            {nodeType === 'location' && (
             <IconButton
               href={href(NOTIFICATIONS_NODE_ITEM.path)}
               aria-label={notificationsName}
@@ -110,7 +112,6 @@ export function AppHeader({
               <Bell className="h-5 w-5" />
               <Badge count={unreadNotifications} />
             </IconButton>
-            )}
 
             <div className="relative flex items-center">
               <Button
@@ -187,17 +188,25 @@ export function AppHeader({
         </div>
       </div>
 
-      <div className="app-header-nav-row mx-auto flex max-w-page items-stretch overflow-x-auto px-8">
+      {visibleNavItems.length > 1 && (
+        <div className="app-header-nav-row mx-auto flex max-w-page items-stretch overflow-x-auto px-8">
           <nav className="flex h-full w-max items-stretch" aria-label="Main">
             {visibleNavItems.map((item) => {
+              const visibleLabel =
+                item.path === ROUTES.manageLocation &&
+                location?.serviceType === 'home-community'
+                  ? `${location.name} settings`
+                  : item.label;
               const bookingRequestRoute =
                 item.path === '/bookings' &&
-                (path === '/request-booking' ||
-                  path.startsWith('/bookings/request/') ||
-                  path.startsWith(BOOKING_DETAIL_ROUTE));
+                (navPath === '/request-booking' ||
+                  navPath.startsWith('/bookings/request/') ||
+                  navPath.startsWith(BOOKING_DETAIL_ROUTE));
               const active =
                 bookingRequestRoute ||
-                (item.path === '/' ? path === '/' : path.startsWith(item.path));
+                (item.path === '/'
+                  ? navPath === '/'
+                  : navPath.startsWith(item.path));
               const count =
                 item.label === 'Bookings'
                   ? bookingsBadge
@@ -215,7 +224,7 @@ export function AppHeader({
                       ? bookingsAccessibleName(bookingsBadge)
                       : item.label === 'Messages'
                         ? messagesAccessibleName(unreadMessages)
-                        : item.label
+                        : visibleLabel
                   }
                   className={`main-nav-link h-full shrink-0 text-sm ${
                     active
@@ -223,7 +232,9 @@ export function AppHeader({
                       : 'font-medium text-text-strong'
                   }`}
                 >
-                  <span>{item.label}</span>
+                  <span className="main-nav-label" data-label={visibleLabel}>
+                    <span>{visibleLabel}</span>
+                  </span>
                   <Badge count={count} />
                 </a>
               );
@@ -240,7 +251,8 @@ export function AppHeader({
               return <Fragment key={item.path}>{link}</Fragment>;
             })}
           </nav>
-      </div>
+        </div>
+      )}
     </header>
   );
 }

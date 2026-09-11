@@ -18,7 +18,6 @@ test('container insets are one scale of three steps, not one flat value', () => 
 
 test('dense week cells stay tight while cards and rows step up', () => {
   const calendar = read('../src/pages/dashboard/BookingsWeek.tsx');
-  const strip = read('../src/pages/dashboard/NotificationStrip.tsx');
   const bookings = read('../src/pages/Bookings.tsx');
 
   // Seven columns in one row: a full card inset would cost more than the
@@ -26,7 +25,6 @@ test('dense week cells stay tight while cards and rows step up', () => {
   assert.match(calendar, /ui-inset-compact/);
   assert.doesNotMatch(calendar, /ui-inset-card|ui-inset-row/);
 
-  assert.match(strip, /ui-inset-card/);
   assert.match(bookings, /<Card as="article" className="ui-inset-card/);
 });
 

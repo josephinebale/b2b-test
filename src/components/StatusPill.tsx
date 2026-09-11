@@ -4,6 +4,7 @@ const LABELS: Record<BookingStatus, string> = {
   confirmed: 'Confirmed',
   requested: 'Requested',
   ended: 'Shift ended',
+  cancelled: 'Worker cancelled',
 };
 
 /** Solid carries a decision that is still waiting; tinted only reports state. */
@@ -11,6 +12,7 @@ const STYLES: Record<BookingStatus, string> = {
   confirmed: 'bg-success-surface text-success',
   requested: 'bg-pending text-surface',
   ended: 'bg-neutral-surface text-neutral',
+  cancelled: 'bg-pending text-surface',
 };
 
 export function StatusPill({ status }: { status: BookingStatus }) {

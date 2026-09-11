@@ -49,6 +49,7 @@
 
   --container-page: 90rem;
   --container-content: 43.75rem;
+  --container-job-title: 60rem;
 
   --spacing: var(--space-1);
 }
@@ -80,8 +81,7 @@
 
   --footer-gap: var(--space-7);
 
-  /* Tier 1 carries the global scope, tier 2 the working scope, so the nav
-     underline has a row bottom to anchor to. */
+  /* Tier 1 carries the global scope, tier 2 the working scope. */
   --header-identity-height: 3.5rem;
   --header-nav-height: 3rem;
   /* Scaled with the page so the narrow column keeps a readable share of the row
@@ -321,6 +321,21 @@ a.ui-entity-link:hover {
   text-decoration: none;
 }
 
+/* A .ui-link that wraps a text label and a companion chevron: keep the
+   underline on the word, never under the glyph. Colour and hover still come
+   from .ui-link, so the whole control deepens together. */
+summary.ui-link {
+  text-decoration: none;
+}
+
+summary.ui-link > span {
+  text-decoration: underline;
+}
+
+summary.ui-link:hover > span {
+  text-decoration: none;
+}
+
 /* Footer utility links stay quiet — secondary grey rather than brand blue — but
    follow the same underline rule as every other link, so hovering never means
    two different things. Colour only; the underline comes from `.ui-link`. */
@@ -554,6 +569,16 @@ a.ui-entity-link--plain:hover {
   color: var(--color-success);
 }
 
+.ui-tag--validated {
+  background: var(--color-location-surface);
+  color: var(--color-location-foreground);
+}
+
+.ui-tag--pending {
+  background: var(--color-pending-surface);
+  color: var(--color-pending);
+}
+
 .avatar {
   flex: 0 0 auto;
   border-radius: 9999px;
@@ -609,14 +634,18 @@ a.ui-entity-link--plain:hover {
   max-height: var(--panel-max-height);
 }
 
-/* Two hairlines only: one between the tiers, one under the whole header. */
+/* The bottom edge belongs to the header itself, so it is the same hairline
+   whichever tiers are present. It used to be a box-shadow drawn to clear the
+   active underline: at a grouping, with no nav row, it was the only thing at
+   that edge and read as a shadow, and at a location the 3px underline sat on
+   top of it. */
 .app-header {
   overflow: visible;
   background: var(--color-surface);
-  box-shadow: 0 1px 0 var(--color-border-subtle);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
-.app-header-identity {
+.app-header-identity:not(:last-child) {
   border-bottom: 1px solid var(--color-border-subtle);
 }
 
@@ -692,6 +721,33 @@ a.ui-entity-link--plain:hover {
   padding-inline: var(--space-3);
   border-bottom: 3px solid transparent;
   padding-top: 3px;
+  /* The hover fill fades on the same 150ms ease as the row and card surfaces.
+     The underline is deliberately left out: it arrives with the label's step to
+     700, and font weight cannot be timed to match, so easing only one of the
+     two made the active state land in two stages. */
+  transition: background-color 150ms ease;
+}
+
+/* An active label steps from 500 to 700, so its text box grows and shifts every
+   item after it along the row. Each label reserves its bold width up front: a
+   hidden bold copy of the same string shares one grid cell with the visible
+   text, so the cell is always as wide as the bold state. The link already
+   carries its own `aria-label`, so the copy cannot reach the accessible name. */
+.main-nav-label {
+  display: grid;
+  grid-template-areas: 'label';
+  justify-items: center;
+}
+
+.main-nav-label > span,
+.main-nav-label::after {
+  grid-area: label;
+}
+
+.main-nav-label::after {
+  content: attr(data-label);
+  font-weight: var(--font-weight-bold);
+  visibility: hidden;
 }
 
 /* Every item keeps the same padding, so the hover fill and active underline are

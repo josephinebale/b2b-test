@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { MoreHorizontal } from 'lucide-react';
+import { Calendar, MessageSquare } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import { PageHeading, RequestBookingButton } from '../components/PageHeading';
 import { PinnedQuestion } from '../components/PinnedQuestion';
@@ -8,9 +8,7 @@ import { EntityLink } from '../components/ui/EntityLink';
 import { IconButton } from '../components/ui/IconButton';
 import {
   GROUPING,
-  groupingWorkers,
   locationWorkerTiers,
-  nearbyWorkers,
   providerHoursForWorker,
   type Grouping,
   type LocationData,
@@ -22,7 +20,10 @@ import { href } from '../lib/router';
 type WorkerRow = {
   id: string;
   name: string;
-  detail: ReactNode;
+  evidence: ReactNode;
+  searchText: string;
+  supportPlanStatus: string;
+  supportPlanNeedsAttention: boolean;
   assessments: WorkerAssessments;
   profile: boolean;
 };
@@ -31,11 +32,26 @@ function supportPlanLabel(confirmed: boolean): string {
   return confirmed ? 'Support plan confirmed' : 'Support plan needs review';
 }
 
-function assessmentSummary(assessments: WorkerAssessments): string {
-  return [
-    `Medication assessment ${assessments.medication ? 'current' : 'not current'}`,
-    `Driving assessment ${assessments.driving ? 'current' : 'not current'}`,
-  ].join(' · ');
+function needsAttentionClass(needsAttention: boolean): string {
+  return needsAttention ? 'font-medium text-text' : 'text-text-tertiary';
+}
+
+function assessmentSearchText(assessments: WorkerAssessments): string {
+  return `Medication assessment ${assessments.medication ? 'current' : 'not current'} Driving assessment ${assessments.driving ? 'current' : 'not current'}`;
+}
+
+function assessmentSummary(assessments: WorkerAssessments) {
+  return (
+    <>
+      <span className={needsAttentionClass(!assessments.medication)}>
+        Medication assessment {assessments.medication ? 'current' : 'not current'}
+      </span>
+      <span aria-hidden="true" className="text-text-tertiary">·</span>
+      <span className={needsAttentionClass(!assessments.driving)}>
+        Driving assessment {assessments.driving ? 'current' : 'not current'}
+      </span>
+    </>
+  );
 }
 
 function matchesQuery(name: string, detail: string, query: string): boolean {
@@ -61,21 +77,37 @@ function renderWorkerRow(worker: WorkerRow) {
         ) : (
           <EntityLink as="span">{worker.name}</EntityLink>
         )}
-        <p className="mt-1 text-sm text-text-secondary">{worker.detail}</p>
-        <p className="mt-1 text-xs text-text-secondary">
+        <p className="mt-1 text-sm text-text-secondary">{worker.evidence}</p>
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs">
+          <span
+            className={needsAttentionClass(worker.supportPlanNeedsAttention)}
+          >
+            {worker.supportPlanStatus}
+          </span>
+          <span aria-hidden="true" className="text-text-tertiary">·</span>
           {assessmentSummary(worker.assessments)}
         </p>
       </div>
-      {worker.profile && (
+      <div className="ui-target-row__action ml-auto flex shrink-0 items-center gap-2">
         <IconButton
-          type="button"
-          aria-label={`More options for ${worker.name}`}
-          data-tooltip={`More options for ${worker.name}`}
-          className="ui-target-row__action ui-tooltip"
+          href={href('/messages')}
+          size="small"
+          aria-label={`Message ${worker.name}`}
+          data-tooltip={`Message ${worker.name}`}
+          className="ui-tooltip"
         >
-          <MoreHorizontal className="h-5 w-5" />
+          <MessageSquare className="h-4 w-4" />
         </IconButton>
-      )}
+        <IconButton
+          href={href('/request-booking')}
+          size="small"
+          aria-label={`Book ${worker.name}`}
+          data-tooltip={`Book ${worker.name}`}
+          className="ui-tooltip"
+        >
+          <Calendar className="h-4 w-4" />
+        </IconButton>
+      </div>
     </li>
   );
 }
@@ -119,73 +151,36 @@ function EmptyWorkers({ search }: { search: boolean }) {
 
 export function Workers({
   data,
-  nodeType = 'location',
   grouping = GROUPING,
 }: {
   data?: LocationData;
-  nodeType?: 'grouping' | 'location';
   grouping?: Grouping;
 }) {
   const [query, setQuery] = useState('');
-
-  if (nodeType === 'grouping') {
-    const providerRows: WorkerRow[] = groupingWorkers(grouping.id).map((worker) => {
-      const locations = worker.locations
-        .map((location) => location.locationName)
-        .join(', ');
-      const detail = `${worker.totalHours} hours at this provider · ${worker.shiftCount} shifts across ${worker.locations.length} locations: ${locations}. ${supportPlanLabel(worker.planConfirmed)}.`;
-      return {
-        id: worker.id,
-        name: worker.name,
-        detail,
-        assessments: worker.assessments,
-        profile: true,
-      };
-    });
-    const nearbyRows: WorkerRow[] = nearbyWorkers().map((worker) => ({
-      id: worker.id,
-      name: worker.name,
-      detail: `${worker.suburb} · ${worker.distanceKm} km away · No history with this provider · Support plan not shared.`,
-      assessments: worker.assessments,
-      profile: false,
-    }));
-    const allRows = query.trim() === '' ? providerRows : [...providerRows, ...nearbyRows];
-    const rows = allRows.filter((worker) =>
-      matchesQuery(worker.name, String(worker.detail), query),
-    );
-
-    return (
-      <div className="width-main-column">
-        <PageHeading
-          title="Workers"
-          description={`Everyone with booking history at ${grouping.organisation} across ${grouping.name}. Ranked by shifts, then locations worked.`}
-          actions={<PinnedQuestion questionId="workers-grouping-order" />}
-        />
-        <SearchWorkers query={query} onQueryChange={setQuery} />
-        {rows.length > 0 ? (
-          <Card as="ul" divided>
-            {rows.map(renderWorkerRow)}
-          </Card>
-        ) : (
-          <EmptyWorkers search={query.trim() !== ''} />
-        )}
-      </div>
-    );
-  }
 
   if (!data) return null;
 
   const client = data.location.serviceType === 'home-community';
   const tiers = locationWorkerTiers(data.location.id, grouping.id);
   const knownRows: WorkerRow[] = tiers.knownHere
-    .map((worker) => ({
-      id: worker.id,
-      name: worker.name,
-      detail: `${providerHoursForWorker(worker.id, data.location.organisation)} hours at this provider · ${supportPlanLabel(worker.planConfirmed)}.`,
-      assessments: worker.assessments,
-      profile: true,
-    }))
-    .filter((worker) => matchesQuery(worker.name, String(worker.detail), query));
+    .map((worker) => {
+      const hours = providerHoursForWorker(
+        worker.id,
+        data.location.organisation,
+      );
+      const supportPlanStatus = supportPlanLabel(worker.planConfirmed);
+      return {
+        id: worker.id,
+        name: worker.name,
+        evidence: `${hours} hours at this provider`,
+        searchText: `${hours} hours at this provider ${supportPlanStatus} ${assessmentSearchText(worker.assessments)}`,
+        supportPlanStatus,
+        supportPlanNeedsAttention: !worker.planConfirmed,
+        assessments: worker.assessments,
+        profile: true,
+      };
+    })
+    .filter((worker) => matchesQuery(worker.name, worker.searchText, query));
   const elsewhereRows: WorkerRow[] = tiers.workedElsewhere
     .map((worker) => {
       const locations = worker.locations
@@ -197,21 +192,27 @@ export function Workers({
       return {
         id: worker.id,
         name: worker.name,
-        detail: `${worker.totalHours} hours at this provider · ${supportPlanLabel(worker.planConfirmed)}. ${locations}.`,
+        evidence: `${worker.totalHours} hours at this provider · ${locations}`,
+        searchText: `${worker.totalHours} hours at this provider ${locations} ${supportPlanLabel(worker.planConfirmed)} ${assessmentSearchText(worker.assessments)}`,
+        supportPlanStatus: supportPlanLabel(worker.planConfirmed),
+        supportPlanNeedsAttention: !worker.planConfirmed,
         assessments: worker.assessments,
         profile: true,
       };
     })
-    .filter((worker) => matchesQuery(worker.name, String(worker.detail), query));
+    .filter((worker) => matchesQuery(worker.name, worker.searchText, query));
   const nearbyRows: WorkerRow[] = tiers.nearby
     .map((worker) => ({
       id: worker.id,
       name: worker.name,
-      detail: `${worker.suburb} · ${worker.distanceKm} km away · No history with this provider · Support plan not shared.`,
+      evidence: `${worker.suburb} · ${worker.distanceKm} km away · No history with this provider`,
+      searchText: `${worker.suburb} ${worker.distanceKm} km away No history with this provider Support plan not shared ${assessmentSearchText(worker.assessments)}`,
+      supportPlanStatus: 'Support plan not shared',
+      supportPlanNeedsAttention: false,
       assessments: worker.assessments,
       profile: false,
     }))
-    .filter((worker) => matchesQuery(worker.name, String(worker.detail), query));
+    .filter((worker) => matchesQuery(worker.name, worker.searchText, query));
   const noResults =
     knownRows.length === 0 && elsewhereRows.length === 0 && nearbyRows.length === 0;
 

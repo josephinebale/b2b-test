@@ -4,7 +4,6 @@ import type { LocationData } from '../../data/locations';
 import { unreadMessagesFromDescription } from '../../data/conversations';
 import { NOTIFICATION_EMPTY_DESCRIPTIONS, bookingsViewPath } from '../../lib/pageContent';
 import { href } from '../../lib/router';
-import { PinnedQuestion } from '../../components/PinnedQuestion';
 import { Card } from '../../components/ui/Card';
 
 type StripCard = {
@@ -69,7 +68,6 @@ export function NotificationStrip({ data }: { data: LocationData }) {
       <div className="mb-3 flex items-baseline justify-between gap-4">
         <div className="flex items-center gap-2">
           <h2 className="text-md font-bold text-text">Notifications</h2>
-          <PinnedQuestion questionId="dashboard-attention" />
         </div>
         <a
           href={href('/notifications')}

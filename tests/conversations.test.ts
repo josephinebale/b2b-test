@@ -146,7 +146,7 @@ test('the Messages page lists the current location inbox', () => {
   assert.match(app, /locationId=\{activeLocation\.id\}/);
 });
 
-test('the Messages nav badge is the current location unread count', () => {
+test('the Messages section badge is the current location unread count', () => {
   const app = source('../src/App.tsx');
 
   assert.match(app, /unreadMessages=\{unreadOverride \?\? visibleData\.unreadMessages\}/);

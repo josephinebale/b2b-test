@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   LOCATIONS,
+  getLocationData,
   groupingWorkers,
   locationWorkerTiers,
   nearbyWorkers,
@@ -18,7 +19,7 @@ function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
 }
 
-test('Workers replaces Team in navigation and public routes', () => {
+test('Workers is a location destination, not a grouping destination', () => {
   const app = source('../src/App.tsx');
   const header = source('../src/components/AppHeader.tsx');
   const router = source('../src/lib/router.ts');
@@ -27,23 +28,43 @@ test('Workers replaces Team in navigation and public routes', () => {
   assert.equal(workerProfilePath('eleni-p'), '/workers/eleni-p');
   assert.equal(workerIdFromPath('/workers/eleni-p'), 'eleni-p');
   assert.equal(workerIdFromPath('/workers'), null);
-  assert.ok(
-    NODE_NAV_ITEMS.some(
-      (item) =>
-        item.label === 'Workers' &&
-        item.path === WORKERS_ROUTE &&
-        item.nodeTypes.some((nodeType) => nodeType === 'grouping'),
-    ),
-  );
+  const item = NODE_NAV_ITEMS.find(({ label }) => label === 'Workers');
+  assert.ok(item);
+  assert.equal(item.path, WORKERS_ROUTE);
+  assert.deepEqual(item.nodeTypes, ['location']);
   assert.match(
     header,
     /NODE_NAV_ITEMS\.filter[\s\S]*?item\.nodeTypes\.some/,
   );
   assert.match(app, /<Workers/);
-  assert.match(app, /nodeType="grouping"/);
+  assert.doesNotMatch(app, /<Workers nodeType="grouping"/);
   assert.match(router, /\/team/);
   assert.match(router, /\/workers/);
   assert.doesNotMatch(header, /label: 'Team'/);
+});
+
+test('tier one is ranked by completed shifts at this location, then name', () => {
+  for (const location of LOCATIONS) {
+    const rows = locationWorkerTiers(location.id).knownHere;
+    const completedShifts = (workerId: string) =>
+      getLocationData(location.id).bookings.filter(
+        (booking) =>
+          booking.workerId === workerId && booking.status === 'ended',
+      ).length;
+
+    for (let index = 1; index < rows.length; index += 1) {
+      const previous = rows[index - 1];
+      const current = rows[index];
+      const previousCount = completedShifts(previous.id);
+      const currentCount = completedShifts(current.id);
+      assert.ok(
+        previousCount > currentCount ||
+          (previousCount === currentCount &&
+            previous.name.localeCompare(current.name) <= 0),
+        `${previous.name} should rank ahead of ${current.name} at ${location.name}`,
+      );
+    }
+  }
 });
 
 test('location Workers has three ordered, disjoint populations', () => {
@@ -66,7 +87,7 @@ test('location Workers has three ordered, disjoint populations', () => {
   }
 });
 
-test('grouping Workers ranks one provider population by shifts then locations', () => {
+test('the grouping dashboard population ranks by shifts then locations', () => {
   const workers = groupingWorkers();
 
   assert.ok(workers.length > 0);
@@ -102,19 +123,35 @@ test('Workers page keeps the location team first and the other tiers below it', 
   assert.match(workers, /Support plan needs review/);
   assert.match(workers, /Support plan not shared/);
   assert.match(workers, /worker\.locations/);
-  assert.match(workers, /worker\.shiftCount/);
+  assert.match(workers, /location\.bookingCount/);
   assert.doesNotMatch(workers, /Paying at|pay level/i);
 });
 
-test('grouping Workers has one history population and search can reach nearby workers', () => {
+test('grouping workers move to the Dashboard without search or marketplace rows', () => {
   const workers = source('../src/pages/Workers.tsx');
+  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
+  const dashboard = source('../src/pages/Dashboard.tsx');
 
-  assert.match(workers, /nodeType === 'grouping'/);
-  assert.match(workers, /groupingWorkers\(grouping\.id\)/);
-  assert.match(workers, /nearbyWorkers\(\)/);
-  assert.match(workers, /Everyone with booking history at/);
-  assert.match(workers, /query/);
-  assert.match(workers, /questionId="workers-grouping-order"/);
+  assert.doesNotMatch(workers, /nodeType === 'grouping'|groupingWorkers\(/);
+  assert.match(panel, /groupingWorkers\(grouping\.id\)/);
+  assert.match(panel, /Ranked by completed shifts, then locations worked/);
+  assert.match(
+    panel,
+    /\{worker\.totalHours\} hours[\s\S]*?\{supportPlanLabel\(worker\.planConfirmed\)\}[\s\S]*?\{assessmentSummary\(worker\.assessments\)\}/,
+  );
+  assert.match(panel, /needsAttentionClass\(!worker\.planConfirmed\)/);
+  assert.doesNotMatch(panel, /nearbyWorkers|Search workers|MessageSquare|Calendar/);
+  assert.match(panel, /questionId="workers-grouping-order"/);
+  assert.match(dashboard, /<WorkersPanel grouping=\{grouping\}/);
   assert.match(workers, /questionId="workers-location-tiers"/);
   assert.match(workers, /questionId="workers-search"/);
+});
+
+test('location Workers keeps search across all three location-relative tiers', () => {
+  const workers = source('../src/pages/Workers.tsx');
+
+  assert.match(workers, /locationWorkerTiers/);
+  assert.match(workers, /Search workers/);
+  assert.match(workers, /tiers\.nearby/);
+  assert.match(workers, /matchesQuery/);
 });
