@@ -83,6 +83,8 @@ test('node pages come from one definition shared with signed-in navigation', () 
   assert.doesNotMatch(header, /const NAV_ITEMS/);
   assert.match(header, /location\?\.serviceType === 'home-community'/);
   assert.match(page, /NODE_NAV_ITEMS\.filter/);
+  assert.match(page, /item\.placement === 'main'/);
+  assert.match(page, /treeSectionLabel\(grouping, nodeType\)/);
 });
 
 test('persona filtering is an organisation boundary, not role permissions', () => {
@@ -107,6 +109,12 @@ test('persona filtering is an organisation boundary, not role permissions', () =
   assert.match(
     page,
     /A provider configures which node each role lands on/,
+  );
+  assert.match(page, /Organisation → Arm → Grouping → Location/);
+  assert.match(page, /No persona enters at an arm/);
+  assert.match(
+    page,
+    /A node lists its children, not its descendants/,
   );
   assert.doesNotMatch(page, /disabled|opacity-/);
   assert.doesNotMatch(page, /configured landing point|Available here/);

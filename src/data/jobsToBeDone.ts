@@ -10,10 +10,36 @@ export type JobToBeDone = {
   iaRelevant: boolean;
   origin: 'research' | 'inferred';
   resolvesAt: string;
+  previousResolvesAt: string;
   notAddressedReason?: string;
   quote?: string;
   quoteSource?: string;
 };
+
+export const SESSION_RECORDINGS = {
+  'prototype session':
+    'https://hireup.dovetail.com/data/2q7ZSyHz0HmWHRCltsOs1D',
+  'structure session':
+    'https://hireup.dovetail.com/data/2oIxzowd988P2TYwdBvK8',
+  'Northcott session':
+    'https://hireup.dovetail.com/data/M8p85NqXQjolLMRHO5I7K',
+  'Life Without Barriers session':
+    'https://hireup.dovetail.com/data/3HTFSh3fbeEhcU5Ke3pObA',
+} as const;
+
+export function sessionUrlFromQuoteSource(
+  quoteSource: string | undefined,
+): string {
+  if (!quoteSource) {
+    return '';
+  }
+
+  const session = (
+    Object.keys(SESSION_RECORDINGS) as (keyof typeof SESSION_RECORDINGS)[]
+  ).find((name) => quoteSource.includes(` · ${name} · `));
+
+  return session ? SESSION_RECORDINGS[session] : '';
+}
 
 /**
  * Seeded from jobs-to-be-done.xlsx on 10 September 2026.
@@ -31,7 +57,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if we were managing Hireup, as you know, we've exhausted all internal options and now Hireup is our remaining option to choose from",
     "quoteSource": "Dorothy · prototype session · 47:17",
-    "resolvesAt": "Location > Bookings > Request"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Request",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-002",
@@ -44,7 +72,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "once they've exhausted their own workforce, it comes to Careforce and then they hand it over to us, get back to their day job, and then we do our best to fill the job, the shift",
     "quoteSource": "Elise · structure session · 44:14",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-003",
@@ -57,7 +86,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "once a month, we catch up— the roster coordinators catch up with each of the house managers that they support to identify, you know, what leftover needs they might have, and then we take a couple of days to then go and fill those with familiar and inducted CPA-trained staff to those services",
     "quoteSource": "Elise · structure session · 00:08",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-004",
@@ -70,7 +100,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "So we go back to filling sort of those unplanned shifts that come in through the house managers and then also work on any shifts that haven't really been filled at that monthly rostering stage that might have been left over.",
     "quoteSource": "Elise · structure session · 00:08",
-    "resolvesAt": "Location > Bookings > Request"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Request",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-005",
@@ -83,7 +115,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "when we go to agency and say, listen, we've got a shift at this time on this day at this site, we want familiar and known staff, then they only offer familiar and known staff. And they don't have anybody, they let us know. We can consult with the manager whether or not unfamiliar is suitable or not based on the other staff on site",
     "quoteSource": "Elise · structure session · 17:36",
-    "resolvesAt": "Location > Bookings > Request > Select workers"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Request > Select workers",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-006",
@@ -96,7 +130,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "then we might go back to agency and say, look, unfamiliar suitable, um, and then we go down that route of getting them to shift a bit earlier for induction and they work on that shift",
     "quoteSource": "Elise · structure session · 17:36",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-007",
@@ -109,7 +144,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "we might have somebody working at that site from 6:00 to 9:00, and we might ring them and say, \"Hey, listen, do you have the capacity to stay until 3:00 and do a lifestyles program?\"",
     "quoteSource": "Elise · structure session · 11:17",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-008",
@@ -122,7 +158,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "so what you would have a little obviously 'I' thing saying 'no workers available for DY at this time,' and then potentially let's say down the bottom here your next box would be other workers who have worked within the region who have availability at this time",
     "quoteSource": "Dorothy · prototype session · 43:04",
-    "resolvesAt": "Location > Bookings > Request > Select workers"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Request > Select workers",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-009",
@@ -135,7 +173,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "You can request a booking here, not go to a specific day, like you can just request booking and then booking, you know, let's say 15th of September.",
     "quoteSource": "Dorothy · prototype session · 15:29",
-    "resolvesAt": "Location > Request booking"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Request booking",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-010",
@@ -148,7 +188,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "that's helpful for if it was a single once-off shift, duplicating the same shift",
     "quoteSource": "Dorothy · prototype session · 33:34",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-011",
@@ -158,8 +199,12 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "job": "Tell whether or not a worker is suitable for the site",
     "saidBy": "Dorothy",
     "iaRelevant": true,
-    "origin": "inferred",
-    "resolvesAt": "Location > Workers"
+    "origin": "research",
+    "quote": "Yeah, because I think from that you can tell whether or not a worker is suitable for Yeah, the site.",
+    "quoteSource": "Dorothy · prototype session · 12:36",
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-012",
@@ -172,7 +217,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if there was a way to kind of broadly see, okay, across this region, this worker has worked across all 7 sites and they've done, let's say, 30, 30 different shifts across those sites",
     "quoteSource": "Dorothy · prototype session · 12:50",
-    "resolvesAt": "Location > Workers, tier 2"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, tier 2",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-013",
@@ -185,7 +232,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "it'd be helpful to have how many hours they'd worked at— see, visible to see how many hours they worked at CPA, to know are they really new to CPA, like have they done 2 shifts versus somebody that has worked very— had a lot of hours at one site, so it's very, very familiar",
     "quoteSource": "Elise · structure session · 56:07",
-    "resolvesAt": "Location > Workers"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-014",
@@ -198,7 +247,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if we were able to have that visibility of who else in Hireup has also worked in other group homes ... they would know where plans are, like certain plans are kept, or they'd have a kind of a rough idea. They're not just walking into a brand new house where they have no idea where things are at.",
     "quoteSource": "Dorothy · structure session · 55:30",
-    "resolvesAt": "Location > Workers, tier 2"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, tier 2",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-015",
@@ -211,7 +262,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if I was Rhea, I would probably only want to see the workers I've had working at my own house",
     "quoteSource": "Dorothy · prototype session · 29:32",
-    "resolvesAt": "Location > Workers, tier 1"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, tier 1",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-016",
@@ -224,7 +277,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I don't know if there's a way you can make it clear, or it's a tick box of which sites they've been at, or, you know, they've color fielded",
     "quoteSource": "Dorothy · prototype session · 29:43",
-    "resolvesAt": "Location > Workers, tier 2"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, tier 2",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-017",
@@ -237,7 +292,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "it would be having familiarity of that worker coming back or coming through. So someone who knows the house, who knows the needs of the clients, who knows roughly what routines are operating that day.",
     "quoteSource": "Dorothy · structure session · 51:07",
-    "resolvesAt": "Location > Workers, tier 1"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, tier 1",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-018",
@@ -250,7 +307,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "you would want to know kind of their name, their skill set, uh, kind of also what their availabilities are",
     "quoteSource": "Dorothy · structure session · 51:07",
-    "resolvesAt": "Location > Workers, Worker profile"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, Worker profile",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-019",
@@ -263,7 +322,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if I was someone new and I didn't know Maxine, I could highlight here and pops up a profile",
     "quoteSource": "Dorothy · prototype session · 57:52",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-020",
@@ -276,7 +336,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I would still be going back to the staff in that particular group home to go, okay, if I was to book someone from higher up, who would be my best bets to book? Like, who is your— who are the staff that you know that are familiar, that know the— know the site, know the operations?",
     "quoteSource": "Dorothy · structure session · 52:05",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-021",
@@ -289,7 +350,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "their next point of call now is actually just sometimes picking up the phone to other house managers and saying, this worker I know have been here before, are they free? Or do you have any other workers who would be keen to come across and work a shift.",
     "quoteSource": "Dorothy · prototype session · 31:45",
-    "resolvesAt": "Location > Workers, tier 2"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, tier 2",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-022",
@@ -302,7 +365,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "seeing potentially which workers we would be using regularly, and then that anecdotally then comes back with the feedback from the managers of this worker is really good, they pick up really short notice shifts, they've been very flexible",
     "quoteSource": "Dorothy · prototype session · 10:26",
-    "resolvesAt": "Grouping > Workers"
+    "resolvesAt": "",
+    "previousResolvesAt": "Grouping > Workers",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-023",
@@ -316,6 +381,7 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "quote": "They're either inducted to the service and they can work there, or they're not inducted to the service because they can't work there.",
     "quoteSource": "Elise · structure session · 08:16",
     "resolvesAt": "",
+    "previousResolvesAt": "",
     "notAddressedReason": "Induction is held in the provider's own rostering system, so the platform cannot see it."
   },
   {
@@ -329,7 +395,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "we wouldn't know whether or not this worker Mandy was potentially coming off a Tuesday, 8th of September, you know, overnight shift or a sleepover shift. Or if after this 9 PM they're booking into another shift ... are they now going into that 24 hours straight?",
     "quoteSource": "Dorothy · prototype session · 33:34",
-    "resolvesAt": "Bookings and Select workers, rest signal"
+    "resolvesAt": "",
+    "previousResolvesAt": "Bookings and Select workers, rest signal",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-025",
@@ -342,7 +410,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "they would definitely be interested in knowing whether or not these workers are booking back-to-back bookings",
     "quoteSource": "Dorothy · prototype session · 35:30",
-    "resolvesAt": "Bookings and Select workers, rest signal"
+    "resolvesAt": "",
+    "previousResolvesAt": "Bookings and Select workers, rest signal",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-026",
@@ -355,7 +425,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I guess it's just trust that they've got all their stuff in date as per our guidelines. So, you know, CPR is done annual, first aid is every 3 years, NDIS work check, you know, appropriate reference checks have been done",
     "quoteSource": "Elise · structure session · 52:49",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-027",
@@ -368,7 +439,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "even with our agency partners, they do the medication assessments that we do as CPA staff. If they're going to drive the vans, they have to be assessed by our fleet coordinator to drive our company vehicles and be ticked off.",
     "quoteSource": "Elise · structure session · 56:07",
-    "resolvesAt": "Location > Workers"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-028",
@@ -381,7 +454,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "support plans confirmed, that's helpful, um, to know whether or not they've been updated and reading on our support plans",
     "quoteSource": "Dorothy · prototype session · 28:20",
-    "resolvesAt": "Location > Workers"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-029",
@@ -394,7 +469,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "having report an incident, that because then it's attached to that worker on that shift",
     "quoteSource": "Dorothy · prototype session · 33:34",
-    "resolvesAt": "Location > Bookings > Booking detail"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Booking detail",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-030",
@@ -407,7 +484,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "Vehicle allowance enabled, that's helpful to know. Not, not that our workers generally use their own vehicles to support our clients, but that's helpful if in the emergency you needed one.",
     "quoteSource": "Dorothy · prototype session · 28:20",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-031",
@@ -420,7 +498,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I think I would be seeing these are the messages relating to DIY and any, any worker that has been on here previously, or that any workers that we've reached out to that we've wanted to go work at DIY",
     "quoteSource": "Dorothy · prototype session · 16:56",
-    "resolvesAt": "Location > Messages"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Messages",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-032",
@@ -433,7 +513,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if I was away and Artika was managing the Hireup for the Northern Beaches ... she would then still be able to action and follow up on those things without me. And then if I then came back, I could actually still see what she did because it's in that shared box.",
     "quoteSource": "Dorothy · prototype session · 25:02",
-    "resolvesAt": "Location > Messages"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Messages",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-033",
@@ -446,7 +528,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "on the main screen you could see, you know, which sites had that, you know what I mean, like notifications or messages, then that might give a good understanding of, oh, which, which sites are there currently messages pending",
     "quoteSource": "Dorothy · prototype session · 18:34",
-    "resolvesAt": "Grouping > Dashboard"
+    "resolvesAt": "",
+    "previousResolvesAt": "Grouping > Dashboard",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-034",
@@ -459,7 +543,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "the messaging to the worker would then be, what's your, you know, what's your experience, um, when are you available for a buddy shift trial?",
     "quoteSource": "Dorothy · prototype session · 53:31",
-    "resolvesAt": "Location > Messages"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Messages",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-035",
@@ -472,7 +558,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "If there was that adjustment that the managers could make on the platform themselves to say, I want to be notified of XYZ, tick these 3 things but I don't want the other 6.",
     "quoteSource": "Dorothy · prototype session · 22:01",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-036",
@@ -485,7 +572,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I might only want to check it 3 times a week, but I just want those messages 3 times a week— Monday, Wednesday, Friday",
     "quoteSource": "Dorothy · prototype session · 22:01",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-037",
@@ -498,7 +586,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "Same with the notifications. These are notifications only relating to DY.",
     "quoteSource": "Dorothy · prototype session · 16:56",
-    "resolvesAt": "Location > Notifications"
+    "resolvesAt": "Location > Notifications",
+    "previousResolvesAt": "Location > Notifications"
   },
   {
     "id": "job-038",
@@ -511,7 +600,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "kind of seeing how frequently we are using it, to then also what workers are coming across with alongside the feedback that the managers are giving",
     "quoteSource": "Dorothy · prototype session · 10:26",
-    "resolvesAt": "Grouping > Dashboard"
+    "resolvesAt": "",
+    "previousResolvesAt": "Grouping > Dashboard",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-039",
@@ -524,7 +615,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "For me, it's at the end of the day is that shift being filled? And if it's not being filled, can Rhea know— does Rhea know how to manage the risks to ensure that she can manage a shift safely?",
     "quoteSource": "Dorothy · prototype session · 19:58",
-    "resolvesAt": "Grouping > Dashboard"
+    "resolvesAt": "",
+    "previousResolvesAt": "Grouping > Dashboard",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-040",
@@ -537,7 +630,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I could see all of the locations were DY. So for me, I thought, okay, that's— that makes sense. I am currently on the DY site ... and this is where all of the bookings for that particular site are showing.",
     "quoteSource": "Dorothy · prototype session · 27:07",
-    "resolvesAt": "Location > Bookings"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-041",
@@ -550,18 +645,24 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "They can see who they've got booked in, they can see who their team is, if there's approvals that need to be made, they can see all of that.",
     "quoteSource": "Dorothy · prototype session · 57:04",
-    "resolvesAt": "Location > Dashboard"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Dashboard",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-042",
     "organisation": "Cerebral Palsy Alliance",
     "sector": "disability",
     "theme": "Oversight",
-    "job": "Approve the booking so the worker gets paid",
+    "job": "Approve the bookings waiting for approval, so workers can be paid",
     "saidBy": "Dorothy",
     "iaRelevant": true,
-    "origin": "inferred",
-    "resolvesAt": "Location > Dashboard, Bookings"
+    "origin": "research",
+    "quote": "I've sent shifts out and workers are waiting for them to be accepted, approval for paying them",
+    "quoteSource": "Dorothy · prototype session · 04:10",
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Dashboard, Bookings",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-043",
@@ -574,8 +675,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "It could even be someone just going off for a day or two, like not even for a 4-week period. It could be a day or two, someone's sick, they've taken just 2 days annual leave, just having someone have oversight of that particular group home.",
     "quoteSource": "Dorothy · structure session · 37:56",
-    "resolvesAt": "",
-    "notAddressedReason": "The location switcher was removed. Lateral movement between supportables now goes up to the grouping and back down."
+    "resolvesAt": "Breadcrumb dropdown",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-044",
@@ -588,8 +689,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "The only times they might jump out of that space would be covering someone on a short-term leave, 2 weeks ... if I just needed to go in and check the platform to see if anyone else, you know, if there was a booking there, if I needed to confirm the worker's name or if there were any messages coming through, that would be the only time.",
     "quoteSource": "Dorothy · prototype session · 06:01",
-    "resolvesAt": "",
-    "notAddressedReason": "The location switcher was removed. Lateral movement between supportables now goes up to the grouping and back down."
+    "resolvesAt": "Breadcrumb dropdown",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-045",
@@ -602,7 +703,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "they create their rosters each month from that sort of base master roster, obviously identifying any leave that's been approved, you know, planned leave and whatnot",
     "quoteSource": "Elise · structure session · 00:08",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-046",
@@ -615,7 +717,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "any vacancies from that, they talk to their existing team to see if they want to pick up any additional hours",
     "quoteSource": "Elise · structure session · 00:08",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-047",
@@ -628,7 +731,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "the roster coordinators catch up with each of the house managers that they support to identify, you know, what leftover needs they might have ... And that happens 2 weeks before the roster commences.",
     "quoteSource": "Elise · structure session · 00:08",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-048",
@@ -641,7 +745,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I want to put the client's name in because that's the specific client that we would be charging this particular invoice to",
     "quoteSource": "Dorothy · prototype session · 40:01",
-    "resolvesAt": "Location > Bookings > Request > Details"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Request > Details",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-049",
@@ -654,7 +760,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "with accommodation respite, when we book somebody, you book them for the whole house. Like, you know, they're a worker to support all the clients on the shift that morning or afternoon.",
     "quoteSource": "Dorothy · prototype session · 40:54",
-    "resolvesAt": "Location > Bookings > Request"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Request",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-050",
@@ -667,7 +775,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "we add all of the agency shifts that are filled into our rostering system with the basic staff details so that we know who's essentially working it. Obviously our rostering system, our managers have obviously full access to, so they need those details to know who's coming to site.",
     "quoteSource": "Elise · structure session · 21:12",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-051",
@@ -680,7 +789,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "when the invoices come through, they obviously come through one of our other programs that are then reviewed and approved by one of my area managers, payment through the finance",
     "quoteSource": "Elise · structure session · 21:12",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-052",
@@ -693,7 +803,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I had to almost copy and paste what I was writing to each individual worker and message them",
     "quoteSource": "Dorothy · prototype session · 52:24",
-    "resolvesAt": "Location settings > Location profile"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location settings > Location profile",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-053",
@@ -706,7 +818,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "They already know it is a SIL house, it's in DY, you know, has 5, you know, 5 clients, 3 males, 2 females, mostly manual handling or mostly behaviors. And this is what we are looking for in a worker.",
     "quoteSource": "Dorothy · prototype session · 52:24",
-    "resolvesAt": "Location settings > Location profile"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location settings > Location profile",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-054",
@@ -719,7 +833,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "the first first page level of gate would be 'DI is a SIL home for Cerebral Palsy Alliance' ... if they're interested, you know, they click an 'I'm interested' button, and then it opens up to then your second gate of 'this is a group home of 5 clients'",
     "quoteSource": "Dorothy · prototype session · 55:13",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-055",
@@ -732,7 +847,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "it is probably a way to distinguish or help workers distinguish, yeah, this is a group home sill setting, therefore you're working your mornings and afternoons and overnight sleepover active awake shifts rather than you're doing your, um, jobs in the middle of the day type scenario",
     "quoteSource": "Dorothy · prototype session · 55:13",
-    "resolvesAt": "Location settings > Location profile"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location settings > Location profile",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-056",
@@ -745,7 +862,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "there will be a lot of information shared potentially on the platform about, you know, all of our different houses, of who's living in them and whatnot. Would that be too much information that's being shared on that face level?",
     "quoteSource": "Dorothy · prototype session · 54:14",
-    "resolvesAt": "Location settings > Location profile"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location settings > Location profile",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-057",
@@ -758,7 +877,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "my team has now dwindled from 15 to 3 because everyone else is either got a permanent job, they're not looking at working at this area anymore, whatever it is, then I want to build my team again to, you know, another 10",
     "quoteSource": "Dorothy · prototype session · 47:17",
-    "resolvesAt": "Location > Workers, tier 3 and search"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, tier 3 and search",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-058",
@@ -771,7 +892,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I used that function to kind of look at who was in the area who was open to work, like a little bit on like LinkedIn where it's like, you know, they want shifts or they're open to work right now",
     "quoteSource": "Dorothy · prototype session · 47:17",
-    "resolvesAt": "Location > Workers, tier 3"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, tier 3",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-059",
@@ -784,7 +907,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if it would be helpful if there was an additional button here to go, you know, workers near me type scenario ... there's no search bar here I can see for looking at workers around in the area",
     "quoteSource": "Dorothy · prototype session · 45:41",
-    "resolvesAt": "Location > Workers, search"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, search",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-060",
@@ -797,7 +922,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "the easiest way to do it is actually just putting it as a job, and it means that anybody in the area could express their interest of doing it",
     "quoteSource": "Dorothy · prototype session · 49:45",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-061",
@@ -810,7 +936,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "it's really a matter of us sending an email and saying, \"These are the shifts we might need filling,\" and they do all the work and then come back and go, \"Right, we've got these people in place that are known to the site and requested by the manager\"",
     "quoteSource": "Elise · structure session · 23:25",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-062",
@@ -823,7 +950,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "it needs to be a little bit easier to utilise, not be so admin heavy, if that makes sense",
     "quoteSource": "Elise · structure session · 23:25",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-063",
@@ -836,7 +964,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "If they've got access, they'll get on and do it. If they don't, they pass it to a manager that does have access for them to put up the ad and to try and find staff.",
     "quoteSource": "Elise · structure session · 49:17",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-064",
@@ -849,7 +978,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "generally the way that I use Hireup is I'll generally usually email the provider inbox and request a staff member",
     "quoteSource": "Carlos · Northcott session · 01:20",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-065",
@@ -862,7 +992,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if I have a staff member in mind, I'll let them know that, you know, there about the higher-up staff, and I say, look, this person, um, has agreed to work a shift at one of my sites, and I'll just let them know which site that is. And I ask for them to put them into the, the portal for me",
     "quoteSource": "Carlos · Northcott session · 01:20",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-066",
@@ -875,7 +1006,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "whenever there's staff required and we cannot ever provide the staff from Northcott, I usually put the shift using the Northcott portal",
     "quoteSource": "Sufi · Northcott session · 04:38",
-    "resolvesAt": "Location > Bookings > Request"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Request",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-067",
@@ -888,7 +1021,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I was really reaching out a lot with a large list of shifts for the following 4 weeks and saying, please mark these shifts in, in your portal and, and help me out to try and cover them",
     "quoteSource": "Carlos · Northcott session · 03:05",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-068",
@@ -901,7 +1035,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "the shift starting at 9 o'clock, support workers might be ringing up at 6 o'clock in the morning saying, hey, yep, so that's a new pale. And that's the worst nightmare we have.",
     "quoteSource": "Sufi · Northcott session · 48:28",
-    "resolvesAt": "Location > Bookings > Request"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Request",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-069",
@@ -914,7 +1050,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "our rostering team starts at 6 o'clock, so if it's— and I start at 8 o'clock, so usually in that specific window, 6 to 8, it's the North Court rostering team. They request for staff to HireUp, or if it's after 8 o'clock, they send it to me.",
     "quoteSource": "Sufi · Northcott session · 48:52",
-    "resolvesAt": "Location > Bookings > Request"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Request",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-070",
@@ -927,7 +1065,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "Sometimes I have to ring back and forth, back and forth, uh, yeah, contact HireUp rostering team. I ring them or email them ... Yeah, try to get the shift filled.",
     "quoteSource": "Sufi · Northcott session · 49:29",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-071",
@@ -940,7 +1079,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "wherever there are vacant shifts, that's what gets offered to the other support workers of Northcote, or if nobody's found, then we offer it to Hireup or any other agencies",
     "quoteSource": "Sufi · Northcott session · 46:27",
-    "resolvesAt": "Location > Bookings > Request > Select workers"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Request > Select workers",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-072",
@@ -953,7 +1094,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I would say as long as the shifts are at least 3 hours. It's very, very much helpful.",
     "quoteSource": "Sufi · Northcott session · 56:18",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-073",
@@ -966,7 +1108,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "so if we have 3 support workers in the list, we are not allowed to offer these jobs to other support workers who may be suitable for the job",
     "quoteSource": "Sufi · Northcott session · 10:42",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-074",
@@ -979,7 +1122,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "Then I had to request, request Niamh to send this offer to the other, other node support workers working, who have experience working in the site.",
     "quoteSource": "Sufi · Northcott session · 17:16",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-075",
@@ -992,7 +1136,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "there's a limit of maximum 10 support workers a job can be offered, a shift can be offered. So if it can be extended maybe up to 15, then we have more possibility of covering the job.",
     "quoteSource": "Sufi · Northcott session · 17:50",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-076",
@@ -1005,7 +1150,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if I want to allocate the job, IS job, to Roshani Ji, as she's not listed in that, that IS account, I cannot really find her and offer the job. So is there any way that we can find the support worker of in the system, maybe using the search.",
     "quoteSource": "Sufi · Northcott session · 24:23",
-    "resolvesAt": "Location > Workers, search"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Workers, search",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-077",
@@ -1018,7 +1165,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "If I go to save, is that going to say— what is it going to save under?",
     "quoteSource": "Sufi · Northcott session · 25:53",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-078",
@@ -1032,6 +1180,7 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "quote": "sometimes it's not really mentioned properly that, that particular booking is actually to be done under this individual service account of the customer, so it gets booked under SIL",
     "quoteSource": "Sufi · Northcott session · 04:38",
     "resolvesAt": "",
+    "previousResolvesAt": "",
     "notAddressedReason": "The model handles participants, not a funding line that splits the worker pool."
   },
   {
@@ -1046,6 +1195,7 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "quote": "the individual service doesn't get charged, even though the service is actually, actually provided for the individual service",
     "quoteSource": "Sufi · Northcott session · 09:25",
     "resolvesAt": "",
+    "previousResolvesAt": "",
     "notAddressedReason": "The model handles participants, not a funding line that splits the worker pool."
   },
   {
@@ -1059,7 +1209,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "whenever I do understand that this is what's happening, I request over using the email to the higher-ups rostering team to shift the booking to the individual service account",
     "quoteSource": "Sufi · Northcott session · 07:17",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-081",
@@ -1072,7 +1223,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "And the invoice is different. Okay, as it's segregated, so the invoice comes only to me for those shifts, particularly the individual service.",
     "quoteSource": "Sufi · Northcott session · 09:38",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-082",
@@ -1085,7 +1237,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "whatever is rostered in the SEAL for 24/7, 7 days a week, they provide me in a 4-week schedule, and it's for the individual services incorporated within that 4-week schedule. And I pick up those support workers and allocate this shift to them who work partially for SIL and partially for individual service on those days.",
     "quoteSource": "Sufi · Northcott session · 45:31",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-083",
@@ -1098,7 +1251,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I can roster support workers up to the service agreement end date. That could be 1 year or less depending upon the service agreement.",
     "quoteSource": "Sufi · Northcott session · 46:27",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-084",
@@ -1111,7 +1265,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "it shows me that there has been a booking made, and once it's accepted it shows who has accepted it, right? No, who— which other support worker has been offered job to.",
     "quoteSource": "Sufi · Northcott session · 38:53",
-    "resolvesAt": "Location > Bookings > Requested booking detail"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Bookings > Requested booking detail",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-085",
@@ -1124,7 +1280,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "when I need to see the portal, is usually just to approve the shift, not so much to allocate a job to a support worker, which that works best for me",
     "quoteSource": "Carlos · Northcott session · 01:20",
-    "resolvesAt": "Location > Dashboard, Bookings"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location > Dashboard, Bookings",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-086",
@@ -1137,7 +1295,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I set up my SILs in the portal, how we do, we give a little brief description of what we're looking for, and the kind of participants that we have at the group home",
     "quoteSource": "Carlos · Northcott session · 12:44",
-    "resolvesAt": "Location settings > Location profile"
+    "resolvesAt": "",
+    "previousResolvesAt": "Location settings > Location profile",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-087",
@@ -1150,7 +1310,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "trying to also keep track of, I guess, the support workers that I kind of had an interest in within Hireup and the messaging them, pushing the jobs out to them, waiting for responses and things like that was sort of what for me was a little bit overwhelming back then",
     "quoteSource": "Carlos · Northcott session · 12:44",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-088",
@@ -1163,7 +1324,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "Oh, it was, uh, it was, uh, Sharni. Sharni. Yeah. So it was a one-to-one.",
     "quoteSource": "Sufi · Northcott session · 41:01 · she dates it at 40:45: it was probably almost more than a year, I believe",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-089",
@@ -1176,7 +1338,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "Posting a job? Yeah. So request booking, right?",
     "quoteSource": "Sufi · Northcott session · 30:16",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-090",
@@ -1189,7 +1352,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "It will probably show in the dashboard. That is a job sent for 7th May from 9 to 3, 6 hours, and with some details of the customer and what needs to be done during the shift.",
     "quoteSource": "Sufi · Northcott session · 38:05",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-091",
@@ -1202,7 +1366,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "in reactive space, the rostering officer will make sure that, you know, it's all on, you know, on a daily basis, like business as usual, to make sure if any sickies, to make sure that, you know, you cover the sickies",
     "quoteSource": "Suman · Life Without Barriers session · 02:36",
-    "resolvesAt": "Client location > Bookings > Request"
+    "resolvesAt": "",
+    "previousResolvesAt": "Client location > Bookings > Request",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-092",
@@ -1215,7 +1381,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "the guidelines that we have from LWB is like, obviously we have to make sure that we utilize our own resources. If by some reason we cannot fulfill, then obviously we then, you know, um, flick an email now to, um, to Hireup to see whether they have any— anybody available.",
     "quoteSource": "Suman · Life Without Barriers session · 02:36",
-    "resolvesAt": "Client location > Bookings > Request"
+    "resolvesAt": "",
+    "previousResolvesAt": "Client location > Bookings > Request",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-093",
@@ -1228,7 +1396,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "If we cannot find anybody within, within LWB, um, and if client you know, needed to have someone today straight away or whatever, then we have to ask our manager for an approval. And once the approval is obtained, then we reach out to HireUp.",
     "quoteSource": "Suman · Life Without Barriers session · 25:43",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-094",
@@ -1241,7 +1410,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "instead of me going to the portal and, you know, like creating a shift and trying to find support work, I think I would just rather flick an email to the, um, to the HireUp internal scheduler, say saying, hey, do you guys have anyone available? And, you know, so that I could buy some time as well. And in that time, I could do something else",
     "quoteSource": "Suman · Life Without Barriers session · 30:03",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-095",
@@ -1254,7 +1424,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "when we send a request, like, we make sure that all the information is in one email so that you don't have to do back and forth",
     "quoteSource": "Suman · Life Without Barriers session · 33:52",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-096",
@@ -1267,7 +1438,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "Even yesterday, like, requested for a support worker for a medication prompt for tomorrow ... And I think within a couple of— within 10 minutes or something like, uh, the— they actually booked someone for one of the— one of the day, I think.",
     "quoteSource": "Suman · Life Without Barriers session · 30:03",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-097",
@@ -1280,7 +1452,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "in the first place, I just have to try to identify whether the client has the bunch of support workers or a group of support workers and to see whether one of them is available",
     "quoteSource": "Suman · Life Without Barriers session · 17:46",
-    "resolvesAt": "Client location > Workers, tier 1"
+    "resolvesAt": "",
+    "previousResolvesAt": "Client location > Workers, tier 1",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-098",
@@ -1293,7 +1467,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "the priority would be to find someone who has been to a client before, so that they know the patterns or, you know, the routine of the client",
     "quoteSource": "Suman · Life Without Barriers session · 18:40",
-    "resolvesAt": "Client location > Workers, tier 1"
+    "resolvesAt": "",
+    "previousResolvesAt": "Client location > Workers, tier 1",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-099",
@@ -1306,7 +1482,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "Yeah, but if it's DA, then we just randomly ask anybody.",
     "quoteSource": "Suman · Life Without Barriers session · 18:40",
-    "resolvesAt": "Client location > Workers, tier 3"
+    "resolvesAt": "",
+    "previousResolvesAt": "Client location > Workers, tier 3",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-100",
@@ -1319,7 +1497,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "for Vic, if, if I needed someone in Vic, then obviously I just reach out to Vic Employee, Vic Support Worker",
     "quoteSource": "Suman · Life Without Barriers session · 17:11",
-    "resolvesAt": "Client location > Workers, tier 3"
+    "resolvesAt": "",
+    "previousResolvesAt": "Client location > Workers, tier 3",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-101",
@@ -1332,7 +1512,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "that's important as well to make sure that support worker has in the, in the, like, you know, individual Certificate 3 in individual support or something ... But I need, um, do you think I could check whether support worker have actually done the Certificate 3?",
     "quoteSource": "Suman · Life Without Barriers session · 40:16",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-102",
@@ -1345,7 +1526,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I believe if, you know, support workers wouldn't be active if their mandatory credentials failed, or, you know, they needed— it needed to be renewed, or vice versa. Am I right?",
     "quoteSource": "Suman · Life Without Barriers session · 41:14",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-103",
@@ -1358,7 +1540,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "they could be on availability in the system, but they may change their mind. So we don't really— it doesn't matter to us.",
     "quoteSource": "Suman · Life Without Barriers session · 39:14",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-104",
@@ -1371,7 +1554,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if the workers already booked elsewhere, um, it doesn't really matter because most of these services would, uh, you know, the client would be flexible",
     "quoteSource": "Suman · Life Without Barriers session · 45:23",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-105",
@@ -1384,7 +1568,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "we obviously, you know, try to give the support worker a heads up or send them the care plan, the summary of care plan, you know, what to expect during the service so that they're prepared",
     "quoteSource": "Suman · Life Without Barriers session · 35:32",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-106",
@@ -1397,7 +1582,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "Associated risks, you know, if client had some sort of allergies, you know, any medication, any medical information that they needed to, you know, to perform the duties, or the service instruction, what exactly needs to be done ... not You know, not sure whether the client would have pets in the house.",
     "quoteSource": "Suman · Life Without Barriers session · 42:50",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-107",
@@ -1410,7 +1596,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "in every service, in every shift, or in every request, I think we provide the phone number as well, especially, you know, if client is not Open the, open the bell or open the door. No response to home visit, please call this number",
     "quoteSource": "Suman · Life Without Barriers session · 42:50",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-108",
@@ -1423,7 +1610,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "those sort of information we try to supply to them through the care plan and also through the messaging, you know, through the Hireup messaging",
     "quoteSource": "Suman · Life Without Barriers session · 42:50",
-    "resolvesAt": "Client location > Messages"
+    "resolvesAt": "",
+    "previousResolvesAt": "Client location > Messages",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-109",
@@ -1436,7 +1625,9 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "whenever we have— whenever we use Portal, yeah, we like, you know, we use the messaging system where we could see whether anybody has responded, or even in the booking thing as well",
     "quoteSource": "Suman · Life Without Barriers session · 45:23",
-    "resolvesAt": "Client location > Bookings, Messages"
+    "resolvesAt": "",
+    "previousResolvesAt": "Client location > Bookings, Messages",
+    "notAddressedReason": "The surface is hidden while navigation and information architecture are the research focus."
   },
   {
     "id": "job-110",
@@ -1449,7 +1640,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "If it's like, you know, quite a few shifts available, and depending on nature of the, you know, shift ... we could actually send a group message as well saying, hey, you know, we have all these shifts available, are you available to support?",
     "quoteSource": "Suman · Life Without Barriers session · 18:40",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-111",
@@ -1462,8 +1654,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "everybody has a visibility of, uh, even, even for, you know, other region as well, um, like, you know, South Australia or even like, you know, New South Wales, um, so, you know, sometimes because of some reason they won't have enough ROs. In, in that instance, yes, we do help them as well. So we do have visibility.",
     "quoteSource": "Suman · Life Without Barriers session · 10:03",
-    "resolvesAt": "",
-    "notAddressedReason": "The location switcher was removed. Lateral movement between supportables now goes up to the grouping and back down."
+    "resolvesAt": "Breadcrumb dropdown",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-112",
@@ -1476,7 +1668,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if anything needs to be done from K-manager perspective ... they normally send it to, you know, to task. And then we have a— and it has a due date as well, you know, whether it will tell you like, you know, how soon it needs to be actioned.",
     "quoteSource": "Suman · Life Without Barriers session · 10:03",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-113",
@@ -1489,7 +1682,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "if there was a task and obviously, um, we couldn't understand or we needed some help, then obviously we reach out to our manager ... So we, we call as a lead, rostering lead.",
     "quoteSource": "Suman · Life Without Barriers session · 14:45",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-114",
@@ -1502,7 +1696,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "forward planning means like, uh, obviously, you know, just making sure the master roster is okay, to make sure that all the leaves are covered, and just to work on, like, you know, forward planning, you know, meaning like to maybe a fortnight ahead or maybe a month ahead",
     "quoteSource": "Suman · Life Without Barriers session · 02:36",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-115",
@@ -1515,7 +1710,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "those, you know, um, who does forward planning, uh, you know, covers reactive space from 3 to 5 o'clock because they normally start around 8:30 to 5 o'clock",
     "quoteSource": "Suman · Life Without Barriers session · 08:45",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-116",
@@ -1528,7 +1724,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "How fast is agency response? That's the most important one. I already have this information.",
     "quoteSource": "Suman · Life Without Barriers session · 47:52",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-117",
@@ -1541,7 +1738,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "I'm not sure whether there is any fast, you know, fast track or loophole to get, you know, get it done within couple of minutes instead of, you know, doing the whole, whole process that we use now",
     "quoteSource": "Suman · Life Without Barriers session · 49:16",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-118",
@@ -1554,7 +1752,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "If we were to use just a portal itself, I would, you know, I would love to attend the training to see whether we can, you know, whether we can learn a lot of, you know, ideas on how to send, like, you know, the service request to a bunch of support workers",
     "quoteSource": "Suman · Life Without Barriers session · 49:16",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-119",
@@ -1567,7 +1766,8 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "origin": "research",
     "quote": "The outside budget remaining, uh, that's not relevant, um, you know, it doesn't matter to us because if, you know, most of the time we, you know, we're not creating a new service, it is just the existing, um, service that needs to be filled in",
     "quoteSource": "Suman · Life Without Barriers session · 48:35",
-    "resolvesAt": ""
+    "resolvesAt": "",
+    "previousResolvesAt": ""
   },
   {
     "id": "job-120",
@@ -1579,6 +1779,7 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "iaRelevant": true,
     "origin": "inferred",
     "resolvesAt": "",
+    "previousResolvesAt": "",
     "notAddressedReason": "The product has no pass that creates or fills shifts at more than one location at a time."
   },
   {
@@ -1591,6 +1792,7 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "iaRelevant": true,
     "origin": "inferred",
     "resolvesAt": "",
+    "previousResolvesAt": "",
     "notAddressedReason": "A node currently resolves its locations recursively, so a manager above several groupings sees leaves instead of their children."
   },
   {
@@ -1603,6 +1805,7 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "iaRelevant": true,
     "origin": "inferred",
     "resolvesAt": "",
+    "previousResolvesAt": "",
     "notAddressedReason": "There is no level between organisation and grouping, so SIL, Lifestyles and Careforce are modelled as sibling groupings."
   },
   {
@@ -1615,6 +1818,7 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "iaRelevant": true,
     "origin": "inferred",
     "resolvesAt": "",
+    "previousResolvesAt": "",
     "notAddressedReason": "Search across supportables, clients and workers is not built. It was deferred while only twenty-five locations are seeded."
   },
   {
@@ -1627,6 +1831,7 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "iaRelevant": true,
     "origin": "inferred",
     "resolvesAt": "",
+    "previousResolvesAt": "",
     "notAddressedReason": "Notification preferences by person and event type are not built. Wanting fewer items is a preference, not a narrower scope."
   },
   {
@@ -1639,6 +1844,7 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "iaRelevant": false,
     "origin": "inferred",
     "resolvesAt": "",
+    "previousResolvesAt": "",
     "notAddressedReason": "A manager's judgement about a worker has no home in the product."
   },
   {
@@ -1651,9 +1857,10 @@ export const JOBS_TO_BE_DONE: JobToBeDone[] = [
     "iaRelevant": false,
     "origin": "inferred",
     "resolvesAt": "",
+    "previousResolvesAt": "",
     "notAddressedReason": "Risk on the grouping dashboard is urgency, not consequence. The platform cannot see the provider's own roster."
   }
-]
+];
 
 export const JOB_THEMES = [
   ...new Set(JOBS_TO_BE_DONE.map((job) => job.theme)),

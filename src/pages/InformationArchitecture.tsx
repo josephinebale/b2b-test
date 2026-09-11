@@ -18,7 +18,9 @@ import {
 import {
   NODE_NAV_ITEMS,
   PERSONAS,
+  ROUTES,
   VISIBLE_ORGANISATIONS,
+  treeSectionLabel,
   type NavigationNodeType,
   type Organisation,
   type Persona,
@@ -60,16 +62,33 @@ function isEntryBranch(
     : false;
 }
 
-function NodePages({ nodeType }: { nodeType: NavigationNodeType }) {
-  const pages = NODE_NAV_ITEMS.filter((item) =>
-    item.nodeTypes.some((itemNodeType) => itemNodeType === nodeType),
+function NodePages({
+  nodeType,
+  grouping,
+  location,
+}: {
+  nodeType: NavigationNodeType;
+  grouping: Grouping;
+  location?: Location;
+}) {
+  const pages = NODE_NAV_ITEMS.filter(
+    (item) =>
+      item.placement === 'main' &&
+      item.nodeTypes.some((itemNodeType) => itemNodeType === nodeType),
   );
 
   return (
     <div className="flex flex-wrap gap-2">
-      {pages.map((page) => (
-        <Tag key={page.path}>{page.label}</Tag>
-      ))}
+      {pages.map((page) => {
+        const label =
+          page.path === '/supportables'
+            ? treeSectionLabel(grouping, nodeType)
+            : page.path === ROUTES.manageLocation &&
+                location?.serviceType === 'home-community'
+              ? `${location.name} settings`
+              : page.label;
+        return <Tag key={page.path}>{label}</Tag>;
+      })}
     </div>
   );
 }
@@ -107,7 +126,7 @@ function LocationNode({
         </div>
       </div>
       <div className="mt-3 pl-12">
-        <NodePages nodeType="location" />
+        <NodePages nodeType="location" grouping={grouping} location={location} />
       </div>
     </div>
   );
@@ -150,7 +169,7 @@ function GroupingNode({
       </summary>
 
       <div className="ui-inset-card space-y-3 border-t border-border-subtle">
-        <NodePages nodeType="grouping" />
+        <NodePages nodeType="grouping" grouping={grouping} />
 
         {children.length > 0 && (
           <div className="space-y-3 border-l border-border-subtle pl-4">
@@ -226,12 +245,20 @@ export function InformationArchitecture() {
           <div className="max-w-content">
             <h2 className="text-sm font-bold text-text">Assumptions</h2>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-text-secondary">
-              <li>Organisation is a hard boundary</li>
+              <li>
+                Organisation is a hard boundary
+              </li>
               <li>
                 Role does not hide anything: everyone at a provider can access and edit anything in their provider’s tree. This is an MVP assumption based on current understanding, not an established finding, and it may change as more organisations come into view.
               </li>
               <li>
                 A provider configures which node each role lands on, so a person starts in the right place on first use.
+              </li>
+              <li>
+                Organisation → Arm → Grouping → Location. An arm is a grouping whose children are always groupings. No persona enters at an arm.
+              </li>
+              <li>
+                A node lists its children, not its descendants. Counts roll up; rows do not.
               </li>
             </ul>
           </div>
@@ -287,7 +314,16 @@ export function InformationArchitecture() {
                       <ChevronDown className="h-5 w-5 shrink-0 text-text-tertiary transition-transform" />
                     </summary>
                     <div className="ui-inset-card space-y-3 border-t border-border-subtle">
-                      <NodePages nodeType="organisation" />
+                      <NodePages
+                        nodeType="organisation"
+                        grouping={{
+                          id: organisation,
+                          name: organisation,
+                          organisation,
+                          locationIds: [],
+                          groupingIds: roots.map((root) => root.id),
+                        }}
+                      />
                       {roots.map((grouping) => (
                         <GroupingNode
                           key={grouping.id}

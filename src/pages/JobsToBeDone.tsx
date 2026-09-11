@@ -8,6 +8,7 @@ import { Tag } from '../components/ui/Tag';
 import {
   JOB_THEMES,
   JOBS_TO_BE_DONE,
+  sessionUrlFromQuoteSource,
   type JobToBeDone as Job,
 } from '../data/jobsToBeDone';
 import {
@@ -23,6 +24,10 @@ function sectorLabel(sector: Sector): string {
   return sector === 'aged care' ? 'Aged care' : 'Disability';
 }
 
+function quoteTimestampFromQuoteSource(quoteSource: string | undefined): string {
+  return quoteSource?.match(/(\d+:\d{2})/)?.[1] ?? '';
+}
+
 function JobRow({ job }: { job: Job }) {
   return (
     <li className="ui-inset-card">
@@ -34,6 +39,7 @@ function JobRow({ job }: { job: Job }) {
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
+        {/* Origin is provenance (who raised it). The Source expander is evidence (the quote). */}
         {job.origin === 'inferred' ? (
           <Tag tone="pending">Inferred</Tag>
         ) : (
@@ -48,13 +54,17 @@ function JobRow({ job }: { job: Job }) {
         <p className="mt-3 text-xs text-text-secondary">
           <span className="font-bold text-text">Addressed, where it resolves:</span> {job.resolvesAt}
         </p>
+      ) : job.previousResolvesAt ? (
+        <p className="mt-3 text-xs text-text-secondary">
+          <span className="font-bold text-text">Hidden for this round, where it returns:</span> {job.previousResolvesAt}
+        </p>
       ) : job.notAddressedReason ? (
         <p className="mt-3 text-xs text-text-secondary">
-          <span className="font-bold text-text">Not addressed yet:</span> {job.notAddressedReason}
+          <span className="font-bold text-text">Not addressed:</span> {job.notAddressedReason}
         </p>
       ) : (
         <p className="mt-3 text-xs text-text-secondary">
-          <span className="font-bold text-text">Not addressed yet</span>
+          <span className="font-bold text-text">Not addressed</span>
         </p>
       )}
 
@@ -64,10 +74,14 @@ function JobRow({ job }: { job: Job }) {
             <span>Source</span>
             <ChevronDown className="h-4 w-4 shrink-0 transition-transform" />
           </summary>
-          <div className="ui-inset-compact">
-            <p className="text-sm text-text-secondary">{job.quote}</p>
-            <p className="mt-1 text-xs text-text-secondary">{job.quoteSource}</p>
-          </div>
+          <p className="mt-3 text-sm text-text-secondary">“{job.quote}”</p>
+          <p className="mt-1 text-xs text-text-secondary">
+            <a href={sessionUrlFromQuoteSource(job.quoteSource)} className="ui-link" target="_blank" rel="noreferrer">
+              {job.saidBy}
+            </a>
+            {' · '}
+            {quoteTimestampFromQuoteSource(job.quoteSource)}
+          </p>
         </details>
       ) : (
         <></>
@@ -110,9 +124,9 @@ export function JobsToBeDone() {
   const [originFilter, setOriginFilter] = useState<'' | 'research' | 'inferred'>(
     '',
   );
-  const [statusFilter, setStatusFilter] = useState<'' | 'addressed' | 'unaddressed'>(
-    '',
-  );
+  const [statusFilter, setStatusFilter] = useState<
+    '' | 'addressed' | 'hidden' | 'unaddressed'
+  >('');
   const filteredJobs = JOBS_TO_BE_DONE.filter(
     (job) =>
       (!organisationFilter || job.organisation === organisationFilter) &&
@@ -120,7 +134,9 @@ export function JobsToBeDone() {
       (!themeFilter || job.theme === themeFilter) &&
       (!originFilter || job.origin === originFilter) &&
       (!statusFilter ||
-        (statusFilter === 'addressed' ? Boolean(job.resolvesAt) : !job.resolvesAt)),
+        (statusFilter === 'addressed' && Boolean(job.resolvesAt)) ||
+        (statusFilter === 'hidden' && !job.resolvesAt && Boolean(job.previousResolvesAt)) ||
+        (statusFilter === 'unaddressed' && !job.resolvesAt && !job.previousResolvesAt)),
   );
 
   return (
@@ -140,6 +156,7 @@ export function JobsToBeDone() {
       <main className="mx-auto w-full max-w-page flex-1 px-8 py-8">
         <PageHeading
           title="Jobs to be done"
+          description="Addressed status reflects what is currently reachable; several surfaces are hidden for this round."
           actions={<Button href={href('/')}>Back</Button>}
         />
 
@@ -236,14 +253,19 @@ export function JobsToBeDone() {
                     value={statusFilter}
                     onChange={(event) =>
                       setStatusFilter(
-                        event.target.value as '' | 'addressed' | 'unaddressed',
+                        event.target.value as
+                          | ''
+                          | 'addressed'
+                          | 'hidden'
+                          | 'unaddressed',
                       )
                     }
                     className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                   >
                     <option value="">All statuses</option>
                     <option value="addressed">Addressed</option>
-                    <option value="unaddressed">Not addressed yet</option>
+                    <option value="hidden">Hidden for this round</option>
+                    <option value="unaddressed">Not addressed</option>
                   </select>
                   <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 text-text-tertiary" />
                 </span>
