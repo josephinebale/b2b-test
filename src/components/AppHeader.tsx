@@ -21,6 +21,8 @@ import {
 import { Logo } from './Logo';
 import { NodeBreadcrumb } from './NodeBreadcrumb';
 import { PinnedQuestion } from './PinnedQuestion';
+import { HEADER_SEARCH_VISIBLE, HeaderSearch } from './HeaderSearch';
+import { LANDING_CONTENT_ENABLED } from './LandingPlaceholder';
 import { Badge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
@@ -30,12 +32,15 @@ type AppHeaderProps = {
   location: Location | null;
   grouping: Grouping;
   persona: Persona;
-  nodeType: 'grouping' | 'location';
+  nodeType: 'grouping' | 'location' | 'organisation';
   path: string;
   unreadMessages: number;
   bookingsBadge: number;
   unreadNotifications: number;
   onSelectGrouping: (groupingId: string) => void;
+  onSelectOrganisation: () => void;
+  onSelectSearchLocation: (locationId: string) => void;
+  onSelectSearchWorker: (workerId: string, locationId: string) => void;
   onSignOut: () => void;
 };
 
@@ -49,6 +54,9 @@ export function AppHeader({
   bookingsBadge,
   unreadNotifications,
   onSelectGrouping,
+  onSelectOrganisation,
+  onSelectSearchLocation,
+  onSelectSearchWorker,
   onSignOut,
 }: AppHeaderProps) {
   const accountMenu = useKeyboardMenu();
@@ -58,7 +66,9 @@ export function AppHeader({
     activeNavRef.current?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }, [path]);
 
-  const notificationsName = notificationsAccessibleName(unreadNotifications);
+  const notificationsName = notificationsAccessibleName(
+    LANDING_CONTENT_ENABLED ? unreadNotifications : 0,
+  );
   const accountName = accountAccessibleName(persona.name);
   const visibleNavItems = NODE_NAV_ITEMS.filter(
     (item) =>
@@ -74,7 +84,7 @@ export function AppHeader({
           className="app-header-row mx-auto flex max-w-page items-center justify-between gap-4 px-8"
           style={{ height: 'var(--header-identity-height)' }}
         >
-          <div className="flex min-w-0 items-center gap-6">
+          <div className="flex min-w-0 flex-1 items-center gap-6">
             <a
               href={href(nodeType === 'location' ? '/bookings' : '/')}
               aria-label={
@@ -94,11 +104,22 @@ export function AppHeader({
               location={location}
               grouping={grouping}
               nodeType={nodeType}
+              entryGroupingId={persona.entry.groupingId}
               onSelectGrouping={onSelectGrouping}
+              onSelectOrganisation={onSelectOrganisation}
+              onSelectLocation={onSelectSearchLocation}
             />
           </div>
 
-          <div className="flex flex-1 items-center justify-end gap-3">
+          <div className="flex shrink-0 items-center justify-end gap-3">
+            {HEADER_SEARCH_VISIBLE && (
+              <HeaderSearch
+                organisation={persona.organisation}
+                onSelectLocation={onSelectSearchLocation}
+                onSelectGrouping={onSelectGrouping}
+                onSelectWorker={onSelectSearchWorker}
+              />
+            )}
             <IconButton
               href={href(NOTIFICATIONS_NODE_ITEM.path)}
               aria-label={notificationsName}
@@ -110,7 +131,9 @@ export function AppHeader({
               }`}
             >
               <Bell className="h-5 w-5" />
-              <Badge count={unreadNotifications} />
+              {LANDING_CONTENT_ENABLED && (
+                <Badge count={unreadNotifications} />
+              )}
             </IconButton>
 
             <div className="relative flex items-center">
@@ -188,7 +211,7 @@ export function AppHeader({
         </div>
       </div>
 
-      {visibleNavItems.length > 1 && (
+      {visibleNavItems.length > 0 && (
         <div className="app-header-nav-row mx-auto flex max-w-page items-stretch overflow-x-auto px-8">
           <nav className="flex h-full w-max items-stretch" aria-label="Main">
             {visibleNavItems.map((item) => {
@@ -207,12 +230,13 @@ export function AppHeader({
                 (item.path === '/'
                   ? navPath === '/'
                   : navPath.startsWith(item.path));
-              const count =
-                item.label === 'Bookings'
+              const count = LANDING_CONTENT_ENABLED
+                ? item.label === 'Bookings'
                   ? bookingsBadge
                   : item.label === 'Messages'
                     ? unreadMessages
-                    : 0;
+                    : 0
+                : 0;
 
               const link = (
                 <a
@@ -221,9 +245,9 @@ export function AppHeader({
                   aria-current={active ? 'page' : undefined}
                   aria-label={
                     item.label === 'Bookings'
-                      ? bookingsAccessibleName(bookingsBadge)
+                      ? bookingsAccessibleName(count)
                       : item.label === 'Messages'
-                        ? messagesAccessibleName(unreadMessages)
+                        ? messagesAccessibleName(count)
                         : visibleLabel
                   }
                   className={`main-nav-link h-full shrink-0 text-sm ${
@@ -235,7 +259,7 @@ export function AppHeader({
                   <span className="main-nav-label" data-label={visibleLabel}>
                     <span>{visibleLabel}</span>
                   </span>
-                  <Badge count={count} />
+                  {LANDING_CONTENT_ENABLED && <Badge count={count} />}
                 </a>
               );
 

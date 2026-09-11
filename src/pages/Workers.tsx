@@ -1,6 +1,10 @@
 import { useState, type ReactNode } from 'react';
 import { Calendar, MessageSquare } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
+import {
+  LANDING_CONTENT_ENABLED,
+  LandingPlaceholder,
+} from '../components/LandingPlaceholder';
 import { PageHeading, RequestBookingButton } from '../components/PageHeading';
 import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Card } from '../components/ui/Card';
@@ -218,6 +222,8 @@ export function Workers({
 
   return (
     <div className="width-main-column">
+      {LANDING_CONTENT_ENABLED ? (
+        <>
       <PageHeading
         title="Workers"
         description={
@@ -282,6 +288,10 @@ export function Workers({
             </section>
           )}
         </div>
+      )}
+        </>
+      ) : (
+        <LandingPlaceholder />
       )}
     </div>
   );

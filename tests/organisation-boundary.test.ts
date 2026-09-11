@@ -8,6 +8,7 @@ import {
   getLocationData,
   locationHistoryForWorker,
   locationWorkerTiers,
+  rootGroupingsForOrganisation,
 } from '../src/data/locations.ts';
 import {
   ORGANISATIONS,
@@ -31,6 +32,26 @@ test('the moderator persona picker covers every organisation after the node menu
         (grouping) => grouping.organisation === organisation,
       ).length > 0,
     );
+  }
+});
+
+test('each organisation boundary starts with arms containing only its groupings', () => {
+  for (const organisation of ORGANISATIONS) {
+    const arms = rootGroupingsForOrganisation(organisation);
+    assert.ok(arms.length > 0);
+    assert.ok(arms.every((arm) => arm.kind === 'arm'));
+    for (const arm of arms) {
+      assert.equal('sector' in arm, false);
+      assert.equal(arm.locationIds.length, 0);
+      assert.ok((arm.groupingIds ?? []).length > 0);
+      assert.ok(
+        (arm.groupingIds ?? []).every(
+          (groupingId) =>
+            GROUPINGS.find((grouping) => grouping.id === groupingId)
+              ?.organisation === organisation,
+        ),
+      );
+    }
   }
 });
 

@@ -10,6 +10,7 @@ import {
   GROUPINGS,
   LOCATIONS,
   descendantLocationIds,
+  rootGroupingsForOrganisation,
   serviceTypeLabel,
   type Grouping,
   type Location,
@@ -24,16 +25,6 @@ import {
   type PersonaId,
 } from '../lib/informationArchitecture';
 import { href } from '../lib/router';
-
-function rootGroupings(organisation: Organisation): Grouping[] {
-  const childIds = new Set(
-    GROUPINGS.flatMap((grouping) => grouping.groupingIds ?? []),
-  );
-  return GROUPINGS.filter(
-    (grouping) =>
-      grouping.organisation === organisation && !childIds.has(grouping.id),
-  );
-}
 
 function directLocations(grouping: Grouping): Location[] {
   return grouping.locationIds
@@ -280,7 +271,7 @@ export function InformationArchitecture() {
 
           <div className="mt-8 space-y-4">
             {visibleOrganisations.map((organisation) => {
-              const roots = rootGroupings(organisation);
+              const roots = rootGroupingsForOrganisation(organisation);
               const withoutGrouping = ungroupedLocations(organisation);
 
               return (
@@ -296,6 +287,7 @@ export function InformationArchitecture() {
                       <ChevronDown className="h-5 w-5 shrink-0 text-text-tertiary transition-transform" />
                     </summary>
                     <div className="ui-inset-card space-y-3 border-t border-border-subtle">
+                      <NodePages nodeType="organisation" />
                       {roots.map((grouping) => (
                         <GroupingNode
                           key={grouping.id}

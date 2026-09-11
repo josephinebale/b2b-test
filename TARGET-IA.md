@@ -7,7 +7,7 @@ This file is the information architecture the prototype follows today, plus the 
 - **`PROJECT.md`** — how screens, routes, chrome, data and tests work today. Give that file to another agent as the current-behaviour handoff.
 - **This file** — the node tree, node rules, naming, and what is still target-only.
 
-If a later task appears to contradict the live tree, **stop and raise the conflict**. Do not silently restore an older target (location-scoped Notifications, a location Dashboard, grouping Workers as a destination) as if it were still the plan.
+If a later task appears to contradict the live tree, **stop and raise the conflict**. Do not silently restore an older target (location-scoped Notifications or a location Dashboard) as if it were still the plan.
 
 ---
 
@@ -17,53 +17,57 @@ Two sections resolve at whichever node the user is standing on, rather than havi
 
 ```
 Organisation
-├─ Organisation settings                  (org, hard, read-only)
+├─ Dashboard                              deliberately undefined;
+│                                          placeholder only; no persona
+│                                          starts here
+├─ Organisation settings                  (org, hard, read-only;
+│                                          account menu, not a section
+│                                          of this face)
 ├─ Notifications                          (person; resolves at the
 │                                          entry node; header utility
-│                                          at grouping and location)
-├─ Grouping  [region or caseload; a location may have more than one parent]
-│   └─ Dashboard                          node-relative; only grouping
-│        houses and centres, then clients   destination. No second header
-│        (omit a section if empty);         tier. Workers used regularly
-│        requests ordered by urgency;       is a read-only section here,
-│        usage frequency;                   not a Workers destination.
-│        workers used regularly
-│        (ranked by shifts, then sites;
-│        no search, no marketplace,
-│        no profile or message/book)
-└─ Location                               bookable entity; SIL house,
-    │                                     centre / day program, or
-    │                                     home and community
-    ├─ Bookings                           (location, hard; default page)
-    │    week schedule first; View by
-    │    status is secondary. Request,
-    │    worker selection step = Workers
-    │    with a time window applied.
-    │    Fatigue: see the Fatigue rule.
-    │    The booking is against the
-    │    location and also carries which
-    │    participants it covers. Finance
-    │    reference is for a centre only.
-    │    Tier 3 appears only when tiers
-    │    1 and 2 return nobody available.
-    ├─ Workers                            (location, hard)
-    │    tier 1: known at this location
-    │    tier 2: worked elsewhere in the
-    │            grouping, + site coverage
-    │    tier 3: available nearby, no
-    │            history, + search
-    ├─ Messages                           (location, hard, owned by the
-    │                                      location rather than the person;
-    │                                      unread count is this location)
-    └─ Location settings / profile        (location, hard)
+│                                          at grouping, location, and
+│                                          organisation)
+├─ Arm                                    same grouping face and sections;
+│   │                                      children are always groupings
+│   └─ Grouping                           region, area, caseload, lifestyles,
+│       │                                  or service; may nest recursively
+│       ├─ Dashboard                      requests ordered by urgency;
+│       │                                  usage frequency
+│       ├─ Supportables                   direct child groupings first,
+│       │                                  then houses and centres, clients;
+│       │                                  counts resolve recursively;
+│       │                                  rows do not
+│       ├─ Workers                        ranked by shifts, then sites;
+│       │                                  read-only, no section-local search,
+│       │                                  marketplace,
+│       │                                  profile, message or book actions
+│       └─ Location                       bookable entity; SIL house,
+│           │                              centre / day program, or
+│           │                              home and community
+│           ├─ Bookings                   (location, hard; default page)
+│           │    week schedule first; View by status is secondary.
+│           │    Request worker selection = Workers with a time window.
+│           │    Fatigue: see the Fatigue rule. The booking is against
+│           │    the location and carries which participants it covers.
+│           │    Finance reference is for a centre only. Tier 3 appears
+│           │    only when tiers 1 and 2 return nobody available.
+│           ├─ Workers                    (location, hard)
+│           │    tier 1: known at this location
+│           │    tier 2: worked elsewhere in the grouping, + site coverage
+│           │    tier 3: available nearby, no history, + search
+│           ├─ Messages                   (location, hard, owned by the
+│           │                              location; unread is this location)
+│           └─ Location settings/profile  (location, hard)
 └─ Your account                           (person)
      └─ Notification preferences          STILL TARGET: per manager,
                                           per type, frequency — not built
 ```
 
-A location may belong to more than one parent grouping at once: a **region** and a **caseload**. Those are the same kind of object at similar granularity, drawn by different service lines, not a stack. The tree above still shows Location under Grouping; it does not mean a location has only one parent. A grouping’s children are locations of any service type.
+A location may belong to more than one operational grouping at once: a **region** and a **caseload**. Those are the same kind of object at similar granularity, drawn by different service lines, not a stack. The tree above still shows Location under Grouping; it does not mean a location has only one parent. An arm’s children are always groupings. An operational grouping’s direct children may be child groupings, locations of any service type, or both.
 
-Chrome: two-tier header. Identity row (logo, breadcrumb, Notifications, account) at every node. Section row (Bookings / Workers / Messages / Location settings) at a location only. A grouping has no second tier, so the page heading sits 48px higher — a known open problem, not a settled decision. A left scope rail was tried and reverted: rendering the whole organisation tree showed a house manager twenty-five things they would never open, and putting sections in that rail left it empty at a grouping.
+Chrome: two-tier header at every node. The identity row holds logo, breadcrumb, Notifications, and account; organisation-wide search is built but hidden by default while navigation and IA are the research focus. The section row holds Dashboard only at the organisation, Dashboard / Supportables / Workers at a grouping, and Bookings / Workers / Messages / Location settings at a location. The organisation crumb name walks up to that Dashboard; the chevron still opens the arms. Eligible breadcrumb crumbs open their children. The current node stays fully visible; when the path does not fit its available width, ancestors drop from the left and an interactive ellipsis opens the hidden path. A left scope rail was tried and reverted: rendering the whole organisation tree showed a house manager twenty-five things they would never open.
+
+The organisation face is **deliberately undefined**. Nothing in the research describes anyone working at organisation level: the structures participants described top out at regional manager and at region. It exists so the tree has no hole, not because a job needs it. No persona enters there. Organisation settings stays in the account menu and is not a section of this face.
 
 ### Notifications (live)
 
@@ -119,7 +123,39 @@ A caseload is 8 to 12 houses, allocated geographically. There are 13 regions acr
 
 Mid-session persona switching is a **moderator** control in the bottom-right dock, not a participant one. Signed-in identity follows the persona: name, photo, role, organisation, and entry node. Restart clears it.
 
-A caseload uses the same grouping face as a region; it is not a fourth kind of node. Careforce area nests two caseloads and still uses that face, resolving locations recursively.
+A caseload uses the same grouping face as a region; it is not a fourth kind of node. Careforce area nests two caseloads and still uses that face. Its Dashboard lists those direct child caseloads rather than flattening their locations.
+
+### Navigation model at scale — first slice live
+
+**A node lists its children, not its descendants. Counts roll up; rows do not.** `descendantLocationIds` still resolves recursively for rolled-up counts and Notifications scope, but grouping Supportables renders only direct children. A child grouping has its own row with its name, recursively resolved contents and summed waiting work; selecting it enters that grouping's Dashboard. Direct location children retain the Houses and centres / Clients split. This matters because flattening works at Careforce area over two caseloads but stops working at an arm over 13 regions, where the manager would see leaves instead of their own structure.
+
+### Navigation model at scale — second slice live
+
+Every grouping has three section destinations: **Dashboard**, **Supportables**, and **Workers**. Dashboard keeps Requests waiting and Platform use. Supportables owns the direct-child rendering from the first slice. Workers owns the existing read-only provider-history population, still resolved across descendant locations and ranked by shifts, then locations worked, then name. It has no search, marketplace rows, profile links, or message/book actions. This fills the same 48px second header tier used at a location, so page headings no longer shift vertically between node types.
+
+### Navigation model at scale — third slice live
+
+**Organisation → Arm → Grouping → Location** is now the live tree. An arm is an ordinary grouping record with the same three-section face; it introduces no node type, page, or role behaviour, and its children are always groupings. Cerebral Palsy Alliance has SIL, Lifestyles, and Careforce arms; Northcott has Disability services; Life Without Barriers has Aged care. Counts resolve recursively and Supportables lists direct children, preserving the first-slice rule. Every persona keeps their previous entry grouping or location, so no persona starts at an arm. This retains the original reasoning: **Elise** (Cerebral Palsy Alliance; structure session · 30:35 and 31:47), asked to confirm the Lifestyles structure, corrected it unprompted because a level was missing above the lifestyles manager. The arm distinguishes service lines from geographic groupings instead of presenting both as one flat sibling list.
+
+### Navigation model at scale — fourth slice live
+
+Search is built as the low-frequency, wide-reach control but hidden by default while the next research sessions focus on navigation and IA. Turning its single named constant on restores it in the 56px identity row at every node. It uses plain case-insensitive substring matching within the signed-in organisation only. Results are grouped as **Supportables**, **Clients**, **Workers**, and **Groupings**: supportables match name or suburb; clients, provider-history workers, groupings, and arms match name. Supportables show service type and suburb, workers show provider hours, and groupings show recursively resolved contents in the same language as Supportables. Selecting a result enters its node or an existing worker profile. Empty query shows no surface; no matches show one named empty state. Marketplace-only workers never enter the query because they have no provider node. Location Workers search and the request-booking marketplace fallback remain separate controls over different populations.
+
+### Navigation model at scale — fifth slice live
+
+**A breadcrumb dropdown on each eligible crumb** opens that crumb’s siblings only: the direct children of its parent. Not the tree, not descendants, not the organisation. The current node participates and is marked in its own sibling list. A crumb with no siblings has no chevron. The organisation is a quiet label for the hard boundary and never opens. Menus show the first twenty siblings and then say how many more there are; they contain no search and do not fall through to hidden header search. The truncation ellipsis opens the ancestors it replaced, keeping a narrow path navigable.
+
+This is a scoped return of the location switcher that was removed. The original was removed for its reach — it listed everything in the organisation, modelling access rather than work. Siblings only is the whole difference: Sofia can move sideways among direct supportables in her caseload, while Rachel can move between the direct caseloads in her area, without either seeing an organisation tree. A working set object was considered and dropped because the sibling dropdown gives a Roster Coordinator the same lateral movement without a new object anyone has to curate. It would come back only if someone’s real working set cuts across groupings.
+
+Control rules:
+
+| Need | Control |
+| --- | --- |
+| Destinations at the node you are standing on | Second tier (live at grouping and location) |
+| Where you are, and moving back up your own path | Breadcrumb (live) |
+| Lateral movement to a sibling | Breadcrumb dropdown (live) |
+| Low frequency, wide reach | Header search (built and tested; hidden by default for the next research sessions) |
+| Views of the same records within one section | Rail, owned by the page (live on Bookings status views and Settings) |
 
 ---
 
@@ -128,31 +164,10 @@ A caseload uses the same grouping face as a region; it is not a fourth kind of n
 Do not treat these as live. Do not implement them unless a task names them.
 
 - **Notification preferences** under Your account (per manager, per type, frequency). Wanting fewer region-wide items lands here, not in a different Notifications scope.
-- **Grouping Workers as its own destination**, with search that reaches beyond the provider’s history. Live: that population is a read-only Dashboard section with no search and no marketplace rows. Nearby search stays on location Workers and the request-booking fallback.
+- **Search and marketplace reach on grouping Workers.** Live: grouping Workers is its own read-only destination over provider history, with no search and no marketplace rows. Nearby search stays on location Workers and the request-booking fallback.
 - **Location Dashboard.** Live: removed. Bookings is the location landing page; most-booked ordering folded into Workers tier 1.
 - **Messages count rolling up** the grouping tree. Live: unread is the current location; Notifications is person-scoped instead.
 - **Acting on several locations in one pass.** Parked.
-
-### Navigation model at scale
-
-Agreed direction, not built. This is the reasoning for how navigation would work once the tree is deeper and wider than twenty-five seeded locations. Do not treat any of it as live.
-
-- **An arm level between organisation and grouping.** SIL, Lifestyles and Careforce at the provider we know best; a disability arm and an aged care arm at another. The gap this fills is already recorded under [Known limits](#known-limits-of-this-ia); the target model adds that level rather than leaving it as an unasked gap.
-- **A node lists its children, not its descendants.** Counts roll up; rows do not. Today `descendantLocationIds` resolves recursively and the grouping Dashboard renders those resolved locations. That works at Careforce area over two caseloads. It stops working at an arm over 13 regions, where the manager would see leaves instead of their own structure.
-- **Three sections at a grouping instead of one:** Dashboard (urgency only, fixed length), Supportables (the node’s children, searchable), and Workers (already a target item above; grouping Workers remains its own destination, not a Dashboard section). This is what fills the second tier at a grouping and removes the 48px page-heading shift without inventing sections.
-- **Search in the header identity row at every node**, reaching supportables, clients and workers across the organisation. Low frequency, wide reach.
-- **A breadcrumb dropdown on each crumb**, opening that crumb’s siblings only. Not the tree, not the organisation. One level, capped at roughly twenty rows with a search field, falling through to search beyond that. This is a scoped return of the location switcher that was removed. The original was removed for its reach — it listed everything in the organisation, modelling access rather than work — not for the dropdown pattern.
-- **A working set object was considered and dropped.** The sibling dropdown gives a Roster Coordinator the same lateral movement without a new object anyone has to curate. It would come back if someone’s real working set cuts across groupings.
-
-Control rules (which need is live today, which is target):
-
-| Need | Control |
-| --- | --- |
-| Destinations at the node you are standing on | Second tier (live at a location; target at a grouping once it has three sections) |
-| Where you are, and moving back up your own path | Breadcrumb (live) |
-| Lateral movement to a sibling | Breadcrumb dropdown (target) |
-| Low frequency, wide reach | Search (target) |
-| Views of the same records within one section | Rail, owned by the page (live on Bookings status views and Settings) |
 
 ---
 
@@ -167,8 +182,16 @@ These are agreed gaps, not bugs to “fix” in the prototype.
 - At this provider, a worker being courted is **induction**: per site and binary — inducted to a site, or they cannot work there. It is held in the provider's own rostering system, so the platform cannot see it. Do not invent it as a blocker in the product. On platform, an inductee is indistinguishable from tier 3.
 - No funding balances or dollar amounts are attached to participants. Invoicing runs through a separate system entirely; a fabricated balance would mislead a participant in research. The prototype seeds invoice approval state only.
 - Worker history can be partitioned by **funding source**, not only by location, and this model does not express that. At a second provider, one client held two separate accounts because their supports were funded from two lines: a shared accommodation account, and a separate account for individually funded supports. They lived in the same house either way and were supported by overlapping people. In one account the client's team showed more than ten workers; in the other only two, because only workers who had already worked a shift under that funding line appeared. The coordinator could not offer the shift to anyone else and had to email the platform's own rostering team to reach them. She asked, unprompted, whether search could find a worker who was not in the account. Where this happens, the tier of people known to a location fragments, and it reads as far smaller than the pool of people who actually know the client. Wanting that boundary crossed is independent support for the tier of people who have worked elsewhere at the provider. A booking's **participants** and its **funding source** are not the same question. This model handles participants. It does not handle a funding line that splits the worker pool.
-- The live model has no level between organisation and grouping, and at least two providers need one. One provider runs a disability arm and an aged care arm within the same organisation. Sector is currently an attribute of a persona and of a location's type label, so two arms of one organisation cannot be represented. The same shape already exists at the provider we know best, where SIL, Lifestyles and the central rostering team are separate arms with their own regional structures. The prototype currently models them as sibling groupings, which loses the distinction that they are different kinds of service rather than different areas of one. This remains a gap in the live tree. The target model now addresses it with an **arm** level; see [Navigation model at scale](#navigation-model-at-scale).
-- The breadcrumb has no truncation rule. It has never needed one at three levels. The target model takes it to four and adds a dropdown affordance to each crumb, inside a 56px identity row that also holds the logo, a divider, search, notifications and account within 1376px. This is a layout rule that does not exist yet, not a token gap.
+- The arm level now exists, so service lines no longer sit flat beside geographic groupings. The remaining model gap is sector ownership: sector stays where it was on personas, locations, and operational groupings, while arms carry no sector. A provider with both disability and aged-care arms therefore remains unsupported as a sector model even though the hierarchy can now draw both arms.
+
+### What the research says about scale
+
+The navigation model recorded this morning rests on the premise that supportables and groupings are what grow, not workload per supportable. That premise was unevidenced in these files. These two statements are the evidence:
+
+- **Suman** (Life Without Barriers, aged care; Life Without Barriers session · 19:59) puts Victoria at more than 300 clients, at least 350. Every client is a location, so an aged care region is two orders of magnitude larger than a SIL region.
+- **Suman** (same session · 11:35) describes South Australia, Victoria and the Northern Territory as one region. The prototype seeds Life Without Barriers regions as Northern Sydney and Western Sydney with four clients each. The grouping face is therefore currently being tested far below the real scale. That is a **seeding gap**, not a model gap.
+
+Already recorded: a SIL region is roughly seven houses across 13 regions, and a caseload is 8 to 12. The same grouping face has to hold both ends of that range.
 
 ---
 

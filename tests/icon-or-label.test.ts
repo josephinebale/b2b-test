@@ -31,7 +31,16 @@ test('Messages sits in location section navigation with an inline badge like Boo
   assert.match(header, /<span>\{visibleLabel\}<\/span>/);
   assert.match(header, /item\.label === 'Bookings'\s*\? bookingsBadge/);
   assert.match(header, /item\.label === 'Messages'\s*\? unreadMessages/);
-  assert.match(header, /item\.label === 'Messages'\s*\? messagesAccessibleName\(unreadMessages\)/);
+  if (source('../src/components/LandingPlaceholder.tsx').includes(
+    'export const LANDING_CONTENT_ENABLED = false',
+  )) {
+    assert.match(header, /messagesAccessibleName\(count\)/);
+  } else {
+    assert.match(
+      header,
+      /item\.label === 'Messages'\s*\? messagesAccessibleName\(unreadMessages\)/,
+    );
+  }
   assert.doesNotMatch(header, /MessageSquare/);
 });
 

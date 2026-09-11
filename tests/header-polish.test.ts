@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import {
+  visibleBreadcrumbItems,
+  type BreadcrumbCrumb,
+} from '../src/lib/breadcrumb.ts';
 
 function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -236,13 +240,220 @@ test('badge digits sit on a zero line-height flex centre', () => {
   );
 });
 
-test('the breadcrumb is inline hierarchy rather than a menu', () => {
+test('the breadcrumb stays inline while each eligible crumb owns a menu', () => {
   const header = source('../src/components/AppHeader.tsx');
   const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
 
   assert.match(header, /NodeBreadcrumb/);
   assert.match(breadcrumb, /aria-label="Breadcrumb"/);
-  assert.doesNotMatch(breadcrumb, /useKeyboardMenu|role="menu"|aria-haspopup/);
+  assert.match(breadcrumb, /useKeyboardMenu/);
+  assert.match(breadcrumb, /role="menu"/);
+  assert.match(breadcrumb, /aria-haspopup="menu"/);
+  assert.doesNotMatch(breadcrumb, /role="tree"|LocationSwitcher/);
+});
+
+function charWidthMeasure(item: {
+  type: 'ellipsis' | 'crumb';
+  crumb?: BreadcrumbCrumb;
+}): number {
+  if (item.type === 'ellipsis') return 12;
+  const label = item.crumb?.label ?? '';
+  return item.crumb?.role === 'current' ? label.length * 8 : label.length * 7;
+}
+
+const helenCrumbs: BreadcrumbCrumb[] = [
+  { id: 'org', label: 'Cerebral Palsy Alliance', role: 'organisation' },
+  { id: 'cpa-sil', label: 'SIL', role: 'ancestor' },
+  { id: 'northern-sydney', label: 'Northern Sydney', role: 'ancestor' },
+  { id: 'dee-why-1', label: 'Dee Why 1', role: 'current' },
+];
+
+const rachelCrumbs: BreadcrumbCrumb[] = [
+  { id: 'org', label: 'Cerebral Palsy Alliance', role: 'organisation' },
+  { id: 'cpa-careforce', label: 'Careforce', role: 'ancestor' },
+  { id: 'careforce-area', label: 'Careforce area', role: 'current' },
+];
+
+const careforceArmCrumbs: BreadcrumbCrumb[] = [
+  { id: 'org', label: 'Cerebral Palsy Alliance', role: 'organisation' },
+  { id: 'cpa-careforce', label: 'Careforce', role: 'current' },
+];
+
+const longestSeededCrumbs: BreadcrumbCrumb[] = [
+  { id: 'org', label: 'Cerebral Palsy Alliance', role: 'organisation' },
+  { id: 'cpa-careforce', label: 'Careforce', role: 'ancestor' },
+  { id: 'careforce-area', label: 'Careforce area', role: 'ancestor' },
+  {
+    id: 'careforce-northern-caseload',
+    label: 'Careforce Northern caseload',
+    role: 'ancestor',
+  },
+  { id: 'chatswood-home', label: 'Noah Williams', role: 'current' },
+];
+
+/* The identity row as it is rendered: page inset, the logo block before the
+   breadcrumb, the row gap, and the utilities that keep their own width. */
+const PAGE_INSET = 32;
+const LOGO_BLOCK = 79 + 24 + 1 + 24;
+const ROW_GAP = 16;
+const UTILITIES = 36 + 12 + 84;
+
+function breadcrumbSpace(windowWidth: number): number {
+  const row = Math.min(windowWidth, 1440) - PAGE_INSET * 2;
+  return row - LOGO_BLOCK - ROW_GAP - UTILITIES;
+}
+
+test('the breadcrumb is measured against the space beside it, not its own box', () => {
+  const header = source('../src/components/AppHeader.tsx');
+  const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
+
+  assert.match(header, /<div className="flex min-w-0 flex-1 items-center gap-6">/);
+  assert.match(header, /<div className="flex shrink-0 items-center justify-end gap-3">/);
+  assert.doesNotMatch(
+    header,
+    /className="flex flex-1 items-center justify-end gap-3"/,
+  );
+  assert.match(breadcrumb, /ref=\{spaceRef\}/);
+  assert.match(breadcrumb, /flex min-w-0 flex-1 items-center gap-1 text-sm/);
+  assert.doesNotMatch(breadcrumb, /<nav ref=/);
+});
+
+test('the full path renders until a measurement proves it does not fit', () => {
+  const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
+
+  assert.match(breadcrumb, /availableWidth !== null && availableWidth > 0/);
+  assert.match(breadcrumb, /!measured \|\| !mediumFont/);
+});
+
+test('no seeded path truncates at a 1376px window', () => {
+  const space = breadcrumbSpace(1376);
+
+  [careforceArmCrumbs, rachelCrumbs, helenCrumbs, longestSeededCrumbs].forEach(
+    (crumbs) => {
+      const items = visibleBreadcrumbItems(crumbs, space, charWidthMeasure);
+      assert.ok(
+        items.every((item) => item.type === 'crumb'),
+        `${crumbs.map((crumb) => crumb.label).join(' > ')} should render whole at 1376px`,
+      );
+      assert.equal(items.length, crumbs.length);
+    },
+  );
+});
+
+test('the longest seeded path only drops an ancestor on a much narrower window', () => {
+  let firstTruncating = 0;
+  for (let width = 1440; width >= 320; width -= 1) {
+    const items = visibleBreadcrumbItems(
+      longestSeededCrumbs,
+      breadcrumbSpace(width),
+      charWidthMeasure,
+    );
+    if (items.some((item) => item.type === 'ellipsis')) {
+      firstTruncating = width;
+      break;
+    }
+  }
+
+  assert.ok(
+    firstTruncating < 1200,
+    `the longest path should survive well below 1376px, first dropped at ${firstTruncating}px`,
+  );
+  assert.ok(
+    firstTruncating > 900,
+    `expected the longest path to need a narrow window, first dropped at ${firstTruncating}px`,
+  );
+});
+
+test('breadcrumb truncation keeps the current node and drops ancestors from the left', () => {
+  const wide = visibleBreadcrumbItems(helenCrumbs, 1000, charWidthMeasure);
+  assert.deepEqual(
+    wide.map((item) => (item.type === 'ellipsis' ? '…' : item.crumb.label)),
+    ['Cerebral Palsy Alliance', 'SIL', 'Northern Sydney', 'Dee Why 1'],
+  );
+
+  const tight = visibleBreadcrumbItems(helenCrumbs, 280, charWidthMeasure);
+  assert.equal(tight[0]?.type, 'ellipsis');
+  assert.equal(tight.at(-1)?.type, 'crumb');
+  if (tight.at(-1)?.type === 'crumb') {
+    assert.equal(tight.at(-1).crumb.role, 'current');
+    assert.equal(tight.at(-1).crumb.label, 'Dee Why 1');
+  }
+  assert.ok(
+    !tight.some(
+      (item) => item.type === 'crumb' && item.crumb.role === 'organisation',
+    ),
+  );
+  assert.equal(
+    tight.filter((item) => item.type === 'ellipsis').length,
+    1,
+  );
+});
+
+test('breadcrumb truncation is decided by width, not crumb count', () => {
+  const shortFour = visibleBreadcrumbItems(
+    [
+      { id: 'a', label: 'A', role: 'organisation' },
+      { id: 'b', label: 'B', role: 'ancestor' },
+      { id: 'c', label: 'C', role: 'ancestor' },
+      { id: 'd', label: 'D', role: 'current' },
+    ],
+    200,
+    charWidthMeasure,
+  );
+  assert.ok(shortFour.every((item) => item.type === 'crumb'));
+
+  const twoLong = visibleBreadcrumbItems(
+    [
+      { id: 'org', label: 'Cerebral Palsy Alliance', role: 'organisation' },
+      {
+        id: 'here',
+        label: 'Northern Lifestyles',
+        role: 'current',
+      },
+    ],
+    200,
+    charWidthMeasure,
+  );
+  assert.equal(twoLong[0]?.type, 'ellipsis');
+  assert.equal(twoLong.length, 2);
+});
+
+test('Rachel and Helen keep their current labels when the trail is squeezed', () => {
+  const rachelTight = visibleBreadcrumbItems(rachelCrumbs, 250, charWidthMeasure);
+  assert.equal(rachelTight.at(-1)?.type, 'crumb');
+  if (rachelTight.at(-1)?.type === 'crumb') {
+    assert.equal(rachelTight.at(-1).crumb.label, 'Careforce area');
+  }
+
+  const helenNarrow = visibleBreadcrumbItems(helenCrumbs, 250, charWidthMeasure);
+  if (helenNarrow.at(-1)?.type === 'crumb') {
+    assert.equal(helenNarrow.at(-1).crumb.label, 'Dee Why 1');
+  }
+});
+
+test('the breadcrumb never clips a crumb label and the ellipsis restores hidden navigation', () => {
+  const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
+  const current = breadcrumb.slice(
+    breadcrumb.indexOf('aria-current="page"'),
+  );
+
+  assert.match(breadcrumb, /visibleBreadcrumbItems/);
+  assert.match(breadcrumb, /ResizeObserver/);
+  assert.doesNotMatch(breadcrumb, /\btruncate\b/);
+  const ellipsis = breadcrumb.slice(
+    breadcrumb.indexOf('function EllipsisMenu'),
+    breadcrumb.indexOf('function trailCrumbs'),
+  );
+  assert.match(ellipsis, /…/);
+  assert.match(ellipsis, /<button/);
+  assert.match(ellipsis, /hiddenCrumbs/);
+  const organisation = breadcrumb.slice(
+    breadcrumb.indexOf('function OrganisationCrumb'),
+    breadcrumb.indexOf('function siblingItems'),
+  );
+  assert.match(organisation, /onSelectOrganisation/);
+  assert.match(organisation, /<button/);
+  assert.doesNotMatch(current, /\btruncate\b/);
 });
 
 test('the logo and account align without pull-backs', () => {

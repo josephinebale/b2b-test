@@ -27,7 +27,7 @@ test('each Bookings column heads itself, so both headings start level', () => {
   assert.ok(titleAt < viewAt, 'title column comes first');
   assert.match(
     bookings,
-    /<h1 className="text-xl font-bold text-text">Bookings<\/h1>\s*<aside className="mt-6 space-y-4">/,
+    /<h1 className="text-xl font-bold text-text">Bookings<\/h1>\s*<aside className="mt-6 ui-rail-stack">/,
   );
   assert.match(bookings, /<h2 className="text-lg font-bold text-text">\{activeLabel\}<\/h2>/);
   assert.match(bookings, /Showing \{filteredBookings\.length > 0 \? 1 : 0\}/);
@@ -77,15 +77,52 @@ test('conversation rows are separated by one line, with none after the last', ()
 test('settings and bookings share one definite active rail treatment', () => {
   const settings = source('../src/pages/Settings.tsx');
   const bookings = source('../src/pages/Bookings.tsx');
+  const treatment =
+    /flex w-full items-center gap-2 border-l-4 px-3 py-2 text-left text-sm font-bold/;
 
   for (const [name, rail] of [['settings', settings], ['bookings', bookings]] as const) {
     /* Labels carry weight at rest, and the active row takes a 4px marker over a
        quiet blue fill, so the selected view is legible at a glance. */
-    assert.match(rail, /border-l-4 px-3 py-2/, `${name} rail marker`);
-    assert.match(rail, /font-bold/, `${name} rail label weight`);
+    assert.match(rail, treatment, `${name} rail item`);
     assert.match(rail, /border-text bg-info-surface text-text/, `${name} active row`);
+    assert.match(rail, /border-transparent text-text-strong hover:bg-surface-selected/, `${name} idle hover`);
+    assert.match(rail, /ui-rail-stack/, `${name} 16px gap below the nav`);
     assert.doesNotMatch(rail, /border-l-2 px-3 py-2/, `${name} keeps no thin marker`);
+    assert.doesNotMatch(rail, /hover:bg-surface-subtle/, `${name} idle hover matches Bookings`);
   }
+});
+
+test('the five rail-content surfaces share column width, alignment, and the 16px stack', () => {
+  const css = source('../src/index.css');
+  const bookings = source('../src/pages/Bookings.tsx');
+  const settings = source('../src/pages/Settings.tsx');
+  const profile = source('../src/pages/WorkerProfile.tsx');
+  const preview = source('../src/pages/LocationProfilePreview.tsx');
+  const messages = source('../src/pages/Messages.tsx');
+
+  assert.match(
+    css,
+    /\.layout-rail-content \{\s*display: grid;\s*align-items: start;\s*gap: var\(--space-5\);\s*grid-template-columns: var\(--narrow-column-width\) minmax\(0, 1fr\);/,
+  );
+  assert.match(
+    css,
+    /\.ui-rail-stack \{\s*display: flex;\s*flex-direction: column;\s*gap: var\(--space-4\);/,
+  );
+
+  for (const [name, page] of [
+    ['bookings', bookings],
+    ['settings', settings],
+    ['worker profile', profile],
+    ['location-profile preview', preview],
+  ] as const) {
+    assert.match(page, /layout-rail-content/, `${name} uses the rail layout`);
+    assert.match(page, /ui-rail-stack/, `${name} uses the 16px stack`);
+  }
+
+  assert.match(messages, /layout-master-detail/);
+  assert.doesNotMatch(messages, /layout-rail-content/);
+  assert.doesNotMatch(messages, /border-l-4 px-3 py-2/);
+  assert.doesNotMatch(messages, /ui-rail-stack/);
 });
 
 test('booking detail sections use one 24px gap without a redundant divider', () => {

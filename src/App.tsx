@@ -8,7 +8,7 @@ import {
   findGrouping,
   findLocationForOrganisation,
   getLocationData,
-  groupingsForLocation,
+  parentGroupingForLocation,
   locationsForOrganisation,
   type Booking,
 } from './data/locations';
@@ -27,6 +27,7 @@ import {
   WORKERS_ROUTE,
   bookingViewFromPath,
   workerIdFromPath,
+  workerProfilePath,
 } from './lib/pageContent';
 import {
   INFORMATION_ARCHITECTURE_ROUTE,
@@ -59,6 +60,8 @@ import { Notifications, notificationCount } from './pages/Notifications';
 import { LocationProfilePreview } from './pages/LocationProfilePreview';
 import { InformationArchitecture } from './pages/InformationArchitecture';
 import { JobsToBeDone } from './pages/JobsToBeDone';
+import { GroupingWorkers } from './pages/GroupingWorkers';
+import { OrganisationDashboard } from './pages/OrganisationDashboard';
 import { PrototypeStart } from './pages/PrototypeStart';
 import { SessionLanding } from './pages/SessionLanding';
 import {
@@ -68,6 +71,7 @@ import {
 } from './pages/Settings';
 import { SignedOut } from './pages/SignedOut';
 import { STUB_TITLES, Stub } from './pages/Stub';
+import { Supportables } from './pages/Supportables';
 import { Workers } from './pages/Workers';
 import { WorkerProfile } from './pages/WorkerProfile';
 
@@ -130,17 +134,13 @@ export default function App() {
         persona.organisation,
       );
       if (!nextLocation) return;
-      const parents = groupingsForLocation(nextLocation.id).filter(
-        (parent) => parent.organisation === persona.organisation,
-      );
-      const preferredParent = parents.find(
-        (parent) => parent.id === preferredGroupingId,
-      );
       const nextGroupingId =
-        preferredParent?.id ??
-        (parents.some((parent) => parent.id === grouping.id)
-          ? grouping.id
-          : parents[0]?.id ?? entryGrouping.id);
+        parentGroupingForLocation(nextLocation.id, {
+          preferredGroupingId,
+          currentGroupingId: grouping.id,
+          entryGroupingId: entryGrouping.id,
+          organisation: persona.organisation,
+        }) ?? entryGrouping.id;
       writeLastGroupingId(nextGroupingId);
       writeLastLocationId(nextLocation.id);
       writeLastNodeType('location');
@@ -151,6 +151,13 @@ export default function App() {
     },
     [entryGrouping.id, grouping.id, persona.organisation],
   );
+
+  const selectOrganisation = useCallback(() => {
+    writeLastNodeType('organisation');
+    setNodeType('organisation');
+    setUnreadOverride(null);
+    navigate('/');
+  }, []);
 
   const selectGrouping = useCallback(
     (nextGroupingId: string) => {
@@ -166,6 +173,22 @@ export default function App() {
       navigate('/');
     },
     [persona.organisation],
+  );
+
+  const selectSearchLocation = useCallback(
+    (nextLocationId: string) => {
+      selectLocation(nextLocationId);
+      navigate('/bookings');
+    },
+    [selectLocation],
+  );
+
+  const selectSearchWorker = useCallback(
+    (workerId: string, nextLocationId: string) => {
+      selectLocation(nextLocationId);
+      navigate(workerProfilePath(workerId));
+    },
+    [selectLocation],
   );
 
   const switchPersona = useCallback((nextPersonaId: PersonaId) => {
@@ -302,19 +325,22 @@ export default function App() {
     );
   }
 
-  if (nodeType === 'grouping') {
+  if (nodeType === 'grouping' || nodeType === 'organisation') {
     return (
       <div className="relative flex min-h-screen flex-col">
         <AppHeader
           location={null}
           grouping={grouping}
           persona={persona}
-          nodeType="grouping"
+          nodeType={nodeType}
           path={path}
           unreadMessages={0}
           bookingsBadge={0}
           unreadNotifications={notificationCount(notificationData)}
           onSelectGrouping={selectGrouping}
+          onSelectOrganisation={selectOrganisation}
+          onSelectSearchLocation={selectSearchLocation}
+          onSelectSearchWorker={selectSearchWorker}
           onSignOut={signOut}
         />
 
@@ -332,6 +358,19 @@ export default function App() {
               />
             ) : path.startsWith(ROUTES.yourAccount) || path === '/settings' ? (
               <YourAccountSettings path={path} persona={persona} />
+            ) : nodeType === 'organisation' ? (
+              <OrganisationDashboard />
+            ) : path === '/supportables' ? (
+              <Supportables
+                grouping={grouping}
+                onSelectGrouping={selectGrouping}
+                onSelectLocation={(nextLocationId, nextPath = '/bookings') => {
+                  selectLocation(nextLocationId);
+                  navigate(nextPath);
+                }}
+              />
+            ) : path === '/workers' ? (
+              <GroupingWorkers grouping={grouping} />
             ) : (
               <Dashboard
                 grouping={grouping}
@@ -383,6 +422,9 @@ export default function App() {
         bookingsBadge={visibleData.bookingsToApprove}
         unreadNotifications={notificationCount(notificationData)}
         onSelectGrouping={selectGrouping}
+        onSelectOrganisation={selectOrganisation}
+        onSelectSearchLocation={selectSearchLocation}
+        onSelectSearchWorker={selectSearchWorker}
         onSignOut={signOut}
       />
 

@@ -33,8 +33,8 @@ export function LocationProfilePreview({ data }: { data: LocationData }) {
         }
       />
 
-      <div className="layout-rail-content grid items-start gap-6">
-        <aside>
+      <div className="layout-rail-content">
+        <aside className="ui-rail-stack">
           <Card className="p-6 text-center">
             <div className="flex justify-center">
               <LocationMarker location={data.location} />

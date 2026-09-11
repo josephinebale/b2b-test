@@ -2,6 +2,10 @@ import { useState, type ReactNode } from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import { LocationProfileSettings } from '../components/LocationProfileSettings';
+import {
+  LANDING_CONTENT_ENABLED,
+  LandingPlaceholder,
+} from '../components/LandingPlaceholder';
 import { PageHeading } from '../components/PageHeading';
 import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Button } from '../components/ui/Button';
@@ -510,8 +514,11 @@ function SettingsPage({
   const section = sectionFromPath(path, sections);
   return (
     <div>
+      {LANDING_CONTENT_ENABLED ? (
+      <>
       <PageHeading title={title} />
-      <div className="grid layout-rail-content items-start gap-6">
+      <div className="layout-rail-content">
+      <aside className="ui-rail-stack">
       <nav className="relative space-y-1" aria-label={title}>
         <PinnedQuestion
           questionId="settings-sections"
@@ -524,10 +531,10 @@ function SettingsPage({
               key={item.id}
               href={href(`${basePath}/${item.id}`)}
               aria-current={active ? 'page' : undefined}
-              className={`flex w-full items-center border-l-4 px-3 py-2 text-left text-sm font-bold ${
+              className={`flex w-full items-center gap-2 border-l-4 px-3 py-2 text-left text-sm font-bold ${
                 active
                   ? 'border-text bg-info-surface text-text'
-                  : 'border-transparent text-text-strong hover:bg-surface-subtle'
+                  : 'border-transparent text-text-strong hover:bg-surface-selected'
               }`}
             >
               {item.label}
@@ -535,11 +542,16 @@ function SettingsPage({
           );
         })}
       </nav>
+      </aside>
 
       <div className="w-full max-w-content">
         {renderSection(section)}
       </div>
       </div>
+      </>
+      ) : (
+        <LandingPlaceholder />
+      )}
     </div>
   );
 }

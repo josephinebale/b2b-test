@@ -1,8 +1,15 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { GROUPINGS, LOCATIONS } from '../src/data/locations.ts';
-import { PERSONAS } from '../src/lib/informationArchitecture.ts';
+import {
+  GROUPINGS,
+  LOCATIONS,
+  rootGroupingsForOrganisation,
+} from '../src/data/locations.ts';
+import {
+  ORGANISATIONS,
+  PERSONAS,
+} from '../src/lib/informationArchitecture.ts';
 
 function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -16,7 +23,7 @@ test('the IA screen derives every node instead of hardcoding the tree', () => {
   assert.match(page, /LOCATIONS/);
   assert.match(page, /NODE_NAV_ITEMS/);
   assert.match(page, /ORGANISATIONS\.filter/);
-  assert.match(page, /rootGroupings/);
+  assert.match(page, /rootGroupingsForOrganisation/);
   assert.match(page, /grouping\.groupingIds/);
   assert.match(page, /grouping\.locationIds/);
   assert.match(page, /serviceTypeLabel/);
@@ -34,6 +41,19 @@ test('the IA screen derives every node instead of hardcoding the tree', () => {
   }
 });
 
+test('the generated tree starts every organisation at its arm level', () => {
+  const page = source('../src/pages/InformationArchitecture.tsx');
+
+  for (const organisation of ORGANISATIONS) {
+    const roots = rootGroupingsForOrganisation(organisation);
+    assert.ok(roots.length > 0);
+    assert.ok(roots.every((root) => root.kind === 'arm'));
+  }
+  assert.doesNotMatch(page, /function rootGroupings/);
+  assert.match(page, /open=\{isEntryBranch/);
+  assert.match(page, /containsGrouping\(grouping, selectedPersona\.entry\.groupingId\)/);
+});
+
 test('node pages come from one definition shared with signed-in navigation', () => {
   const model = source('../src/lib/informationArchitecture.ts');
   const header = source('../src/components/AppHeader.tsx');
@@ -42,7 +62,11 @@ test('node pages come from one definition shared with signed-in navigation', () 
   assert.match(model, /export const NODE_NAV_ITEMS/);
   assert.match(
     model,
-    /label: 'Workers',[\s\S]*?nodeTypes: \['location'\]/,
+    /label: 'Workers',[\s\S]*?nodeTypes: \['grouping', 'location'\]/,
+  );
+  assert.match(
+    model,
+    /label: 'Supportables',[\s\S]*?path: '\/supportables',[\s\S]*?nodeTypes: \['grouping'\]/,
   );
   assert.match(model, /label: 'Notifications'/);
   assert.match(model, /label: 'Location settings'/);

@@ -41,8 +41,8 @@ test('the account menu exposes person and organisation settings together', () =>
   ]);
 });
 
-test('location navigation follows work frequency and grouping has only Dashboard', () => {
-  const mainLabelsFor = (nodeType: 'grouping' | 'location') =>
+test('both node types have a complete second-tier navigation', () => {
+  const mainLabelsFor = (nodeType: 'grouping' | 'location' | 'organisation') =>
     NODE_NAV_ITEMS.filter(
       (item) =>
         item.placement === 'main' &&
@@ -55,7 +55,40 @@ test('location navigation follows work frequency and grouping has only Dashboard
     'Messages',
     'Location settings',
   ]);
-  assert.deepEqual(mainLabelsFor('grouping'), ['Dashboard']);
+  assert.deepEqual(mainLabelsFor('grouping'), [
+    'Dashboard',
+    'Supportables',
+    'Workers',
+  ]);
+  assert.deepEqual(mainLabelsFor('organisation'), ['Dashboard']);
+});
+
+test('an arm reuses the grouping face instead of adding a node type', () => {
+  const session = readFileSync(
+    new URL('../src/lib/session.ts', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(
+    session,
+    /export type NodeType = 'grouping' \| 'location' \| 'organisation'/,
+  );
+  assert.doesNotMatch(session, /NodeType[\s\S]*?'arm'/);
+  assert.ok(
+    NODE_NAV_ITEMS.every((item) =>
+      item.nodeTypes.every(
+        (nodeType) =>
+          nodeType === 'grouping' ||
+          nodeType === 'location' ||
+          nodeType === 'organisation',
+      ),
+    ),
+  );
+  assert.ok(
+    NODE_NAV_ITEMS.every((item) =>
+      item.nodeTypes.every((nodeType) => nodeType !== 'arm'),
+    ),
+  );
 });
 
 test('client settings are named for the person in the location navigation', () => {

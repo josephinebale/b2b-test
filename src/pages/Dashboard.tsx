@@ -2,20 +2,18 @@ import { ChevronRight } from 'lucide-react';
 import {
   groupingOpenRequests,
   groupingUsageLast7Days,
-  partitionGroupingLocations,
-  pendingCountsForLocation,
-  serviceTypeLabel,
   type Grouping,
-  type Location,
 } from '../data/locations';
-import { LocationMarker } from '../components/LocationMarker';
+import {
+  LANDING_CONTENT_ENABLED,
+  LandingPlaceholder,
+} from '../components/LandingPlaceholder';
 import { PageHeading } from '../components/PageHeading';
 import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Card } from '../components/ui/Card';
 import { EntityLink } from '../components/ui/EntityLink';
 import { formatLongDate, formatTime } from '../lib/date';
-import { bookingsViewPath, pendingWorkParts } from '../lib/pageContent';
-import { WorkersPanel } from './dashboard/WorkersPanel';
+import { bookingsViewPath } from '../lib/pageContent';
 
 function plural(count: number, singular: string, pluralForm: string): string {
   return count === 1 ? singular : pluralForm;
@@ -30,41 +28,6 @@ function unansweredLabel(requestedAt: Date, now = new Date()): string {
   return days === 1 ? 'Unanswered for 1 day' : `Unanswered for ${days} days`;
 }
 
-function GroupingLocationRow({
-  location,
-  onSelectLocation,
-}: {
-  location: Location;
-  onSelectLocation?: (locationId: string, path?: string) => void;
-}) {
-  const pendingWork = pendingWorkParts(pendingCountsForLocation(location.id));
-  return (
-    <button
-      type="button"
-      onClick={() => onSelectLocation?.(location.id, '/bookings')}
-      className="ui-inset-row flex w-full items-center gap-3 text-left hover:bg-surface-subtle"
-    >
-      <LocationMarker location={location} />
-      <span className="min-w-0 flex-1">
-        <EntityLink as="span" className="block">
-          {location.name}
-        </EntityLink>
-        <span className="mt-1 block text-sm text-text-secondary">
-          {serviceTypeLabel(location.serviceType, location.sector)} · {location.suburb}
-        </span>
-        {/* Nothing waiting shows nothing: the name and type above already carry
-            the row, and the location's own page reads the same way. */}
-        {pendingWork.length > 0 && (
-          <span className="mt-1 block text-sm text-text-secondary">
-            {pendingWork.join(' · ')}
-          </span>
-        )}
-      </span>
-      <ChevronRight className="h-5 w-5 shrink-0 text-text-tertiary" />
-    </button>
-  );
-}
-
 export function Dashboard({
   grouping,
   onSelectLocation,
@@ -72,54 +35,17 @@ export function Dashboard({
   grouping: Grouping;
   onSelectLocation?: (locationId: string, path?: string) => void;
 }) {
-  const { housesAndCentres, clients } = partitionGroupingLocations(grouping);
   const requests = groupingOpenRequests(grouping.id);
   const usage = groupingUsageLast7Days(grouping.id);
 
   return (
       <div className="width-main-column space-y-8">
+        {LANDING_CONTENT_ENABLED ? (
+        <>
         <PageHeading
           title="Dashboard"
-          description={`Locations in ${grouping.name}`}
+          description={`Requests and platform use in ${grouping.name}`}
         />
-
-        {housesAndCentres.length > 0 && (
-          <section>
-            <div className="mb-3 flex items-center gap-2">
-              <h2 className="text-md font-bold text-text">Houses and centres</h2>
-              <PinnedQuestion questionId="grouping-locations" />
-            </div>
-            <Card divided>
-              {housesAndCentres.map((location) => (
-                <GroupingLocationRow
-                  key={location.id}
-                  location={location}
-                  onSelectLocation={onSelectLocation}
-                />
-              ))}
-            </Card>
-          </section>
-        )}
-
-        {clients.length > 0 && (
-          <section>
-            <div className="mb-3 flex items-center gap-2">
-              <h2 className="text-md font-bold text-text">Clients</h2>
-              {housesAndCentres.length === 0 && (
-                <PinnedQuestion questionId="grouping-locations" />
-              )}
-            </div>
-            <Card divided>
-              {clients.map((location) => (
-                <GroupingLocationRow
-                  key={location.id}
-                  location={location}
-                  onSelectLocation={onSelectLocation}
-                />
-              ))}
-            </Card>
-          </section>
-        )}
 
         <section>
           <div className="mb-3 flex items-center gap-2">
@@ -179,8 +105,10 @@ export function Dashboard({
             ))}
           </Card>
         </section>
-
-        <WorkersPanel grouping={grouping} />
+        </>
+        ) : (
+          <LandingPlaceholder />
+        )}
       </div>
   );
 }

@@ -62,11 +62,8 @@ test('element questions are pinned to every requested page and context', () => {
     ],
     '../src/pages/dashboard/WorkersPanel.tsx': ['workers-grouping-order'],
     '../src/pages/WorkerProfile.tsx': ['workers-profile-context'],
-    '../src/pages/Dashboard.tsx': [
-      'grouping-locations',
-      'grouping-requests',
-      'grouping-usage',
-    ],
+    '../src/pages/Supportables.tsx': ['grouping-locations'],
+    '../src/pages/Dashboard.tsx': ['grouping-requests', 'grouping-usage'],
     '../src/pages/Bookings.tsx': [
       'bookings-actions',
       'bookings-status',

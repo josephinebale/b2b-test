@@ -606,7 +606,16 @@ a.ui-entity-link--plain:hover {
 }
 
 .layout-rail-content {
+  display: grid;
+  align-items: start;
+  gap: var(--space-5);
   grid-template-columns: var(--narrow-column-width) minmax(0, 1fr);
+}
+
+.ui-rail-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .layout-master-detail {

@@ -206,13 +206,13 @@ export const ROUTES = {
   yourAccount: '/your-account',
 } as const;
 
-export type NavigationNodeType = 'grouping' | 'location';
+export type NavigationNodeType = 'grouping' | 'location' | 'organisation';
 export type NodeNavigationPlacement = 'main' | 'utility';
 
 export const NOTIFICATIONS_NODE_ITEM = {
   label: 'Notifications',
   path: '/notifications',
-  nodeTypes: ['grouping', 'location'],
+  nodeTypes: ['grouping', 'location', 'organisation'],
   placement: 'utility',
 } as const;
 
@@ -228,6 +228,12 @@ export const NODE_NAV_ITEMS = [
   {
     label: 'Dashboard',
     path: '/',
+    nodeTypes: ['grouping', 'organisation'],
+    placement: 'main',
+  },
+  {
+    label: 'Supportables',
+    path: '/supportables',
     nodeTypes: ['grouping'],
     placement: 'main',
   },
@@ -240,7 +246,7 @@ export const NODE_NAV_ITEMS = [
   {
     label: 'Workers',
     path: '/workers',
-    nodeTypes: ['location'],
+    nodeTypes: ['grouping', 'location'],
     placement: 'main',
   },
   {

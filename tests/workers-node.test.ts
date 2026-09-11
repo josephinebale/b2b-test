@@ -19,7 +19,7 @@ function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
 }
 
-test('Workers is a location destination, not a grouping destination', () => {
+test('Workers is a destination at both node types with node-specific content', () => {
   const app = source('../src/App.tsx');
   const header = source('../src/components/AppHeader.tsx');
   const router = source('../src/lib/router.ts');
@@ -31,12 +31,13 @@ test('Workers is a location destination, not a grouping destination', () => {
   const item = NODE_NAV_ITEMS.find(({ label }) => label === 'Workers');
   assert.ok(item);
   assert.equal(item.path, WORKERS_ROUTE);
-  assert.deepEqual(item.nodeTypes, ['location']);
+  assert.deepEqual(item.nodeTypes, ['grouping', 'location']);
   assert.match(
     header,
     /NODE_NAV_ITEMS\.filter[\s\S]*?item\.nodeTypes\.some/,
   );
   assert.match(app, /<Workers/);
+  assert.match(app, /<GroupingWorkers/);
   assert.doesNotMatch(app, /<Workers nodeType="grouping"/);
   assert.match(router, /\/team/);
   assert.match(router, /\/workers/);
@@ -127,10 +128,11 @@ test('Workers page keeps the location team first and the other tiers below it', 
   assert.doesNotMatch(workers, /Paying at|pay level/i);
 });
 
-test('grouping workers move to the Dashboard without search or marketplace rows', () => {
+test('grouping Workers is its own read-only page without search or marketplace rows', () => {
   const workers = source('../src/pages/Workers.tsx');
   const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
   const dashboard = source('../src/pages/Dashboard.tsx');
+  const groupingWorkersPage = source('../src/pages/GroupingWorkers.tsx');
 
   assert.doesNotMatch(workers, /nodeType === 'grouping'|groupingWorkers\(/);
   assert.match(panel, /groupingWorkers\(grouping\.id\)/);
@@ -142,7 +144,8 @@ test('grouping workers move to the Dashboard without search or marketplace rows'
   assert.match(panel, /needsAttentionClass\(!worker\.planConfirmed\)/);
   assert.doesNotMatch(panel, /nearbyWorkers|Search workers|MessageSquare|Calendar/);
   assert.match(panel, /questionId="workers-grouping-order"/);
-  assert.match(dashboard, /<WorkersPanel grouping=\{grouping\}/);
+  assert.doesNotMatch(dashboard, /<WorkersPanel grouping=\{grouping\}/);
+  assert.match(groupingWorkersPage, /<WorkersPanel grouping=\{grouping\}/);
   assert.match(workers, /questionId="workers-location-tiers"/);
   assert.match(workers, /questionId="workers-search"/);
 });

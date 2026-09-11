@@ -6,7 +6,7 @@ const NODE_TYPE_KEY = 'hm.lastNodeType';
 const GROUPING_KEY = 'hm.lastGroupingId';
 const PERSONA_KEY = 'hm.personaId';
 
-export type NodeType = 'grouping' | 'location';
+export type NodeType = 'grouping' | 'location' | 'organisation';
 export type PersonaId =
   | 'house-manager'
   | 'regional-manager'
@@ -55,7 +55,9 @@ export function writeLastLocationId(locationId: string): void {
 }
 
 export function readLastNodeType(): NodeType {
-  return read(NODE_TYPE_KEY) === 'grouping' ? 'grouping' : 'location';
+  const saved = read(NODE_TYPE_KEY);
+  if (saved === 'grouping' || saved === 'organisation') return saved;
+  return 'location';
 }
 
 export function writeLastNodeType(nodeType: NodeType): void {

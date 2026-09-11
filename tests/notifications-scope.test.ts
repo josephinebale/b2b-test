@@ -59,7 +59,7 @@ test('App derives notifications from the entry node and renders them at grouping
   assert.match(app, /const notificationData = notificationLocationIds\.map/);
   assert.match(
     app,
-    /if \(nodeType === 'grouping'\)[\s\S]*?path === '\/notifications'[\s\S]*?<Notifications/,
+    /if \(nodeType === 'grouping' \|\| nodeType === 'organisation'\)[\s\S]*?path === '\/notifications'[\s\S]*?<Notifications/,
   );
   assert.match(app, /<Notifications[\s\S]*data=\{notificationData\}/);
 });
@@ -70,7 +70,7 @@ test('the header Notifications control is available at groupings and locations',
 
   assert.match(
     architecture,
-    /NOTIFICATIONS_NODE_ITEM[\s\S]*?nodeTypes: \['grouping', 'location'\]/,
+    /NOTIFICATIONS_NODE_ITEM[\s\S]*?nodeTypes: \['grouping', 'location', 'organisation'\]/,
   );
   assert.doesNotMatch(
     header,

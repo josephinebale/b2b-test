@@ -25,8 +25,9 @@ export type Location = {
 export type Grouping = {
   id: string;
   name: string;
+  kind?: 'arm' | 'area' | 'caseload' | 'lifestyles' | 'region' | 'service';
   organisation: Organisation;
-  sector: Sector;
+  sector?: Sector;
   locationIds: string[];
   groupingIds?: string[];
 };
@@ -116,6 +117,21 @@ export type ProviderWorkerSummary = {
   totalHours: number;
   assessments: WorkerAssessments;
   locations: WorkerLocationHistory[];
+};
+
+export type OrganisationSearchWorker = {
+  id: string;
+  name: string;
+  organisation: Organisation;
+  totalHours: number;
+  locationId: string;
+};
+
+export type OrganisationSearchResults = {
+  supportables: Location[];
+  clients: Location[];
+  workers: OrganisationSearchWorker[];
+  groupings: Grouping[];
 };
 
 export type NearbyWorker = {
@@ -445,6 +461,7 @@ export const LOCATIONS: Location[] = [
 export const GROUPING: Grouping = {
   id: 'northern-sydney',
   name: 'Northern Sydney',
+  kind: 'region',
   organisation: 'Cerebral Palsy Alliance',
   sector: 'disability',
   locationIds: [
@@ -468,6 +485,7 @@ export const GROUPINGS: Grouping[] = [
   {
     id: 'northern-lifestyles',
     name: 'Northern Lifestyles',
+    kind: 'lifestyles',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
     locationIds: [
@@ -480,6 +498,7 @@ export const GROUPINGS: Grouping[] = [
   {
     id: 'careforce-area',
     name: 'Careforce area',
+    kind: 'area',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
     locationIds: [],
@@ -491,6 +510,7 @@ export const GROUPINGS: Grouping[] = [
   {
     id: 'careforce-caseload',
     name: 'Careforce caseload',
+    kind: 'caseload',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
     locationIds: [
@@ -505,6 +525,7 @@ export const GROUPINGS: Grouping[] = [
   {
     id: 'careforce-northern-caseload',
     name: 'Careforce Northern caseload',
+    kind: 'caseload',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
     locationIds: [
@@ -519,6 +540,7 @@ export const GROUPINGS: Grouping[] = [
   {
     id: 'northcott-sil-services',
     name: 'Western Sydney SIL services',
+    kind: 'service',
     organisation: 'Northcott',
     sector: 'disability',
     locationIds: ['north-parramatta-1', 'westmead-1'],
@@ -526,6 +548,7 @@ export const GROUPINGS: Grouping[] = [
   {
     id: 'northcott-individual-services',
     name: 'Western Sydney individual services',
+    kind: 'service',
     organisation: 'Northcott',
     sector: 'disability',
     locationIds: [
@@ -537,6 +560,7 @@ export const GROUPINGS: Grouping[] = [
   {
     id: 'lwb-greater-sydney',
     name: 'Greater Sydney',
+    kind: 'area',
     organisation: 'Life Without Barriers',
     sector: 'aged care',
     locationIds: [],
@@ -545,6 +569,7 @@ export const GROUPINGS: Grouping[] = [
   {
     id: 'lwb-northern-sydney',
     name: 'Northern Sydney',
+    kind: 'region',
     organisation: 'Life Without Barriers',
     sector: 'aged care',
     locationIds: [
@@ -557,6 +582,7 @@ export const GROUPINGS: Grouping[] = [
   {
     id: 'lwb-western-sydney',
     name: 'Western Sydney',
+    kind: 'region',
     organisation: 'Life Without Barriers',
     sector: 'aged care',
     locationIds: [
@@ -565,6 +591,49 @@ export const GROUPINGS: Grouping[] = [
       'linda-cooper-home',
       'michael-ward-home',
     ],
+  },
+  {
+    id: 'cpa-sil',
+    name: 'SIL',
+    kind: 'arm',
+    organisation: 'Cerebral Palsy Alliance',
+    locationIds: [],
+    groupingIds: ['northern-sydney'],
+  },
+  {
+    id: 'cpa-lifestyles',
+    name: 'Lifestyles',
+    kind: 'arm',
+    organisation: 'Cerebral Palsy Alliance',
+    locationIds: [],
+    groupingIds: ['northern-lifestyles'],
+  },
+  {
+    id: 'cpa-careforce',
+    name: 'Careforce',
+    kind: 'arm',
+    organisation: 'Cerebral Palsy Alliance',
+    locationIds: [],
+    groupingIds: ['careforce-area'],
+  },
+  {
+    id: 'northcott-disability-services',
+    name: 'Disability services',
+    kind: 'arm',
+    organisation: 'Northcott',
+    locationIds: [],
+    groupingIds: [
+      'northcott-sil-services',
+      'northcott-individual-services',
+    ],
+  },
+  {
+    id: 'lwb-aged-care',
+    name: 'Aged care',
+    kind: 'arm',
+    organisation: 'Life Without Barriers',
+    locationIds: [],
+    groupingIds: ['lwb-greater-sydney'],
   },
 ];
 
@@ -1181,6 +1250,19 @@ export function pendingCountsForLocation(locationId: string) {
   };
 }
 
+export function pendingCountsForGrouping(grouping: Grouping) {
+  return descendantLocationIds(grouping)
+    .map(pendingCountsForLocation)
+    .reduce(
+      (total, counts) => ({
+        requests: total.requests + counts.requests,
+        approvals: total.approvals + counts.approvals,
+        messages: total.messages + counts.messages,
+      }),
+      { requests: 0, approvals: 0, messages: 0 },
+    );
+}
+
 export function compareRequestUrgency(
   a: { start: Date; requestedAt: Date },
   b: { start: Date; requestedAt: Date },
@@ -1277,6 +1359,18 @@ export function findGrouping(groupingId: string | null): Grouping | null {
   return GROUPINGS.find((grouping) => grouping.id === groupingId) ?? null;
 }
 
+export function rootGroupingsForOrganisation(
+  organisation: Organisation,
+): Grouping[] {
+  const childIds = new Set(
+    GROUPINGS.flatMap((grouping) => grouping.groupingIds ?? []),
+  );
+  return GROUPINGS.filter(
+    (grouping) =>
+      grouping.organisation === organisation && !childIds.has(grouping.id),
+  );
+}
+
 /** Unique locations beneath a grouping, including locations in child groupings. */
 export function descendantLocationIds(grouping: Grouping): string[] {
   const locationIds: string[] = [];
@@ -1307,6 +1401,86 @@ export function childGroupings(grouping: Grouping): Grouping[] {
     .filter((child): child is Grouping => child !== null);
 }
 
+type GroupingKind = NonNullable<Grouping['kind']>;
+
+const GROUPING_KIND_TITLES: Record<GroupingKind, string> = {
+  arm: 'Arms',
+  area: 'Areas',
+  caseload: 'Caseloads',
+  lifestyles: 'Lifestyles',
+  region: 'Regions',
+  service: 'Services',
+};
+
+export function childGroupingSectionTitle(groupings: Grouping[]): string {
+  if (groupings.length === 0) return 'Groupings';
+  const kind = groupings[0].kind;
+  return kind && groupings.every((grouping) => grouping.kind === kind)
+    ? GROUPING_KIND_TITLES[kind]
+    : 'Groupings';
+}
+
+function housesAndCentresPhrase(locations: Location[], counted: boolean): string | null {
+  if (locations.length === 0) return null;
+  const count = locations.length;
+  const allHouses = locations.every((location) => location.serviceType === 'sil');
+  const allCentres = locations.every((location) => location.serviceType === 'centre');
+  if (allHouses) {
+    return counted ? `${count} ${count === 1 ? 'house' : 'houses'}` : 'houses';
+  }
+  if (allCentres) {
+    return counted ? `${count} ${count === 1 ? 'centre' : 'centres'}` : 'centres';
+  }
+  return counted ? `${count} houses and centres` : 'houses and centres';
+}
+
+function clientsPhrase(count: number, counted: boolean): string | null {
+  if (count === 0) return null;
+  if (!counted) return 'clients';
+  return `${count} ${count === 1 ? 'client' : 'clients'}`;
+}
+
+function joinHoldings(parts: string[]): string {
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+}
+
+/** What sits beneath a grouping, in Houses and centres / Clients language. */
+export function groupingContentsSummary(grouping: Grouping): string {
+  const locations = descendantLocationIds(grouping)
+    .map(findLocation)
+    .filter((location): location is Location => location !== null);
+  const housesAndCentres = locations.filter(
+    (location) => location.serviceType !== 'home-community',
+  );
+  const clients = locations.filter(
+    (location) => location.serviceType === 'home-community',
+  );
+  return [
+    housesAndCentresPhrase(housesAndCentres, true),
+    clientsPhrase(clients.length, true),
+  ]
+    .filter((part): part is string => part !== null)
+    .join(' · ');
+}
+
+/** Page description keyed to the node's direct children, never "children" or "nodes". */
+export function groupingDashboardDescription(grouping: Grouping): string {
+  const { groupings, housesAndCentres, clients } =
+    groupingDashboardChildren(grouping);
+  if (groupings.length > 0) {
+    return `The ${childGroupingSectionTitle(groupings).toLowerCase()} in ${grouping.name}`;
+  }
+  const held = joinHoldings(
+    [
+      housesAndCentresPhrase(housesAndCentres, false),
+      clientsPhrase(clients.length, false),
+    ].filter((part): part is string => part !== null),
+  );
+  return `The ${held} in ${grouping.name}`;
+}
+
 /** The current grouping and any grouping ancestors, ordered root first. */
 export function groupingPath(grouping: Grouping): Grouping[] {
   const path: Grouping[] = [];
@@ -1326,17 +1500,147 @@ export function groupingPath(grouping: Grouping): Grouping[] {
   return path;
 }
 
-/** Houses and centres first, then home-and-community clients, in grouping order. */
+/**
+ * Every chain of groupings leading from a grouping down to a location, the
+ * grouping itself excluded. A location can sit under more than one parent, so
+ * this can return more than one chain.
+ */
+function descentChains(
+  grouping: Grouping,
+  locationId: string,
+  visited: ReadonlySet<string> = new Set<string>(),
+): Grouping[][] {
+  if (visited.has(grouping.id)) return [];
+  const seen = new Set(visited).add(grouping.id);
+  const chains: Grouping[][] = grouping.locationIds.includes(locationId) ? [[]] : [];
+
+  childGroupings(grouping).forEach((child) => {
+    descentChains(child, locationId, seen).forEach((chain) => {
+      chains.push([child, ...chain]);
+    });
+  });
+
+  return chains;
+}
+
+/** The chain the person came down, preferring the branch holding their entry node. */
+function descentFrom(
+  grouping: Grouping,
+  locationId: string,
+  entryGroupingId?: string | null,
+): Grouping[] | null {
+  const chains = descentChains(grouping, locationId);
+  if (chains.length === 0) return null;
+  const entered = entryGroupingId
+    ? chains.find((chain) => chain.some((segment) => segment.id === entryGroupingId))
+    : undefined;
+  return entered ?? chains.reduce((shortest, chain) =>
+    chain.length < shortest.length ? chain : shortest,
+  );
+}
+
+/**
+ * The groupings a breadcrumb renders, root first. This is the path the person
+ * travelled: the ancestors of the node they are standing on, then every
+ * grouping between that node and the location they opened. A location can have
+ * more than one parent, so the path is never rediscovered from its parent list.
+ */
+export function breadcrumbTrail({
+  grouping,
+  location,
+  entryGroupingId,
+}: {
+  grouping: Grouping;
+  location?: Location | null;
+  entryGroupingId?: string | null;
+}): Grouping[] {
+  if (!location) return groupingPath(grouping);
+
+  const descent = descentFrom(grouping, location.id, entryGroupingId);
+  if (descent) return [...groupingPath(grouping), ...descent];
+
+  const entry = entryGroupingId ? findGrouping(entryGroupingId) : null;
+  const fromEntry = entry ? descentFrom(entry, location.id, entryGroupingId) : null;
+  if (entry && fromEntry) return [...groupingPath(entry), ...fromEntry];
+
+  const parent = directParentGroupings(location.id, location.organisation)[0];
+  return parent ? groupingPath(parent) : groupingPath(grouping);
+}
+
+function directParentGroupings(
+  locationId: string,
+  organisation: Organisation,
+): Grouping[] {
+  return GROUPINGS.filter(
+    (grouping) =>
+      grouping.organisation === organisation && grouping.locationIds.includes(locationId),
+  );
+}
+
+/**
+ * The grouping a location should open under: the node the link came from, then
+ * the node the person is standing on, then their entry node, then the
+ * location's first direct parent. Never an arm they did not travel through.
+ */
+export function parentGroupingForLocation(
+  locationId: string,
+  {
+    preferredGroupingId,
+    currentGroupingId,
+    entryGroupingId,
+    organisation,
+  }: {
+    preferredGroupingId?: string | null;
+    currentGroupingId?: string | null;
+    entryGroupingId?: string | null;
+    organisation: Organisation;
+  },
+): string | null {
+  const holding = [preferredGroupingId, currentGroupingId, entryGroupingId].find(
+    (groupingId) => {
+      const grouping = groupingId ? findGrouping(groupingId) : null;
+      return (
+        grouping !== null &&
+        grouping.organisation === organisation &&
+        descendantLocationIds(grouping).includes(locationId)
+      );
+    },
+  );
+  if (holding) return holding;
+
+  const parents = directParentGroupings(locationId, organisation);
+  const entry = entryGroupingId ? findGrouping(entryGroupingId) : null;
+  const entryArm = entry ? groupingPath(entry)[0]?.id : undefined;
+  const inEntryArm = entryArm
+    ? parents.find((parent) => groupingPath(parent)[0]?.id === entryArm)
+    : undefined;
+
+  return (inEntryArm ?? parents[0])?.id ?? null;
+}
+
+/** Direct location children: houses and centres first, then clients. */
 export function partitionGroupingLocations(grouping: Grouping): {
   housesAndCentres: Location[];
   clients: Location[];
 } {
-  const locations = descendantLocationIds(grouping)
+  const locations = grouping.locationIds
     .map(findLocation)
     .filter((location): location is Location => location !== null);
   return {
     housesAndCentres: locations.filter((location) => location.serviceType !== 'home-community'),
     clients: locations.filter((location) => location.serviceType === 'home-community'),
+  };
+}
+
+/** Direct children only. Counts for a grouping child may still resolve recursively. */
+export function groupingDashboardChildren(grouping: Grouping): {
+  groupings: Grouping[];
+  housesAndCentres: Location[];
+  clients: Location[];
+} {
+  return {
+    groupings: childGroupings(grouping),
+    ...partitionGroupingLocations(grouping),
   };
 }
 
@@ -1377,6 +1681,59 @@ export function locationsForOrganisation(
   organisation: Organisation,
 ): Location[] {
   return LOCATIONS.filter((location) => location.organisation === organisation);
+}
+
+export function searchOrganisation(
+  query: string,
+  organisation: Organisation,
+): OrganisationSearchResults {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) {
+    return { supportables: [], clients: [], workers: [], groupings: [] };
+  }
+
+  const locations = locationsForOrganisation(organisation);
+  const matches = (value: string) =>
+    value.toLowerCase().includes(normalizedQuery);
+  const byName = <Item extends { name: string }>(a: Item, b: Item) =>
+    a.name.localeCompare(b.name);
+
+  const providerWorkers = new Map<string, OrganisationSearchWorker>();
+  for (const location of locations) {
+    for (const worker of getLocationData(location.id).workers) {
+      if (providerWorkers.has(worker.id)) continue;
+      providerWorkers.set(worker.id, {
+        id: worker.id,
+        name: worker.name,
+        organisation,
+        totalHours: providerHoursForWorker(worker.id, organisation),
+        locationId: location.id,
+      });
+    }
+  }
+
+  return {
+    supportables: locations
+      .filter(
+        (location) =>
+          location.serviceType !== 'home-community' &&
+          (matches(location.name) || matches(location.suburb)),
+      )
+      .sort(byName),
+    clients: locations
+      .filter(
+        (location) =>
+          location.serviceType === 'home-community' && matches(location.name),
+      )
+      .sort(byName),
+    workers: [...providerWorkers.values()]
+      .filter((worker) => matches(worker.name))
+      .sort(byName),
+    groupings: GROUPINGS.filter(
+      (grouping) =>
+        grouping.organisation === organisation && matches(grouping.name),
+    ).sort(byName),
+  };
 }
 
 export function locationHistoryForWorker(

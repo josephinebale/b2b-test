@@ -8,11 +8,13 @@ import {
   descendantLocationIds,
   findGrouping,
   getLocationData,
+  groupingDashboardChildren,
   groupingOpenRequests,
   groupingPath,
   groupingUsageLast7Days,
   groupingsForLocation,
   pendingCountsForLocation,
+  rootGroupingsForOrganisation,
 } from '../src/data/locations.ts';
 import {
   PERSONAS,
@@ -23,8 +25,8 @@ function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
 }
 
-test('regions, lifestyles, caseloads, and areas use one recursive grouping model', () => {
-  assert.equal(GROUPINGS.length, 10);
+test('arms, regions, lifestyles, caseloads, and areas use one recursive grouping model', () => {
+  assert.equal(GROUPINGS.length, 15);
   const region = findGrouping('northern-sydney');
   const caseload = findGrouping('careforce-caseload');
   const secondCaseload = findGrouping('careforce-northern-caseload');
@@ -76,20 +78,63 @@ test('regions, lifestyles, caseloads, and areas use one recursive grouping model
   }
 });
 
+test('an organisation has arms as its direct children, never operational groupings', () => {
+  assert.deepEqual(
+    rootGroupingsForOrganisation('Cerebral Palsy Alliance').map(
+      ({ name, kind, groupingIds }) => ({ name, kind, groupingIds }),
+    ),
+    [
+      {
+        name: 'SIL',
+        kind: 'arm',
+        groupingIds: ['northern-sydney'],
+      },
+      {
+        name: 'Lifestyles',
+        kind: 'arm',
+        groupingIds: ['northern-lifestyles'],
+      },
+      {
+        name: 'Careforce',
+        kind: 'arm',
+        groupingIds: ['careforce-area'],
+      },
+    ],
+  );
+  assert.deepEqual(
+    rootGroupingsForOrganisation('Northcott').map(({ name, kind }) => ({
+      name,
+      kind,
+    })),
+    [{ name: 'Disability services', kind: 'arm' }],
+  );
+  assert.deepEqual(
+    rootGroupingsForOrganisation('Life Without Barriers').map(
+      ({ name, kind }) => ({ name, kind }),
+    ),
+    [{ name: 'Aged care', kind: 'arm' }],
+  );
+  assert.ok(
+    rootGroupingsForOrganisation('Cerebral Palsy Alliance').every(
+      (grouping) => grouping.kind === 'arm',
+    ),
+  );
+});
+
 test('grouping paths preserve recursive ancestry', () => {
   assert.deepEqual(
     groupingPath(findGrouping('careforce-caseload')!).map(({ id }) => id),
-    ['careforce-area', 'careforce-caseload'],
+    ['cpa-careforce', 'careforce-area', 'careforce-caseload'],
   );
   assert.deepEqual(
     groupingPath(findGrouping('lwb-western-sydney')!).map(({ id }) => id),
-    ['lwb-greater-sydney', 'lwb-western-sydney'],
+    ['lwb-aged-care', 'lwb-greater-sydney', 'lwb-western-sydney'],
   );
   assert.deepEqual(
     groupingPath(findGrouping('northcott-individual-services')!).map(
       ({ id }) => id,
     ),
-    ['northcott-individual-services'],
+    ['northcott-disability-services', 'northcott-individual-services'],
   );
 });
 
@@ -174,6 +219,35 @@ test('grouping rollups resolve recursively against the selected grouping', () =>
       usage.locations.reduce((total, item) => total + item.bookingCount, 0),
     );
   }
+});
+
+test('parent-node personas see child groupings instead of descendant locations', () => {
+  const rachel = PERSONAS.find((persona) => persona.name === 'Rachel Morgan');
+  const natalie = PERSONAS.find((persona) => persona.name === 'Natalie Brooks');
+  assert.ok(
+    rachel?.entry.nodeType === 'grouping' &&
+      natalie?.entry.nodeType === 'grouping',
+  );
+
+  const rachelChildren = groupingDashboardChildren(
+    findGrouping(rachel.entry.groupingId)!,
+  );
+  assert.deepEqual(
+    rachelChildren.groupings.map((grouping) => grouping.name),
+    ['Careforce caseload', 'Careforce Northern caseload'],
+  );
+  assert.deepEqual(rachelChildren.housesAndCentres, []);
+  assert.deepEqual(rachelChildren.clients, []);
+
+  const natalieChildren = groupingDashboardChildren(
+    findGrouping(natalie.entry.groupingId)!,
+  );
+  assert.deepEqual(
+    natalieChildren.groupings.map((grouping) => grouping.name),
+    ['Northern Sydney', 'Western Sydney'],
+  );
+  assert.deepEqual(natalieChildren.housesAndCentres, []);
+  assert.deepEqual(natalieChildren.clients, []);
 });
 
 test('the existing seven personas remain CPA disability identities at the same entry nodes', () => {
@@ -261,6 +335,13 @@ test('the existing seven personas remain CPA disability identities at the same e
     ],
   );
   assert.equal(new Set(PERSONAS.map((persona) => persona.name)).size, 12);
+  assert.ok(
+    PERSONAS.every(
+      (persona) =>
+        findGrouping(persona.entry.groupingId)?.kind !== 'arm',
+    ),
+    'no persona starts at an arm in this slice',
+  );
   const avatars = source('../src/data/avatars.ts');
   for (const persona of PERSONAS) {
     assert.match(avatars, new RegExp(`'${persona.name}':`));
@@ -324,19 +405,22 @@ test('persona switching is moderator-only, changes entry, and roles do not gate 
   assert.match(session, /clearSession[\s\S]*clearLastLocationId\(\)/);
 });
 
-test('the grouping dashboard and breadcrumb keep grouping and location context reachable', () => {
+test('grouping sections and breadcrumb keep grouping and location context reachable', () => {
   const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
   const header = source('../src/components/AppHeader.tsx');
   const dashboard = source('../src/pages/Dashboard.tsx');
+  const supportables = source('../src/pages/Supportables.tsx');
   const app = source('../src/App.tsx');
 
   assert.match(header, /NodeBreadcrumb/);
-  assert.match(breadcrumb, /groupingPath\(grouping\)/);
-  assert.match(breadcrumb, /onSelectGrouping\(segment\.id\)/);
-  assert.match(breadcrumb, /\{location\.name\}/);
-  assert.match(dashboard, /partitionGroupingLocations\(grouping\)/);
+  assert.match(breadcrumb, /breadcrumbTrail\(\{/);
+  assert.match(breadcrumb, /onSelectGrouping\(item\.crumb\.id\)/);
+  assert.match(breadcrumb, /location\.name/);
+  assert.match(supportables, /groupingDashboardChildren\(grouping\)/);
+  assert.match(supportables, /onSelectGrouping\?\.\(grouping\.id\)/);
   assert.match(dashboard, /groupingOpenRequests\(grouping\.id\)/);
   assert.match(dashboard, /groupingUsageLast7Days\(grouping\.id\)/);
+  assert.match(app, /onSelectGrouping=\{selectGrouping\}/);
   assert.match(app, /preferredGroupingId/);
 });
 

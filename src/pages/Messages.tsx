@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Info, MoreHorizontal } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
+import {
+  LANDING_CONTENT_ENABLED,
+  LandingPlaceholder,
+} from '../components/LandingPlaceholder';
 import { PageHeading } from '../components/PageHeading';
 import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Badge } from '../components/ui/Badge';
@@ -151,6 +155,8 @@ export function Messages({ locationId, persona, onUnreadChange }: MessagesProps)
 
   return (
     <div>
+      {LANDING_CONTENT_ENABLED ? (
+        <>
       <PageHeading
         title="Messages"
         actions={
@@ -393,6 +399,10 @@ export function Messages({ locationId, persona, onUnreadChange }: MessagesProps)
           )}
         </div>
       </Card>
+        </>
+      ) : (
+        <LandingPlaceholder />
+      )}
     </div>
   );
 }

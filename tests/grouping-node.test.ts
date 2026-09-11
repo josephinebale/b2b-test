@@ -7,13 +7,18 @@ import {
   GROUPING,
   GROUPINGS,
   LOCATIONS,
+  childGroupingSectionTitle,
+  groupingContentsSummary,
+  groupingDashboardDescription,
   compareRequestUrgency,
   descendantLocationIds,
   findGrouping,
   getLocationData,
+  groupingDashboardChildren,
   groupingOpenRequests,
   groupingUsageLast7Days,
   partitionGroupingLocations,
+  pendingCountsForGrouping,
   pendingCountsForLocation,
 } from '../src/data/locations.ts';
 
@@ -29,16 +34,21 @@ test('the Northern Sydney grouping keeps its SIL houses and the day program', ()
   assert.ok(GROUPING.locationIds.every((id) => LOCATIONS.some((location) => location.id === id)));
 });
 
-test('a grouping dashboard splits houses and centres from clients, and omits an empty client section', () => {
+test('a grouping dashboard lists direct children, with groupings before split locations', () => {
   for (const grouping of GROUPINGS) {
-    const { housesAndCentres, clients } = partitionGroupingLocations(grouping);
-    const expectedHouses = descendantLocationIds(grouping).filter(
+    const { groupings, housesAndCentres, clients } =
+      groupingDashboardChildren(grouping);
+    const expectedHouses = grouping.locationIds.filter(
       (id) => LOCATIONS.find((location) => location.id === id)?.serviceType !== 'home-community',
     );
-    const expectedClients = descendantLocationIds(grouping).filter(
+    const expectedClients = grouping.locationIds.filter(
       (id) => LOCATIONS.find((location) => location.id === id)?.serviceType === 'home-community',
     );
 
+    assert.deepEqual(
+      groupings.map((child) => child.id),
+      grouping.groupingIds ?? [],
+    );
     assert.deepEqual(
       housesAndCentres.map((location) => location.id),
       expectedHouses,
@@ -51,12 +61,99 @@ test('a grouping dashboard splits houses and centres from clients, and omits an 
     assert.ok(clients.every((location) => location.serviceType === 'home-community'));
   }
 
+  const careforceArea = groupingDashboardChildren(
+    findGrouping('careforce-area')!,
+  );
+  assert.equal(careforceArea.groupings.length, 2);
+  assert.equal(careforceArea.housesAndCentres.length, 0);
+  assert.equal(careforceArea.clients.length, 0);
+
+  const greaterSydney = groupingDashboardChildren(
+    findGrouping('lwb-greater-sydney')!,
+  );
+  assert.equal(greaterSydney.groupings.length, 2);
+  assert.equal(greaterSydney.housesAndCentres.length, 0);
+  assert.equal(greaterSydney.clients.length, 0);
+
   assert.equal(partitionGroupingLocations(findGrouping('northern-sydney')!).clients.length, 0);
   assert.ok(partitionGroupingLocations(findGrouping('careforce-caseload')!).clients.length >= 1);
   assert.equal(
     partitionGroupingLocations(findGrouping('lwb-northern-sydney')!)
       .housesAndCentres.length,
     0,
+  );
+});
+
+test('child grouping rows roll up counts but retain their own kind', () => {
+  const careforceArea = findGrouping('careforce-area')!;
+  const careforceChildren = groupingDashboardChildren(careforceArea).groupings;
+  assert.deepEqual(
+    careforceChildren.map((child) => child.name),
+    ['Careforce caseload', 'Careforce Northern caseload'],
+  );
+  assert.equal(childGroupingSectionTitle(careforceChildren), 'Caseloads');
+
+  const greaterSydney = findGrouping('lwb-greater-sydney')!;
+  const regionChildren = groupingDashboardChildren(greaterSydney).groupings;
+  assert.deepEqual(
+    regionChildren.map((child) => child.name),
+    ['Northern Sydney', 'Western Sydney'],
+  );
+  assert.equal(childGroupingSectionTitle(regionChildren), 'Regions');
+
+  for (const child of [...careforceChildren, ...regionChildren]) {
+    const expected = descendantLocationIds(child)
+      .map(pendingCountsForLocation)
+      .reduce(
+        (total, counts) => ({
+          requests: total.requests + counts.requests,
+          approvals: total.approvals + counts.approvals,
+          messages: total.messages + counts.messages,
+        }),
+        { requests: 0, approvals: 0, messages: 0 },
+      );
+    assert.deepEqual(pendingCountsForGrouping(child), expected);
+  }
+
+  assert.equal(
+    groupingDashboardDescription(careforceArea),
+    'The caseloads in Careforce area',
+  );
+  assert.equal(
+    groupingDashboardDescription(greaterSydney),
+    'The regions in Greater Sydney',
+  );
+  assert.equal(
+    groupingDashboardDescription(findGrouping('northern-sydney')!),
+    'The houses and centres in Northern Sydney',
+  );
+  assert.equal(
+    groupingDashboardDescription(findGrouping('lwb-northern-sydney')!),
+    'The clients in Northern Sydney',
+  );
+  assert.equal(
+    groupingDashboardDescription(findGrouping('northern-lifestyles')!),
+    'The centres and clients in Northern Lifestyles',
+  );
+  assert.equal(
+    groupingContentsSummary(findGrouping('careforce-caseload')!),
+    '5 houses · 1 client',
+  );
+  assert.equal(
+    groupingContentsSummary(findGrouping('lwb-northern-sydney')!),
+    '4 clients',
+  );
+  assert.equal(
+    groupingContentsSummary(findGrouping('northcott-sil-services')!),
+    '2 houses',
+  );
+  assert.equal(
+    groupingContentsSummary(findGrouping('northern-sydney')!),
+    '6 houses and centres',
+  );
+  assert.equal(
+    groupingContentsSummary(findGrouping('northern-lifestyles')!),
+    '2 centres · 2 clients',
   );
 });
 
@@ -125,31 +222,57 @@ test('usage is recent booking volume, counted per location', () => {
   );
 });
 
-test('Dashboard grouping lists locations, requests, usage, and regularly used workers', () => {
+test('grouping content is split between Dashboard, Supportables, and Workers', () => {
   const dashboard = source('../src/pages/Dashboard.tsx');
+  const supportables = source('../src/pages/Supportables.tsx');
+  const groupingWorkersPage = source('../src/pages/GroupingWorkers.tsx');
   const workers = source('../src/pages/dashboard/WorkersPanel.tsx');
+  const groupingRow = supportables.slice(
+    supportables.indexOf('function ChildGroupingRow'),
+    supportables.indexOf('export function Supportables'),
+  );
 
-  assert.match(dashboard, /partitionGroupingLocations/);
-  assert.match(dashboard, /housesAndCentres\.length > 0/);
-  assert.match(dashboard, /clients\.length > 0/);
-  assert.match(dashboard, /pendingCountsForLocation/);
-  assert.match(dashboard, /groupingOpenRequests/);
-  assert.match(dashboard, /groupingUsageLast7Days/);
+  assert.match(supportables, /groupingDashboardChildren\(grouping\)/);
+  assert.match(supportables, /groupings\.length > 0/);
+  assert.match(supportables, /housesAndCentres\.length > 0/);
+  assert.match(supportables, /clients\.length > 0/);
+  assert.match(supportables, /pendingCountsForLocation/);
+  assert.match(supportables, /pendingCountsForGrouping\(grouping\)/);
+  assert.match(supportables, /groupingContentsSummary\(grouping\)/);
+  assert.match(supportables, /groupingDashboardDescription\(grouping\)/);
+  assert.match(supportables, /childGroupingSectionTitle\(groupings\)/);
+  assert.ok(
+    supportables.indexOf('{groupings.length > 0') <
+      supportables.indexOf('{housesAndCentres.length > 0'),
+    'child groupings render before direct locations',
+  );
+  assert.doesNotMatch(groupingRow, /LocationMarker/);
+  assert.doesNotMatch(groupingRow, /serviceTypeLabel/);
+  assert.doesNotMatch(groupingRow, /\.suburb/);
+  assert.match(dashboard, /groupingOpenRequests\(grouping\.id\)/);
+  assert.match(dashboard, /groupingUsageLast7Days\(grouping\.id\)/);
   assert.match(
-    dashboard,
+    supportables,
     /onSelectLocation\?\.\(location\.id, '\/bookings'\)/,
   );
+  assert.match(supportables, /onSelectGrouping\?\.\(grouping\.id\)/);
+  assert.match(supportables, /\{grouping\.name\}/);
+  assert.doesNotMatch(supportables, /Children of|supportable/);
   assert.match(dashboard, /bookingsViewPath\('requested'\)/);
-  assert.match(dashboard, /Houses and centres/);
-  assert.match(dashboard, />Clients</);
-  assert.match(dashboard, /clients\.length > 0/);
-  assert.match(dashboard, /questionId="grouping-locations"/);
+  assert.match(supportables, /Houses and centres/);
+  assert.match(supportables, />Clients</);
+  assert.match(supportables, /clients\.length > 0/);
+  assert.match(supportables, /questionId="grouping-locations"/);
   assert.match(dashboard, /questionId="grouping-requests"/);
   assert.match(dashboard, /questionId="grouping-usage"/);
-  assert.match(dashboard, /<WorkersPanel grouping=\{grouping\}/);
+  assert.match(groupingWorkersPage, /<WorkersPanel grouping=\{grouping\}/);
   assert.match(workers, /groupingWorkers\(grouping\.id\)/);
   assert.match(workers, /Workers used regularly/);
   assert.match(workers, /questionId="workers-grouping-order"/);
+  assert.doesNotMatch(dashboard, /groupingDashboardChildren|GroupingLocationRow|ChildGroupingRow/);
+  assert.doesNotMatch(dashboard, /WorkersPanel|groupingWorkers/);
+  assert.doesNotMatch(supportables, /groupingOpenRequests|groupingUsageLast7Days|WorkersPanel/);
+  assert.doesNotMatch(groupingWorkersPage, /Search workers|nearbyWorkers|MessageSquare|Calendar/);
   assert.doesNotMatch(dashboard, /plans to review/);
   assert.doesNotMatch(dashboard, /counts\.plans/);
   assert.doesNotMatch(dashboard, /\brisk\b/i);
@@ -191,7 +314,7 @@ test('Galston is busy but has no shift actions waiting on its manager', () => {
    "0 requests · 0 approvals · 0 unread messages" in the grouping list. Both
    now drop a zero, so the row keeps its name and type and says nothing else. */
 test('a grouping row states only the waiting work a location actually has', () => {
-  const dashboard = source('../src/pages/Dashboard.tsx');
+  const supportables = source('../src/pages/Supportables.tsx');
 
   assert.deepEqual(
     pendingWorkParts({ requests: 0, approvals: 0, messages: 0 }),
@@ -210,25 +333,29 @@ test('a grouping row states only the waiting work a location actually has', () =
   ]);
 
   assert.match(
-    dashboard,
+    supportables,
     /pendingWorkParts\(pendingCountsForLocation\(location\.id\)\)/,
   );
-  assert.match(dashboard, /\{pendingWork\.length > 0 && \(/);
-  assert.match(dashboard, /\{pendingWork\.join\(' · '\)\}/);
-  assert.match(dashboard, /serviceTypeLabel\(location\.serviceType, location\.sector\)/);
-  assert.doesNotMatch(dashboard, /counts\.requests|counts\.approvals|counts\.messages/);
+  assert.match(supportables, /\{pendingWork\.length > 0 && \(/);
+  assert.match(supportables, /\{pendingWork\.join\(' · '\)\}/);
+  assert.match(supportables, /serviceTypeLabel\(location\.serviceType, location\.sector\)/);
+  assert.doesNotMatch(supportables, /counts\.requests|counts\.approvals|counts\.messages/);
 });
 
-test('the breadcrumb keeps grouping context without acting as a menu', () => {
+test('the breadcrumb keeps grouping context while menus stay one level deep', () => {
   const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
 
-  assert.match(breadcrumb, /groupingPath\(grouping\)/);
-  assert.match(breadcrumb, /onSelectGrouping\(segment\.id\)/);
+  assert.match(breadcrumb, /breadcrumbTrail\(\{/);
+  assert.match(breadcrumb, /onSelectGrouping/);
   assert.match(breadcrumb, /nodeType === 'location'/);
-  assert.doesNotMatch(breadcrumb, /orderedGroupingsForMenu|role="menu"/);
+  assert.match(breadcrumb, /function siblingItems/);
+  assert.match(breadcrumb, /childGroupings\(parent\)/);
+  assert.match(breadcrumb, /function childItems/);
+  assert.match(breadcrumb, /role="menu"/);
+  assert.doesNotMatch(breadcrumb, /orderedGroupingsForMenu|descendantLocationIds/);
 });
 
-test('a grouping has only Dashboard and renders no section navigation', () => {
+test('a grouping renders Dashboard, Supportables, and Workers in the second tier', () => {
   const header = source('../src/components/AppHeader.tsx');
   const app = source('../src/App.tsx');
   const navigation = source('../src/lib/informationArchitecture.ts');
@@ -238,12 +365,14 @@ test('a grouping has only Dashboard and renders no section navigation', () => {
     /NODE_NAV_ITEMS\.filter[\s\S]*?item\.placement === 'main'[\s\S]*?item\.nodeTypes\.some/,
   );
   assert.match(header, /href=\{href\(NOTIFICATIONS_NODE_ITEM\.path\)\}/);
-  assert.match(header, /visibleNavItems\.length > 1/);
+  assert.match(header, /\{visibleNavItems\.length > 0 && \(/);
   assert.match(header, /app-header-nav-row/);
   assert.match(app, /nodeType === 'grouping'/);
   assert.match(app, /<Dashboard\s+grouping=\{grouping\}/);
+  assert.match(app, /path === '\/supportables'[\s\S]*?<Supportables/);
+  assert.match(app, /path === '\/workers'[\s\S]*?<GroupingWorkers/);
   const groupingShell = app.slice(
-    app.indexOf("if (nodeType === 'grouping')"),
+    app.indexOf("if (nodeType === 'grouping' || nodeType === 'organisation')"),
     app.indexOf('if (!activeLocation) return null'),
   );
   assert.doesNotMatch(groupingShell, /<SectionNavigation/);
@@ -254,9 +383,9 @@ test('a grouping has only Dashboard and renders no section navigation', () => {
   assert.match(app, /navigate\('\/'\)/);
   assert.match(
     navigation,
-    /label: 'Dashboard',[\s\S]*?nodeTypes: \['grouping'\]/,
+    /label: 'Dashboard',[\s\S]*?nodeTypes: \['grouping', 'organisation'\]/,
   );
-  assert.doesNotMatch(
+  assert.match(
     navigation,
     /label: 'Workers',[\s\S]*?nodeTypes: \['grouping', 'location'\]/,
   );

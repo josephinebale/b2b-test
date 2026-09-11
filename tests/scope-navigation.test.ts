@@ -23,7 +23,7 @@ test('the tried scope rail is removed', () => {
   assert.equal(existsSync(railPath), false);
 });
 
-test('location sections return to the header and grouping has no second tier', () => {
+test('both node types use the header second tier', () => {
   const navPath = new URL(
     '../src/components/SectionNavigation.tsx',
     import.meta.url,
@@ -33,17 +33,17 @@ test('location sections return to the header and grouping has no second tier', (
   const header = source('../src/components/AppHeader.tsx');
 
   assert.match(header, /NODE_NAV_ITEMS\.filter/);
-  assert.match(header, /visibleNavItems\.length > 1/);
+  assert.match(header, /visibleNavItems\.length > 0/);
   assert.match(header, /app-header-nav-row/);
   assert.doesNotMatch(app, /<SectionNavigation|import \{ SectionNavigation \}/);
   const groupingShell = app.slice(
-    app.indexOf("if (nodeType === 'grouping')"),
+    app.indexOf("if (nodeType === 'grouping' || nodeType === 'organisation')"),
     app.indexOf('if (!activeLocation) return null'),
   );
   assert.doesNotMatch(groupingShell, /<SectionNavigation/);
 });
 
-test('the header has identity and location-section tiers', () => {
+test('the header has identity and node-section tiers', () => {
   const header = source('../src/components/AppHeader.tsx');
 
   assert.match(header, /<Logo \/>/);
@@ -66,7 +66,7 @@ test('the breadcrumb returns without duplicating the location marker', () => {
   const marker = source('../src/components/LocationMarker.tsx');
 
   assert.match(header, /<NodeBreadcrumb/);
-  assert.match(breadcrumb, /\{location\.name\}/);
+  assert.match(breadcrumb, /location\.name/);
   assert.doesNotMatch(breadcrumb, /LocationMarker/);
   assert.doesNotMatch(marker, /inline:/);
 });

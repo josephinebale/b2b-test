@@ -1,6 +1,10 @@
 import { Fragment, useMemo, useState } from 'react';
 import { Check, Clock3, MapPin, Moon, Repeat2, Users, X } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
+import {
+  LANDING_CONTENT_ENABLED,
+  LandingPlaceholder,
+} from '../components/LandingPlaceholder';
 import { PageHeading, RequestBookingButton } from '../components/PageHeading';
 import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Badge } from '../components/ui/Badge';
@@ -274,6 +278,8 @@ export function Bookings({
   if (!view) {
     return (
       <div>
+        {LANDING_CONTENT_ENABLED ? (
+        <>
         {/* Waiting work is the page's secondary line, not a block of its own:
             the same middot-separated line a grouping row uses under a location
             name, carried by the heading it belongs to. As a standalone block —
@@ -308,10 +314,14 @@ export function Bookings({
           }
         />
 
-        <BookingsWeek
-          data={data}
-          calendarBookings={calendarBookings}
-        />
+          <BookingsWeek
+            data={data}
+            calendarBookings={calendarBookings}
+          />
+        </>
+        ) : (
+          <LandingPlaceholder />
+        )}
       </div>
     );
   }
@@ -320,13 +330,12 @@ export function Bookings({
 
   return (
     <div>
-      {/* Each column opens with its own heading, so the two headings start level
-          while each keeps its own gap to the content beneath it. */}
-      <div className="grid layout-rail-content items-start gap-6">
+      {LANDING_CONTENT_ENABLED ? (
+      <div className="layout-rail-content">
       <div>
       <h1 className="text-xl font-bold text-text">Bookings</h1>
 
-      <aside className="mt-6 space-y-4">
+      <aside className="mt-6 ui-rail-stack">
         <nav className="relative space-y-1" aria-label="Booking status">
           <PinnedQuestion
             questionId="bookings-status"
@@ -346,7 +355,9 @@ export function Bookings({
                 }`}
               >
                 <span>{item.label}</span>
-                {item.id === 'approve' && data.bookingsToApprove > 0 && (
+                {LANDING_CONTENT_ENABLED &&
+                  item.id === 'approve' &&
+                  data.bookingsToApprove > 0 && (
                   <Badge count={data.bookingsToApprove} />
                 )}
               </button>
@@ -477,6 +488,9 @@ export function Bookings({
       </section>
       </div>
       </div>
+      ) : (
+          <LandingPlaceholder />
+      )}
     </div>
   );
 }

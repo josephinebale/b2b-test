@@ -39,6 +39,10 @@ const AVAILABILITY = [
   ['Saturday', 'Sleepover'],
 ];
 
+function needsAttentionClass(needsAttention: boolean): string {
+  return needsAttention ? 'font-medium text-text' : 'text-text-tertiary';
+}
+
 export function WorkerProfile({
   data,
   workerId,
@@ -122,8 +126,8 @@ export function WorkerProfile({
         }
       />
 
-      <div className="layout-rail-content grid gap-6">
-        <aside>
+      <div className="layout-rail-content">
+        <aside className="ui-rail-stack">
           <Card className="p-6 text-center">
             <div className="flex justify-center">
               <Avatar name={worker.name} size="lg" />
@@ -147,11 +151,12 @@ export function WorkerProfile({
                 <CheckCircle2 className="h-5 w-5 text-success" />
                 Worker screening verified
               </p>
-              <p className="mt-2 flex items-center gap-2 text-sm text-text">
-                <CheckCircle2 className="h-5 w-5 text-success" />
-                {worker.planConfirmed ? 'Support plan confirmed' : 'Support plan needs review'}
-              </p>
             </div>
+            <p
+              className={`mt-3 text-left text-sm ${needsAttentionClass(!worker.planConfirmed)}`}
+            >
+              {worker.planConfirmed ? 'Support plan confirmed' : 'Support plan needs review'}
+            </p>
           </Card>
         </aside>
 

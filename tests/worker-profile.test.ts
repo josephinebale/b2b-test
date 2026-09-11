@@ -16,7 +16,7 @@ test('worker profile routes use the worker id under Workers', () => {
 test('the app renders worker profiles at a location, not from grouping oversight', () => {
   const app = source('../src/App.tsx');
   const groupingBranch = app.slice(
-    app.indexOf("if (nodeType === 'grouping')"),
+    app.indexOf("if (nodeType === 'grouping' || nodeType === 'organisation')"),
     app.indexOf('if (!activeLocation)'),
   );
 
@@ -43,6 +43,31 @@ test('the worker profile adapts the reference into existing product primitives',
   assert.match(profile, /Qualifications/);
   assert.match(profile, /Work history/);
   assert.match(profile, /Worker not found/);
+});
+
+test('the identity card treats support plan as status, not a verification', () => {
+  const profile = source('../src/pages/WorkerProfile.tsx');
+  const identity = profile.slice(
+    profile.indexOf('border-t border-border-subtle'),
+    profile.indexOf('</aside>'),
+  );
+
+  assert.equal(
+    identity.match(/CheckCircle2/g)?.length,
+    2,
+    'only identity and screening keep ticks',
+  );
+  assert.match(identity, /Identity verified/);
+  assert.match(identity, /Worker screening verified/);
+  const screening = identity.indexOf('Worker screening verified');
+  const plan = identity.slice(screening);
+
+  assert.doesNotMatch(plan, /CheckCircle2/, 'the plan line must not sit on a tick');
+  assert.match(plan, /needsAttentionClass\(!worker\.planConfirmed\)/);
+  assert.match(
+    plan,
+    /worker\.planConfirmed \? 'Support plan confirmed' : 'Support plan needs review'/,
+  );
 });
 
 test('worker-name links open profiles where action is supported, not on grouping oversight', () => {
