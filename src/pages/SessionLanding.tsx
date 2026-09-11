@@ -6,7 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { EntityLink } from '../components/ui/EntityLink';
 import {
-  ORGANISATIONS,
+  VISIBLE_ORGANISATIONS,
   personasForOrganisation,
   type PersonaId,
 } from '../lib/informationArchitecture';
@@ -50,7 +50,7 @@ export function SessionLanding({
             />
             <Card>
               <div className="py-1">
-                {ORGANISATIONS.map((organisation) => (
+                {VISIBLE_ORGANISATIONS.map((organisation) => (
                   <Fragment key={organisation}>
                     <p className="px-3 pb-1 pt-2 text-xs font-bold text-text-secondary">
                       {organisation}

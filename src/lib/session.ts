@@ -1,3 +1,5 @@
+import { ALL_ORGANISATIONS_VISIBLE, ORGANISATION_NAME, PERSONAS } from './informationArchitecture';
+
 const LOCATION_KEY = 'hm.lastLocationId';
 const LEGACY_HOUSE_KEY = 'hm.lastHouseId';
 const SIGNED_IN_KEY = 'hm.signedIn';
@@ -74,19 +76,15 @@ export function writeLastGroupingId(groupingId: string): void {
 
 export function readPersonaId(): PersonaId {
   const saved = read(PERSONA_KEY);
-  return saved === 'regional-manager' ||
-    saved === 'roster-coordinator' ||
-    saved === 'team-leader' ||
-    saved === 'regional-lifestyles-manager' ||
-    saved === 'service-manager' ||
-    saved === 'area-manager' ||
-    saved === 'northcott-service-coordinator' ||
-    saved === 'northcott-individual-service-coordinator' ||
-    saved === 'lwb-reactive-rostering-officer' ||
-    saved === 'lwb-forward-rostering-officer' ||
-    saved === 'lwb-rostering-lead'
-    ? saved
-    : 'house-manager';
+  const known = PERSONAS.find((persona) => persona.id === saved);
+  if (!known) return 'house-manager';
+  if (
+    !ALL_ORGANISATIONS_VISIBLE &&
+    known.organisation !== ORGANISATION_NAME
+  ) {
+    return 'house-manager';
+  }
+  return known.id;
 }
 
 export function writePersonaId(personaId: PersonaId): void {

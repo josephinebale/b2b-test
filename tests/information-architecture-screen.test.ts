@@ -7,8 +7,10 @@ import {
   rootGroupingsForOrganisation,
 } from '../src/data/locations.ts';
 import {
+  ALL_ORGANISATIONS_VISIBLE,
   ORGANISATIONS,
   PERSONAS,
+  VISIBLE_ORGANISATIONS,
 } from '../src/lib/informationArchitecture.ts';
 
 function source(path: string): string {
@@ -22,7 +24,7 @@ test('the IA screen derives every node instead of hardcoding the tree', () => {
   assert.match(page, /GROUPINGS/);
   assert.match(page, /LOCATIONS/);
   assert.match(page, /NODE_NAV_ITEMS/);
-  assert.match(page, /ORGANISATIONS\.filter/);
+  assert.match(page, /VISIBLE_ORGANISATIONS\.filter/);
   assert.match(page, /rootGroupingsForOrganisation/);
   assert.match(page, /grouping\.groupingIds/);
   assert.match(page, /grouping\.locationIds/);
@@ -52,6 +54,13 @@ test('the generated tree starts every organisation at its arm level', () => {
   assert.doesNotMatch(page, /function rootGroupings/);
   assert.match(page, /open=\{isEntryBranch/);
   assert.match(page, /containsGrouping\(grouping, selectedPersona\.entry\.groupingId\)/);
+
+  if (!ALL_ORGANISATIONS_VISIBLE) {
+    assert.deepEqual([...VISIBLE_ORGANISATIONS], ['Cerebral Palsy Alliance']);
+    assert.match(page, /VISIBLE_ORGANISATIONS\.map/);
+  } else {
+    assert.equal(VISIBLE_ORGANISATIONS.length, ORGANISATIONS.length);
+  }
 });
 
 test('node pages come from one definition shared with signed-in navigation', () => {
@@ -66,7 +75,7 @@ test('node pages come from one definition shared with signed-in navigation', () 
   );
   assert.match(
     model,
-    /label: 'Supportables',[\s\S]*?path: '\/supportables',[\s\S]*?nodeTypes: \['grouping'\]/,
+    /label: 'Supportables',[\s\S]*?path: '\/supportables',[\s\S]*?nodeTypes: \['grouping', 'organisation'\]/,
   );
   assert.match(model, /label: 'Notifications'/);
   assert.match(model, /label: 'Location settings'/);

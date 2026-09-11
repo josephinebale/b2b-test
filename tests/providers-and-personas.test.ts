@@ -9,8 +9,10 @@ import {
   getLocationData,
 } from '../src/data/locations.ts';
 import {
+  ALL_ORGANISATIONS_VISIBLE,
   ORGANISATIONS,
   PERSONAS,
+  VISIBLE_ORGANISATIONS,
   personasForOrganisation,
 } from '../src/lib/informationArchitecture.ts';
 
@@ -91,9 +93,47 @@ test('all twelve personas carry organisation and sector with the agreed entry no
   assert.deepEqual(lwb[0].entry, lwb[1].entry);
 });
 
+test('Northcott and Life Without Barriers sit behind one off flag', () => {
+  const model = source('../src/lib/informationArchitecture.ts');
+  const picker = source('../src/components/PageVariantToggle.tsx');
+  const landing = source('../src/pages/SessionLanding.tsx');
+  const ia = source('../src/pages/InformationArchitecture.tsx');
+  const session = source('../src/lib/session.ts');
+  const project = source('../PROJECT.md');
+
+  assert.match(
+    model,
+    /export const ALL_ORGANISATIONS_VISIBLE = false/,
+  );
+  assert.equal(PERSONAS.length, 12);
+  assert.equal(ORGANISATIONS.length, 3);
+  assert.match(picker, /VISIBLE_ORGANISATIONS\.map/);
+  assert.match(picker, /\{organisation\}/);
+  assert.match(landing, /VISIBLE_ORGANISATIONS\.map/);
+  assert.match(landing, /\{organisation\}/);
+  assert.match(ia, /VISIBLE_ORGANISATIONS/);
+  assert.match(session, /ALL_ORGANISATIONS_VISIBLE/);
+  assert.match(session, /PERSONAS\.find/);
+  assert.match(project, /ALL_ORGANISATIONS_VISIBLE/);
+
+  if (!ALL_ORGANISATIONS_VISIBLE) {
+    assert.deepEqual([...VISIBLE_ORGANISATIONS], ['Cerebral Palsy Alliance']);
+    assert.equal(
+      VISIBLE_ORGANISATIONS.flatMap(personasForOrganisation).length,
+      7,
+    );
+  } else {
+    assert.equal(VISIBLE_ORGANISATIONS.length, 3);
+    assert.equal(
+      VISIBLE_ORGANISATIONS.flatMap(personasForOrganisation).length,
+      12,
+    );
+  }
+});
+
 test('the persona picker groups people by organisation rather than one flat list', () => {
   const picker = source('../src/components/PageVariantToggle.tsx');
-  assert.match(picker, /ORGANISATIONS\.map/);
+  assert.match(picker, /VISIBLE_ORGANISATIONS\.map/);
   assert.match(picker, /personasForOrganisation\(organisation\)/);
   assert.match(picker, /\{organisation\}/);
   assert.doesNotMatch(picker, /\{PERSONAS\.map/);

@@ -75,7 +75,7 @@ test('global search never crosses the signed-in organisation boundary', () => {
   }
 
   assert.equal(
-    searchOrganisation('Western Sydney', 'Cerebral Palsy Alliance').groupings
+    searchOrganisation('Greater Sydney', 'Cerebral Palsy Alliance').groupings
       .length,
     0,
   );

@@ -6,6 +6,8 @@ import {
   NOTIFICATIONS_NODE_ITEM,
   PERSONAL_MENU_ITEMS,
   ROUTES,
+  nodeLandingPath,
+  treeSectionLabel,
   type Persona,
 } from '../lib/informationArchitecture';
 import { BOOKING_DETAIL_ROUTE } from '../lib/pageContent';
@@ -86,11 +88,11 @@ export function AppHeader({
         >
           <div className="flex min-w-0 flex-1 items-center gap-6">
             <a
-              href={href(nodeType === 'location' ? '/bookings' : '/')}
+              href={href(nodeLandingPath(nodeType))}
               aria-label={
                 nodeType === 'location'
                   ? 'Hireup for Providers bookings'
-                  : 'Hireup for Providers dashboard'
+                  : `Hireup for Providers ${treeSectionLabel(grouping, nodeType).toLowerCase()}`
               }
               className="shrink-0 rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
@@ -216,10 +218,12 @@ export function AppHeader({
           <nav className="flex h-full w-max items-stretch" aria-label="Main">
             {visibleNavItems.map((item) => {
               const visibleLabel =
-                item.path === ROUTES.manageLocation &&
-                location?.serviceType === 'home-community'
-                  ? `${location.name} settings`
-                  : item.label;
+                item.path === '/supportables'
+                  ? treeSectionLabel(grouping, nodeType)
+                  : item.path === ROUTES.manageLocation &&
+                      location?.serviceType === 'home-community'
+                    ? `${location.name} settings`
+                    : item.label;
               const bookingRequestRoute =
                 item.path === '/bookings' &&
                 (navPath === '/request-booking' ||

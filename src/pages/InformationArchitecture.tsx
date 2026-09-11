@@ -17,8 +17,8 @@ import {
 } from '../data/locations';
 import {
   NODE_NAV_ITEMS,
-  ORGANISATIONS,
   PERSONAS,
+  VISIBLE_ORGANISATIONS,
   type NavigationNodeType,
   type Organisation,
   type Persona,
@@ -197,7 +197,7 @@ export function InformationArchitecture() {
   const [personaFilter, setPersonaFilter] = useState<PersonaId | ''>('');
   const selectedPersona =
     PERSONAS.find((persona) => persona.id === personaFilter) ?? null;
-  const visibleOrganisations = ORGANISATIONS.filter(
+  const visibleOrganisations = VISIBLE_ORGANISATIONS.filter(
     (organisation) =>
       !selectedPersona || organisation === selectedPersona.organisation,
   );
@@ -250,7 +250,7 @@ export function InformationArchitecture() {
                     className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                   >
                     <option value="">All organisations and personas</option>
-                    {ORGANISATIONS.map((organisation) => (
+                    {VISIBLE_ORGANISATIONS.map((organisation) => (
                       <optgroup key={organisation} label={organisation}>
                         {PERSONAS.filter(
                           (persona) => persona.organisation === organisation,

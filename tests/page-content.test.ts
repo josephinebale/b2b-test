@@ -5,6 +5,7 @@ import {
   EMPTY_STATES,
   NOTIFICATION_EMPTY_DESCRIPTIONS,
   WORKERS_ROUTE,
+  childCountLine,
 } from '../src/lib/pageContent.ts';
 
 function avatarSize(path: string): string {
@@ -13,6 +14,31 @@ function avatarSize(path: string): string {
   assert.ok(match, `${path} must render an Avatar with an explicit size`);
   return match[1];
 }
+
+test('the child-count line names each kind that is present, never a category', () => {
+  assert.equal(
+    childCountLine({ houses: 5, centres: 2, clients: 1 }),
+    '5 houses, 2 centres and 1 client',
+  );
+  assert.equal(
+    childCountLine({ houses: 11, centres: 1, clients: 0 }),
+    '11 houses and 1 centre',
+  );
+  assert.equal(
+    childCountLine({ houses: 0, centres: 3, clients: 3 }),
+    '3 centres and 3 clients',
+  );
+  assert.equal(
+    childCountLine({ houses: 5, centres: 0, clients: 1 }),
+    '5 houses and 1 client',
+  );
+  assert.equal(childCountLine({ houses: 1, centres: 0, clients: 0 }), '1 house');
+  assert.equal(childCountLine({ houses: 0, centres: 0, clients: 4 }), '4 clients');
+  assert.doesNotMatch(
+    childCountLine({ houses: 6, centres: 1, clients: 0 }),
+    /houses and centres| · /,
+  );
+});
 
 test('Workers uses one public route', () => {
   assert.equal(WORKERS_ROUTE, '/workers');

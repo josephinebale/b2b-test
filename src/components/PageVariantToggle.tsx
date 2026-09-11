@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Check, Layers, UserRoundCog } from 'lucide-react';
 import {
-  ORGANISATIONS,
+  VISIBLE_ORGANISATIONS,
   personasForOrganisation,
   type PersonaId,
 } from '../lib/informationArchitecture';
@@ -55,7 +55,7 @@ export function PageVariantToggle({
               onKeyDown={menu.onMenuKeyDown}
               className="max-h-[70vh] overflow-y-auto py-1"
             >
-              {ORGANISATIONS.map((organisation, organisationIndex) => (
+              {VISIBLE_ORGANISATIONS.map((organisation, organisationIndex) => (
                 <Fragment key={organisation}>
                   <p
                     className={`px-3 pb-1 text-xs font-bold text-text-secondary ${

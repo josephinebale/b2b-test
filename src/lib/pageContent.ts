@@ -103,6 +103,33 @@ export function pendingWorkParts(counts: {
   return parts;
 }
 
+/** Houses, then centres, then clients. Omit zeros. Never a category name. */
+export function childCountLine(counts: {
+  houses: number;
+  centres: number;
+  clients: number;
+}): string {
+  const parts: string[] = [];
+
+  if (counts.houses > 0) {
+    parts.push(`${counts.houses} ${counts.houses === 1 ? 'house' : 'houses'}`);
+  }
+  if (counts.centres > 0) {
+    parts.push(
+      `${counts.centres} ${counts.centres === 1 ? 'centre' : 'centres'}`,
+    );
+  }
+  if (counts.clients > 0) {
+    parts.push(
+      `${counts.clients} ${counts.clients === 1 ? 'client' : 'clients'}`,
+    );
+  }
+
+  if (parts.length <= 1) return parts[0] ?? '';
+  if (parts.length === 2) return `${parts[0]} and ${parts[1]}`;
+  return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+}
+
 export function bookingViewFromPath(path: string): BookingViewId | null {
   if (!path.startsWith(`${BOOKINGS_ROUTE}/`)) return null;
   const candidate = path.slice(BOOKINGS_ROUTE.length + 1);

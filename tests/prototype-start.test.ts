@@ -68,7 +68,7 @@ test('play opens a pre-session persona picker grouped like the moderator menu', 
   const app = source('../src/App.tsx');
 
   assert.match(landing, /personasForOrganisation/);
-  assert.match(landing, /ORGANISATIONS\.map/);
+  assert.match(landing, /VISIBLE_ORGANISATIONS\.map/);
   assert.match(
     landing,
     /persona\.sector === 'aged care' \? 'Aged care' : 'Disability'/,

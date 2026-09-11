@@ -15,6 +15,7 @@ import {
 import {
   PERSONAS,
   ROUTES,
+  nodeLandingPath,
   personaById,
   type PersonaId,
 } from './lib/informationArchitecture';
@@ -156,7 +157,7 @@ export default function App() {
     writeLastNodeType('organisation');
     setNodeType('organisation');
     setUnreadOverride(null);
-    navigate('/');
+    navigate(nodeLandingPath('organisation'));
   }, []);
 
   const selectGrouping = useCallback(
@@ -170,7 +171,7 @@ export default function App() {
       setGroupingId(nextGrouping.id);
       setNodeType('grouping');
       setUnreadOverride(null);
-      navigate('/');
+      navigate(nodeLandingPath('grouping'));
     },
     [persona.organisation],
   );
@@ -207,9 +208,7 @@ export default function App() {
     } else {
       setLocationId(null);
     }
-    navigate(
-      persona.entry.nodeType === 'location' ? '/bookings' : '/',
-    );
+    navigate(nodeLandingPath(persona.entry.nodeType));
   }, []);
 
   const onUnreadChange = useCallback((count: number) => {
@@ -298,7 +297,7 @@ export default function App() {
         onSignInAsReturning={() => {
           writeSignedIn(true);
           setSignedIn(true);
-          navigate('/');
+          navigate(nodeLandingPath(nodeType));
         }}
         onSignInAsNewUser={() => {
           clearLastLocationId();
@@ -358,17 +357,18 @@ export default function App() {
               />
             ) : path.startsWith(ROUTES.yourAccount) || path === '/settings' ? (
               <YourAccountSettings path={path} persona={persona} />
-            ) : nodeType === 'organisation' ? (
-              <OrganisationDashboard />
             ) : path === '/supportables' ? (
               <Supportables
                 grouping={grouping}
+                nodeType={nodeType}
                 onSelectGrouping={selectGrouping}
                 onSelectLocation={(nextLocationId, nextPath = '/bookings') => {
                   selectLocation(nextLocationId);
                   navigate(nextPath);
                 }}
               />
+            ) : nodeType === 'organisation' ? (
+              <OrganisationDashboard />
             ) : path === '/workers' ? (
               <GroupingWorkers grouping={grouping} />
             ) : (

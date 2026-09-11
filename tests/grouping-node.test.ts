@@ -21,6 +21,7 @@ import {
   pendingCountsForGrouping,
   pendingCountsForLocation,
 } from '../src/data/locations.ts';
+import { nodeLandingPath } from '../src/lib/informationArchitecture.ts';
 
 function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -64,7 +65,7 @@ test('a grouping dashboard lists direct children, with groupings before split lo
   const careforceArea = groupingDashboardChildren(
     findGrouping('careforce-area')!,
   );
-  assert.equal(careforceArea.groupings.length, 2);
+  assert.equal(careforceArea.groupings.length, 5);
   assert.equal(careforceArea.housesAndCentres.length, 0);
   assert.equal(careforceArea.clients.length, 0);
 
@@ -89,7 +90,13 @@ test('child grouping rows roll up counts but retain their own kind', () => {
   const careforceChildren = groupingDashboardChildren(careforceArea).groupings;
   assert.deepEqual(
     careforceChildren.map((child) => child.name),
-    ['Careforce caseload', 'Careforce Northern caseload'],
+    [
+      'Careforce caseload',
+      'Careforce Northern caseload',
+      'Careforce Western caseload',
+      'Careforce Hunter caseload',
+      'Careforce Illawarra caseload',
+    ],
   );
   assert.equal(childGroupingSectionTitle(careforceChildren), 'Caseloads');
 
@@ -136,8 +143,24 @@ test('child grouping rows roll up counts but retain their own kind', () => {
     'The centres and clients in Northern Lifestyles',
   );
   assert.equal(
+    groupingContentsSummary(findGrouping('cpa-sil')!),
+    '11 houses and 1 centre',
+  );
+  assert.equal(
+    groupingContentsSummary(findGrouping('cpa-lifestyles')!),
+    '3 centres and 3 clients',
+  );
+  assert.equal(
+    groupingContentsSummary(findGrouping('cpa-careforce')!),
+    '14 houses and 2 clients',
+  );
+  assert.equal(
+    groupingContentsSummary(findGrouping('northern-sydney')!),
+    '5 houses and 1 centre',
+  );
+  assert.equal(
     groupingContentsSummary(findGrouping('careforce-caseload')!),
-    '5 houses · 1 client',
+    '5 houses and 1 client',
   );
   assert.equal(
     groupingContentsSummary(findGrouping('lwb-northern-sydney')!),
@@ -148,13 +171,17 @@ test('child grouping rows roll up counts but retain their own kind', () => {
     '2 houses',
   );
   assert.equal(
-    groupingContentsSummary(findGrouping('northern-sydney')!),
-    '6 houses and centres',
-  );
-  assert.equal(
     groupingContentsSummary(findGrouping('northern-lifestyles')!),
-    '2 centres · 2 clients',
+    '2 centres and 2 clients',
   );
+
+  const locations = source('../src/data/locations.ts');
+  const summary = locations.slice(
+    locations.indexOf('export function groupingContentsSummary'),
+    locations.indexOf('export function groupingDashboardDescription'),
+  );
+  assert.match(summary, /childCountLine\(\{/);
+  assert.doesNotMatch(summary, /join\(' · '\)|houses and centres/);
 });
 
 test('grouping location rows expose waiting counts without aggregating records', () => {
@@ -239,7 +266,10 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
   assert.match(supportables, /pendingCountsForLocation/);
   assert.match(supportables, /pendingCountsForGrouping\(grouping\)/);
   assert.match(supportables, /groupingContentsSummary\(grouping\)/);
-  assert.match(supportables, /groupingDashboardDescription\(grouping\)/);
+  assert.doesNotMatch(supportables, /groupingDashboardDescription/);
+  assert.doesNotMatch(supportables, /organisationSupportablesDescription/);
+  assert.match(supportables, /title=\{treeSectionLabel\(grouping, nodeType\)\}/);
+  assert.doesNotMatch(supportables, /<PageHeading\s+title="Supportables"/);
   assert.match(supportables, /childGroupingSectionTitle\(groupings\)/);
   assert.ok(
     supportables.indexOf('{groupings.length > 0') <
@@ -367,6 +397,7 @@ test('a grouping renders Dashboard, Supportables, and Workers in the second tier
   assert.match(header, /href=\{href\(NOTIFICATIONS_NODE_ITEM\.path\)\}/);
   assert.match(header, /\{visibleNavItems\.length > 0 && \(/);
   assert.match(header, /app-header-nav-row/);
+  assert.match(header, /treeSectionLabel\(grouping, nodeType\)/);
   assert.match(app, /nodeType === 'grouping'/);
   assert.match(app, /<Dashboard\s+grouping=\{grouping\}/);
   assert.match(app, /path === '\/supportables'[\s\S]*?<Supportables/);
@@ -380,7 +411,7 @@ test('a grouping renders Dashboard, Supportables, and Workers in the second tier
   assert.equal(app.match(/<Dashboard/g)?.length, 1);
   assert.doesNotMatch(app, /<Workers nodeType="grouping"/);
   assert.match(app, /selectGrouping/);
-  assert.match(app, /navigate\('\/'\)/);
+  assert.match(app, /navigate\(nodeLandingPath\('grouping'\)\)/);
   assert.match(
     navigation,
     /label: 'Dashboard',[\s\S]*?nodeTypes: \['grouping', 'organisation'\]/,
@@ -396,9 +427,36 @@ test('a grouping renders Dashboard, Supportables, and Workers in the second tier
   assert.match(app, /navigate\('\/bookings'\)/);
 });
 
-test('the current node is remembered and restart clears it', () => {
-  const session = source('../src/lib/session.ts');
+test('every node above a location lands on its child list, not the placeholder Dashboard', () => {
   const app = source('../src/App.tsx');
+  const header = source('../src/components/AppHeader.tsx');
+
+  assert.equal(nodeLandingPath('organisation'), '/supportables');
+  assert.equal(nodeLandingPath('grouping'), '/supportables');
+  assert.equal(nodeLandingPath('location'), '/bookings');
+
+  /* Child-list rows, breadcrumb crumbs and breadcrumb dropdowns all enter a
+     node through these two callbacks, so the landing rule lives with them. */
+  assert.match(
+    app,
+    /const selectOrganisation = useCallback\(\(\) => \{[\s\S]*?navigate\(nodeLandingPath\('organisation'\)\)/,
+  );
+  assert.match(
+    app,
+    /const selectGrouping = useCallback\([\s\S]*?navigate\(nodeLandingPath\('grouping'\)\)/,
+  );
+  assert.match(app, /navigate\(nodeLandingPath\(persona\.entry\.nodeType\)\)/);
+  assert.match(app, /navigate\(nodeLandingPath\(nodeType\)\)/);
+  assert.match(header, /href=\{href\(nodeLandingPath\(nodeType\)\)\}/);
+  assert.doesNotMatch(
+    header,
+    /href\(nodeType === 'location' \? '\/bookings' : '\/'\)/,
+  );
+});
+
+test('the current node is remembered and restart clears it', () => {
+  const app = source('../src/App.tsx');
+  const session = source('../src/lib/session.ts');
 
   assert.match(session, /const NODE_TYPE_KEY = 'hm\.lastNodeType'/);
   assert.match(session, /readLastNodeType/);

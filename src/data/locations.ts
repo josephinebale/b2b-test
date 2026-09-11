@@ -1,5 +1,6 @@
 import { addDays, startOfDay, startOfWeek } from '../lib/date.ts';
 import type { Organisation, Sector } from '../lib/informationArchitecture.ts';
+import { childCountLine } from '../lib/pageContent.ts';
 
 export type BookingStatus = 'confirmed' | 'requested' | 'ended' | 'cancelled';
 export type FatigueSignal = 'no-break' | 'short-rest' | null;
@@ -456,6 +457,92 @@ export const LOCATIONS: Location[] = [
     providerSite: false,
     participants: people('michael-ward-home', ['Michael Ward']),
   },
+  {
+    id: 'harris-park-1',
+    name: 'Harris Park 1',
+    suburb: 'Harris Park',
+    state: 'NSW',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    serviceType: 'sil',
+    participants: people('harris-park-1', ['Pia E', 'Rory F', 'Sasha G']),
+  },
+  {
+    id: 'blacktown-1',
+    name: 'Blacktown 1',
+    suburb: 'Blacktown',
+    state: 'NSW',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    serviceType: 'sil',
+    participants: people('blacktown-1', ['Theo H', 'Una I', 'Vera J', 'Wes K']),
+  },
+  {
+    id: 'newcastle-1',
+    name: 'Newcastle 1',
+    suburb: 'Newcastle',
+    state: 'NSW',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    serviceType: 'sil',
+    participants: people('newcastle-1', ['Yara L', 'Zeke M', 'Arlo N']),
+  },
+  {
+    id: 'maitland-1',
+    name: 'Maitland 1',
+    suburb: 'Maitland',
+    state: 'NSW',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    serviceType: 'sil',
+    participants: people('maitland-1', ['Blair O', 'Cleo P', 'Duke Q', 'Ellis R']),
+  },
+  {
+    id: 'wollongong-1',
+    name: 'Wollongong 1',
+    suburb: 'Wollongong',
+    state: 'NSW',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    serviceType: 'sil',
+    participants: people('wollongong-1', ['Fran S', 'Gus T', 'Hana U']),
+  },
+  {
+    id: 'shellharbour-1',
+    name: 'Shellharbour 1',
+    suburb: 'Shellharbour',
+    state: 'NSW',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    serviceType: 'sil',
+    participants: people('shellharbour-1', ['Ivo V', 'June W', 'Kade X', 'Lina Y']),
+  },
+  {
+    id: 'pennant-hills-day-program',
+    name: 'Pennant Hills Day Program',
+    suburb: 'Pennant Hills',
+    state: 'NSW',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    serviceType: 'centre',
+    participants: people('pennant-hills-day-program', [
+      'Mira Z',
+      'Ned A',
+      'Opal B',
+      'Paul C',
+    ]),
+  },
+  {
+    id: 'ruby-chen-home',
+    name: 'Ruby Chen',
+    suburb: 'Carlingford',
+    state: 'NSW',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    serviceType: 'home-community',
+    providerSite: false,
+    participants: people('ruby-chen-home', ['Ruby Chen']),
+  },
 ];
 
 export const GROUPING: Grouping = {
@@ -478,10 +565,36 @@ export const GROUPING: Grouping = {
  * Two peer groupings drawn by different service lines. They share Dee Why 1 and
  * North Ryde 1, because a house really does have two parents, but three houses
  * on each side belong to one grouping only — otherwise standing at the caseload
- * looks exactly like standing in the region.
+ * looks exactly like standing in the region. Extra SIL regions and Careforce
+ * caseloads sit beside those two so a crumb with siblings is the usual case,
+ * not an exception.
  */
 export const GROUPINGS: Grouping[] = [
   GROUPING,
+  {
+    id: 'cpa-western-sydney',
+    name: 'Western Sydney',
+    kind: 'region',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: ['harris-park-1', 'blacktown-1'],
+  },
+  {
+    id: 'hunter',
+    name: 'Hunter',
+    kind: 'region',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: ['newcastle-1', 'maitland-1'],
+  },
+  {
+    id: 'illawarra',
+    name: 'Illawarra',
+    kind: 'region',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: ['wollongong-1', 'shellharbour-1'],
+  },
   {
     id: 'northern-lifestyles',
     name: 'Northern Lifestyles',
@@ -496,6 +609,14 @@ export const GROUPINGS: Grouping[] = [
     ],
   },
   {
+    id: 'western-lifestyles',
+    name: 'Western Lifestyles',
+    kind: 'lifestyles',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: ['pennant-hills-day-program', 'ruby-chen-home'],
+  },
+  {
     id: 'careforce-area',
     name: 'Careforce area',
     kind: 'area',
@@ -505,6 +626,9 @@ export const GROUPINGS: Grouping[] = [
     groupingIds: [
       'careforce-caseload',
       'careforce-northern-caseload',
+      'careforce-western-caseload',
+      'careforce-hunter-caseload',
+      'careforce-illawarra-caseload',
     ],
   },
   {
@@ -536,6 +660,30 @@ export const GROUPINGS: Grouping[] = [
       'north-ryde-1',
       'wahroonga',
     ],
+  },
+  {
+    id: 'careforce-western-caseload',
+    name: 'Careforce Western caseload',
+    kind: 'caseload',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: ['harris-park-1', 'blacktown-1', 'gladesville-1'],
+  },
+  {
+    id: 'careforce-hunter-caseload',
+    name: 'Careforce Hunter caseload',
+    kind: 'caseload',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: ['newcastle-1', 'maitland-1', 'manly-1'],
+  },
+  {
+    id: 'careforce-illawarra-caseload',
+    name: 'Careforce Illawarra caseload',
+    kind: 'caseload',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: ['wollongong-1', 'shellharbour-1', 'forestville-home'],
   },
   {
     id: 'northcott-sil-services',
@@ -598,7 +746,12 @@ export const GROUPINGS: Grouping[] = [
     kind: 'arm',
     organisation: 'Cerebral Palsy Alliance',
     locationIds: [],
-    groupingIds: ['northern-sydney'],
+    groupingIds: [
+      'northern-sydney',
+      'cpa-western-sydney',
+      'hunter',
+      'illawarra',
+    ],
   },
   {
     id: 'cpa-lifestyles',
@@ -606,7 +759,7 @@ export const GROUPINGS: Grouping[] = [
     kind: 'arm',
     organisation: 'Cerebral Palsy Alliance',
     locationIds: [],
-    groupingIds: ['northern-lifestyles'],
+    groupingIds: ['northern-lifestyles', 'western-lifestyles'],
   },
   {
     id: 'cpa-careforce',
@@ -880,6 +1033,38 @@ function buildWorkerSeeds(): WorkerSeed[] {
         if (!candidate) break;
         candidate.sites.add(locationIndex);
       }
+    }
+  }
+
+  /* Two-house regions can otherwise share one roster, which leaves the
+     first house with nobody in the middle worker tier. */
+  for (const grouping of GROUPINGS) {
+    const indexes = grouping.locationIds
+      .map((id) => LOCATIONS.findIndex((location) => location.id === id))
+      .filter((index) => index >= 0);
+    if (indexes.length < 2) continue;
+
+    for (const locationIndex of indexes) {
+      const hasSiblingOnlyWorker = seeds.some(
+        (worker) =>
+          !worker.sites.has(locationIndex) &&
+          indexes.some(
+            (otherIndex) =>
+              otherIndex !== locationIndex && worker.sites.has(otherIndex),
+          ),
+      );
+      if (hasSiblingOnlyWorker) continue;
+      if (countAt(seeds, locationIndex) <= 1) continue;
+
+      const shared = seeds.find(
+        (worker) =>
+          worker.sites.has(locationIndex) &&
+          indexes.some(
+            (otherIndex) =>
+              otherIndex !== locationIndex && worker.sites.has(otherIndex),
+          ),
+      );
+      shared?.sites.delete(locationIndex);
     }
   }
 
@@ -1446,23 +1631,19 @@ function joinHoldings(parts: string[]): string {
   return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
 }
 
-/** What sits beneath a grouping, in Houses and centres / Clients language. */
+/** What sits beneath a grouping: each location kind that is present. */
 export function groupingContentsSummary(grouping: Grouping): string {
   const locations = descendantLocationIds(grouping)
     .map(findLocation)
     .filter((location): location is Location => location !== null);
-  const housesAndCentres = locations.filter(
-    (location) => location.serviceType !== 'home-community',
-  );
-  const clients = locations.filter(
-    (location) => location.serviceType === 'home-community',
-  );
-  return [
-    housesAndCentresPhrase(housesAndCentres, true),
-    clientsPhrase(clients.length, true),
-  ]
-    .filter((part): part is string => part !== null)
-    .join(' · ');
+  return childCountLine({
+    houses: locations.filter((location) => location.serviceType === 'sil').length,
+    centres: locations.filter((location) => location.serviceType === 'centre')
+      .length,
+    clients: locations.filter(
+      (location) => location.serviceType === 'home-community',
+    ).length,
+  });
 }
 
 /** Page description keyed to the node's direct children, never "children" or "nodes". */

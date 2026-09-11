@@ -186,7 +186,7 @@ test('breadcrumb menus keep both models behind a named constant', () => {
 
   assert.match(
     breadcrumb,
-    /export const BREADCRUMB_MENU_MODE: 'siblings' \| 'children' = 'children'/,
+    /export const BREADCRUMB_MENU_MODE: 'siblings' \| 'children' = 'siblings'/,
   );
   assert.match(breadcrumb, /function siblingItems/);
   assert.match(breadcrumb, /function childItems/);
@@ -194,6 +194,7 @@ test('breadcrumb menus keep both models behind a named constant', () => {
     breadcrumb,
     /BREADCRUMB_MENU_MODE === 'children'[\s\S]*\? childItems[\s\S]*: siblingItems/,
   );
+  assert.match(breadcrumb, /items\.length > 1/);
 });
 
 test('a crumb menu contains siblings from its parent and no descendants', () => {
@@ -203,8 +204,14 @@ test('a crumb menu contains siblings from its parent and no descendants', () => 
 
   assert.deepEqual(
     childGroupings(area).map(({ id }) => id),
-    ['careforce-caseload', 'careforce-northern-caseload'],
-    'Rachel sees the other caseload, not locations below either caseload',
+    [
+      'careforce-caseload',
+      'careforce-northern-caseload',
+      'careforce-western-caseload',
+      'careforce-hunter-caseload',
+      'careforce-illawarra-caseload',
+    ],
+    'Rachel sees the other caseloads, not locations below any caseload',
   );
   assert.ok(
     childGroupings(area).every((sibling) => sibling.locationIds.length > 0),
@@ -217,6 +224,8 @@ test('a crumb menu contains siblings from its parent and no descendants', () => 
   );
   assert.match(siblingPath, /childGroupings\(parent\)/);
   assert.match(siblingPath, /parent\.locationIds/);
+  assert.match(siblingPath, /grouping: item/);
+  assert.match(siblingPath, /location: item/);
   assert.doesNotMatch(siblingPath, /descendantLocationIds/);
 });
 

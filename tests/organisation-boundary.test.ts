@@ -23,7 +23,7 @@ function source(path: string): string {
 test('the moderator persona picker covers every organisation after the node menu is removed', () => {
   const picker = source('../src/components/PageVariantToggle.tsx');
 
-  assert.match(picker, /ORGANISATIONS\.map/);
+  assert.match(picker, /VISIBLE_ORGANISATIONS\.map/);
   assert.match(picker, /personasForOrganisation\(organisation\)\.map/);
   for (const organisation of ORGANISATIONS) {
     assert.ok(personasForOrganisation(organisation).length > 0);

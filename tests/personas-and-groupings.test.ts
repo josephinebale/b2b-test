@@ -26,7 +26,7 @@ function source(path: string): string {
 }
 
 test('arms, regions, lifestyles, caseloads, and areas use one recursive grouping model', () => {
-  assert.equal(GROUPINGS.length, 15);
+  assert.equal(GROUPINGS.length, 22);
   const region = findGrouping('northern-sydney');
   const caseload = findGrouping('careforce-caseload');
   const secondCaseload = findGrouping('careforce-northern-caseload');
@@ -38,10 +38,19 @@ test('arms, regions, lifestyles, caseloads, and areas use one recursive grouping
   assert.deepEqual(area.groupingIds, [
     'careforce-caseload',
     'careforce-northern-caseload',
+    'careforce-western-caseload',
+    'careforce-hunter-caseload',
+    'careforce-illawarra-caseload',
   ]);
   assert.deepEqual(
     descendantLocationIds(area),
-    [...new Set([...caseload.locationIds, ...secondCaseload.locationIds])],
+    [
+      ...new Set(
+        (area.groupingIds ?? []).flatMap(
+          (id) => findGrouping(id)?.locationIds ?? [],
+        ),
+      ),
+    ],
   );
   assert.ok(
     descendantLocationIds(lifestyles).filter(
@@ -87,12 +96,17 @@ test('an organisation has arms as its direct children, never operational groupin
       {
         name: 'SIL',
         kind: 'arm',
-        groupingIds: ['northern-sydney'],
+        groupingIds: [
+          'northern-sydney',
+          'cpa-western-sydney',
+          'hunter',
+          'illawarra',
+        ],
       },
       {
         name: 'Lifestyles',
         kind: 'arm',
-        groupingIds: ['northern-lifestyles'],
+        groupingIds: ['northern-lifestyles', 'western-lifestyles'],
       },
       {
         name: 'Careforce',
@@ -234,7 +248,13 @@ test('parent-node personas see child groupings instead of descendant locations',
   );
   assert.deepEqual(
     rachelChildren.groupings.map((grouping) => grouping.name),
-    ['Careforce caseload', 'Careforce Northern caseload'],
+    [
+      'Careforce caseload',
+      'Careforce Northern caseload',
+      'Careforce Western caseload',
+      'Careforce Hunter caseload',
+      'Careforce Illawarra caseload',
+    ],
   );
   assert.deepEqual(rachelChildren.housesAndCentres, []);
   assert.deepEqual(rachelChildren.clients, []);
@@ -248,6 +268,21 @@ test('parent-node personas see child groupings instead of descendant locations',
   );
   assert.deepEqual(natalieChildren.housesAndCentres, []);
   assert.deepEqual(natalieChildren.clients, []);
+});
+
+test('no grouping is the only child of its parent', () => {
+  const siblingKinds = new Set(['region', 'caseload', 'lifestyles', 'service']);
+  for (const parent of GROUPINGS) {
+    const children = (parent.groupingIds ?? [])
+      .map((id) => findGrouping(id))
+      .filter((child): child is NonNullable<typeof child> => child !== null);
+    if (children.length === 0) continue;
+    if (!children.some((child) => siblingKinds.has(child.kind ?? ''))) continue;
+    assert.ok(
+      children.length >= 2,
+      `${parent.name} should not have a single ${children[0].kind} child`,
+    );
+  }
 });
 
 test('the existing seven personas remain CPA disability identities at the same entry nodes', () => {
@@ -375,7 +410,7 @@ test('persona switching is moderator-only, changes entry, and roles do not gate 
   assert.match(personaControl, /useKeyboardMenu/);
   assert.match(personaControl, /role="menu"/);
   assert.match(personaControl, /role="menuitem"/);
-  assert.match(personaControl, /ORGANISATIONS\.map/);
+  assert.match(personaControl, /VISIBLE_ORGANISATIONS\.map/);
   assert.match(personaControl, /personasForOrganisation\(organisation\)/);
   assert.match(personaControl, /persona\.name/);
   assert.match(personaControl, /persona\.role/);

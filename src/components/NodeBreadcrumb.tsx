@@ -26,7 +26,7 @@ import { Card } from './ui/Card';
 const measureCanvas =
   typeof document === 'undefined' ? null : document.createElement('canvas');
 const BREADCRUMB_MENU_LIMIT = 20;
-export const BREADCRUMB_MENU_MODE: 'siblings' | 'children' = 'children';
+export const BREADCRUMB_MENU_MODE: 'siblings' | 'children' = 'siblings';
 
 type MenuItem = {
   id: string;
@@ -88,7 +88,12 @@ function siblingItems(
     return parent.locationIds
       .map(findLocation)
       .filter((item): item is Location => item !== null)
-      .map((item) => ({ id: item.id, name: item.name, nodeType: 'location' }));
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        nodeType: 'location' as const,
+        location: item,
+      }));
   }
 
   const pathIndex = path.findIndex((segment) => segment.id === crumb.id);
@@ -100,7 +105,8 @@ function siblingItems(
   return siblings.map((item) => ({
     id: item.id,
     name: item.name,
-    nodeType: 'grouping',
+    nodeType: 'grouping' as const,
+    grouping: item,
   }));
 }
 

@@ -9,14 +9,15 @@ import {
   childGroupingSectionTitle,
   groupingContentsSummary,
   groupingDashboardChildren,
-  groupingDashboardDescription,
   pendingCountsForGrouping,
   pendingCountsForLocation,
+  rootGroupingsForOrganisation,
   serviceTypeLabel,
   type Grouping,
   type Location,
 } from '../data/locations';
 import { pendingWorkParts } from '../lib/pageContent';
+import { treeSectionLabel } from '../lib/informationArchitecture';
 
 function GroupingLocationRow({
   location,
@@ -91,22 +92,27 @@ function ChildGroupingRow({
 
 export function Supportables({
   grouping,
+  nodeType = 'grouping',
   onSelectLocation,
   onSelectGrouping,
 }: {
   grouping: Grouping;
+  nodeType?: 'grouping' | 'organisation';
   onSelectLocation?: (locationId: string, path?: string) => void;
   onSelectGrouping?: (groupingId: string) => void;
 }) {
-  const { groupings, housesAndCentres, clients } =
-    groupingDashboardChildren(grouping);
+  const atOrganisation = nodeType === 'organisation';
+  const { groupings, housesAndCentres, clients } = atOrganisation
+    ? {
+        groupings: rootGroupingsForOrganisation(grouping.organisation),
+        housesAndCentres: [],
+        clients: [],
+      }
+    : groupingDashboardChildren(grouping);
 
   return (
     <div className="width-main-column space-y-8">
-      <PageHeading
-        title="Supportables"
-        description={groupingDashboardDescription(grouping)}
-      />
+      <PageHeading title={treeSectionLabel(grouping, nodeType)} />
 
       {groupings.length > 0 && (
         <section>

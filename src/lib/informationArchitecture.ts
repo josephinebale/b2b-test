@@ -10,6 +10,16 @@ export const ORGANISATIONS = [
 export type Organisation = (typeof ORGANISATIONS)[number];
 export type Sector = 'disability' | 'aged care';
 
+/** Flip to true to restore Northcott and Life Without Barriers in menus and the IA screen. */
+export const ALL_ORGANISATIONS_VISIBLE = false;
+
+export const VISIBLE_ORGANISATIONS: readonly Organisation[] =
+  ALL_ORGANISATIONS_VISIBLE
+    ? ORGANISATIONS
+    : ORGANISATIONS.filter(
+        (organisation) => organisation === ORGANISATION_NAME,
+      );
+
 export type PersonaId =
   | 'house-manager'
   | 'regional-manager'
@@ -226,15 +236,15 @@ export const LOCATION_SETTINGS_NODE_ITEM = {
 /** One definition for what can be reached from each node. */
 export const NODE_NAV_ITEMS = [
   {
-    label: 'Dashboard',
-    path: '/',
+    label: 'Supportables',
+    path: '/supportables',
     nodeTypes: ['grouping', 'organisation'],
     placement: 'main',
   },
   {
-    label: 'Supportables',
-    path: '/supportables',
-    nodeTypes: ['grouping'],
+    label: 'Dashboard',
+    path: '/',
+    nodeTypes: ['grouping', 'organisation'],
     placement: 'main',
   },
   {
@@ -258,6 +268,25 @@ export const NODE_NAV_ITEMS = [
   LOCATION_SETTINGS_NODE_ITEM,
   NOTIFICATIONS_NODE_ITEM,
 ] as const;
+
+/** Second-tier and page title for the tree list: groupings, or locations. */
+export function treeSectionLabel(
+  grouping: { groupingIds?: readonly string[] },
+  nodeType: NavigationNodeType,
+): 'Groupings' | 'Supportables' {
+  if (nodeType === 'organisation') return 'Groupings';
+  return (grouping.groupingIds?.length ?? 0) > 0 ? 'Groupings' : 'Supportables';
+}
+
+/**
+ * Where entering a node lands. Above a location that is the child list, because
+ * Dashboard is a placeholder while landing content is hidden. Revisit once
+ * Dashboard has content: a manager arriving at their own grouping may want what
+ * needs attention before a list of children.
+ */
+export function nodeLandingPath(nodeType: NavigationNodeType): string {
+  return nodeType === 'location' ? '/bookings' : '/supportables';
+}
 
 export type SettingsSection = {
   id: string;

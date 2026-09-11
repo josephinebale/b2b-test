@@ -13,7 +13,9 @@ import {
   ROUTES,
   menuIndexAfterKey,
   sectionFromPath,
+  treeSectionLabel,
 } from '../src/lib/informationArchitecture.ts';
+import { findGrouping } from '../src/data/locations.ts';
 
 test('settings sections are split by scope without changing existing labels', () => {
   assert.deepEqual(LOCATION_SECTIONS.map(({ label }) => label), [
@@ -56,11 +58,33 @@ test('both node types have a complete second-tier navigation', () => {
     'Location settings',
   ]);
   assert.deepEqual(mainLabelsFor('grouping'), [
-    'Dashboard',
     'Supportables',
+    'Dashboard',
     'Workers',
   ]);
-  assert.deepEqual(mainLabelsFor('organisation'), ['Dashboard']);
+  assert.deepEqual(mainLabelsFor('organisation'), ['Supportables', 'Dashboard']);
+});
+
+test('the tree section is named by whether the node holds groupings or locations', () => {
+  const sil = findGrouping('cpa-sil');
+  const northernSydney = findGrouping('northern-sydney');
+  const careforceArea = findGrouping('careforce-area');
+  assert.ok(sil && northernSydney && careforceArea);
+
+  assert.equal(treeSectionLabel(sil, 'grouping'), 'Groupings');
+  assert.equal(treeSectionLabel(northernSydney, 'grouping'), 'Supportables');
+  assert.equal(treeSectionLabel(careforceArea, 'grouping'), 'Groupings');
+  assert.equal(treeSectionLabel(sil, 'organisation'), 'Groupings');
+
+  const model = readFileSync(
+    new URL('../src/lib/informationArchitecture.ts', import.meta.url),
+    'utf8',
+  );
+  assert.match(model, /path: '\/supportables'/);
+  assert.match(
+    model,
+    /label: 'Supportables',[\s\S]*?path: '\/supportables'/,
+  );
 });
 
 test('an arm reuses the grouping face instead of adding a node type', () => {
