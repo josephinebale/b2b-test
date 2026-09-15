@@ -108,7 +108,14 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
   assert.match(supportables, /\{location\.name\}/);
   assert.match(supportables, /DirectChildLocationListIcon location=\{location\}/);
   assert.doesNotMatch(supportables, /LocationMarker/);
-  assert.match(supportables, /directChildLocationTypeLine\(location\)/);
+  assert.match(
+    supportables,
+    /mt-1 block text-xs text-text-tertiary">\s*\{directChildLocationTypeLine\(location\)\}/,
+  );
+  assert.match(
+    supportables,
+    /className="ui-inset-card flex w-full items-center gap-3 text-left hover:bg-surface-subtle"/,
+  );
 
   assert.match(
     breadcrumb,

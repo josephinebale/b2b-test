@@ -21,8 +21,8 @@ Some delegated measurements were made while the Cursor browser was zoomed to abo
 
 ## Finding count
 
-- Type scale: **2**
-- Spacing: **3**
+- Type scale: **1 open** (T1 resolved; T2 recorded)
+- Spacing: **2 open** (S1 and S4 resolved; S2 and S3 recorded)
 - Control heights: **4**
 - Alignment: **2 open** (A1–A3 resolved; A6 closed; A4 and A5 recorded, not acted on)
 - Product question: **1 open** (A7) — resolve with the grouping Workers screen
@@ -63,18 +63,13 @@ Distinct rendered semantic text colours:
 - `--color-surface` → rgb(255, 255, 255)
 - status foregrounds: success, pending, attention/badge, neutral, info, and location foreground tokens
 
-### T1 — Direct-location rows change type treatment between Overview and `/supportables`
+### T1 — Direct-location rows change type treatment between Overview and `/supportables` — **resolved**
 
-Computed values:
+Converged 16 Sep 2026 on the Overview treatment: type line **12/400/16 tertiary** on both views. Name stays **14/700/20**; colour still follows interaction (brand on Overview’s linked name, strong on `/supportables`’ span label).
 
-- Grouping Overview row: name **14/700/20, brand**; type/suburb **12/400/16, tertiary**.
-- `/supportables` row: name **14/700/20, strong**; type/suburb **14/400/20, secondary**.
+Reason: the type line is compact entity metadata, which is 12/400/16 tertiary everywhere else (Notifications, booking cards, worker metadata). The former 14/400/20 secondary on `/supportables` was the navigational-list-row pattern, which fitted the whole-row button but not the content it carries.
 
-Places: every direct house, centre, and client row on grouping Overview and `/supportables`. Northern Sydney was measured directly.
-
-Rest of product: compact entity metadata in Overview, Notifications, booking cards, and worker metadata uses **12/400/16 tertiary**; navigational list rows use **14/400/20 secondary**.
-
-Why flagged: `PROJECT.md:134` says `/supportables` rows “match Overview”, but the rendered hierarchy changes when moving between the two views. No reason for that typography change is documented.
+Places: every direct house, centre, and client row on grouping Overview and `/supportables`.
 
 ### T2 — Location initials introduce a 12/12 tuple outside the type scale
 
@@ -122,18 +117,11 @@ Rest of product/documented value: a card holding prose uses **16px (`.ui-inset-c
 
 Uncertainty: the extra air may be intended for placeholders, but no exception says so.
 
-### S4 — The same direct-location row changes vertical inset between its two views
+### S4 — The same direct-location row changes vertical inset between its two views — **resolved**
 
-Computed values:
-
-- Overview: **16px all sides**, first row 96px high with pending links.
-- `/supportables`: **12px vertical / 16px horizontal**, rows 68–69px high without pending links under the current flag.
+Converged 16 Sep 2026 on **16px all sides** (`.ui-inset-card`) on both Overview and `/supportables` location rows. Child-grouping rows on `/supportables` stay on `.ui-inset-row` (12px vertical / 16px horizontal); they are a different entity.
 
 Places: all direct-location rows on grouping Overview and `/supportables`.
-
-Rest of product: list rows use **12px vertical / 16px horizontal**; stacked multi-block cards use **16px** (`PROJECT.md:402`).
-
-Why flagged: either density can be reasonable, but the docs say these rows match and do not record the context-driven inset difference.
 
 Not a finding: the Overview content-section gap was remeasured at **32px**, matching `--space-6`; an earlier 20px report was the page-heading margin, not the section gap.
 
@@ -356,19 +344,16 @@ Do not make `SectionHeadingRow` type-size aware to chase it.
 
 ## 6. Duplication
 
-### D1 — Direct-location rows implement the same entity with different markup
+### D1 — Direct-location rows implement the same entity with different markup — **partly resolved**
 
 Places:
 
 - Overview `LocationRow`.
 - `/supportables` `GroupingLocationRow`.
 
-Differences confirmed in rendered output:
+Shared after 16 Sep 2026: **16px inset**, **12/400/16 tertiary** type line, **Building2** / **User** icon.
 
-- Overview is a non-interactive row with a linked name, 16px inset, 12/16 tertiary type line, optional independent pending links, no chevron.
-- `/supportables` is a whole-row button with a non-link name label, 12px/16px inset, 14/20 secondary type line, and chevron.
-
-Rest of product: the row’s destination determines whole-row versus nested-link behaviour, but shared entity typography normally remains stable. `PROJECT.md:134` says the rows match Overview, so the unexplained visual differences are drift candidates.
+Remaining difference is **interaction**, recorded as intended-for-now rather than drift: Overview is a non-interactive row with a linked name and optional independent waiting links (three destinations); `/supportables` is a whole-row button with a non-link name label and chevron (one destination). Revisit when `/supportables` rows gain waiting links, at which point interaction converges on Overview.
 
 ### D2 — Attention booking cards have separate grid and list implementations
 
@@ -671,7 +656,7 @@ Do not fix in this pass.
 
 1. ~~**Resolve the SectionHeadingRow alignment rule and implementation (A1/DC1).**~~ Done: rule in `PROJECT.md`, `LineAlignedControl` in code, A1/A2/A3 recomputed to 0px delta.
 2. ~~**Replace the shared 20px PageHeading gap with the documented 24px step, or change the rule (S1).**~~ Done: `mb-5` (20px) → `mb-6` (24px / `--space-5`).
-3. **Unify the direct-location row contract (T1/S4/D1).** Switching from Overview to `/supportables` currently changes hierarchy, density, colour, and click model for the same entity despite the docs saying the rows match.
+3. ~~**Unify the direct-location row contract (T1/S4/D1).**~~ Typography, inset and icon now match Overview. Remaining D1 difference is interaction (Overview linked name vs `/supportables` whole-row button), intended until `/supportables` rows gain waiting links.
 4. **Decide and document the in-progress-card inset (S3).** The placeholder is currently the most common rendered body because the landing flag is off, so its unexplained 24px treatment appears across many routes.
 5. **Bring the week-grid expander into the control-height system or document it (C1).** It is the only visible standalone button at 45px and appears inside the product’s most prominent calendar.
 

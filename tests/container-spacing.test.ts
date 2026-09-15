@@ -48,6 +48,21 @@ test('every list row uses the row step, so their content shares one left edge', 
     /className="ui-inset-card flex items-center gap-3"/,
     'Overview location rows should use the card inset',
   );
+  const supportables = read('../src/pages/Supportables.tsx');
+  const locationRow = supportables.slice(
+    supportables.indexOf('function GroupingLocationRow'),
+    supportables.indexOf('function ChildGroupingRow'),
+  );
+  assert.match(
+    locationRow,
+    /className="ui-inset-card flex w-full items-center gap-3/,
+    '/supportables location rows should use the same 16px inset as Overview',
+  );
+  assert.doesNotMatch(
+    locationRow,
+    /ui-inset-row/,
+    '/supportables location rows should not use the 12px/16px row inset',
+  );
   assert.match(
     read('../src/pages/dashboard/WorkersPanel.tsx'),
     /className="ui-inset-card"/,

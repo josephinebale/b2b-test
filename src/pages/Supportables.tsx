@@ -35,14 +35,14 @@ function GroupingLocationRow({
     <button
       type="button"
       onClick={() => onSelectLocation?.(location.id, '/bookings')}
-      className="ui-inset-row flex w-full items-center gap-3 text-left hover:bg-surface-subtle"
+      className="ui-inset-card flex w-full items-center gap-3 text-left hover:bg-surface-subtle"
     >
       <DirectChildLocationListIcon location={location} />
       <span className="min-w-0 flex-1">
         <EntityLink as="span" className="block">
           {location.name}
         </EntityLink>
-        <span className="mt-1 block text-sm text-text-secondary">
+        <span className="mt-1 block text-xs text-text-tertiary">
           {directChildLocationTypeLine(location)}
         </span>
         {pendingWork.length > 0 && (
