@@ -55,6 +55,8 @@ test('a control beside text centres on that text line through one shared wrapper
   for (const caller of [row, heading, request]) {
     assert.match(caller, /import \{ LineAlignedControl \}/);
   }
+  assert.match(heading, /className="mb-6 flex items-start justify-between gap-6"/);
+  assert.doesNotMatch(heading, /mb-5/);
   assert.match(heading, /<LineAlignedControl line="xl" className="shrink-0 gap-2">/);
   assert.doesNotMatch(heading, /flex shrink-0 items-center gap-2/);
   assert.equal(

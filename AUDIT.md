@@ -22,9 +22,9 @@ Some delegated measurements were made while the Cursor browser was zoomed to abo
 ## Finding count
 
 - Type scale: **2**
-- Spacing: **4**
+- Spacing: **3**
 - Control heights: **4**
-- Alignment: **2 open** (A1–A3 resolved; A4 and A5 recorded, not acted on)
+- Alignment: **3 open** (A1–A3 resolved; A4, A5 and A6 recorded, not acted on)
 - Colour: **0**
 - Duplication: **3**
 - Borders and radii: **2**
@@ -89,15 +89,19 @@ Why flagged: the marker uses a literal `line-height: 1` result without a matchin
 
 Token scale observed: **4, 8, 12, 16, 24, 32, 40, 48px** (`--space-1` through `--space-8`).
 
-### S1 — Shared page headings leave 20px, while the documented shell uses 24px
+### S1 — Shared page headings leave 20px, while the documented shell uses 24px — **resolved**
 
-Computed value: **margin-bottom: 20px** on the shared heading wrapper.
+Computed value was **margin-bottom: 20px** on the shared heading wrapper.
+
+Cause: Tailwind `mb-5` on `PageHeading` (`5 × --spacing` = 20px). Not a literal `20px`, and not inherited. `--space-5` is 24px; the numbered utility does not map to that token (`PROJECT.md` spacing trap).
+
+**Recomputed 15 Sep 2026.** Wrapper is `mb-6` → **margin-bottom: 24px** (`--space-5`).
 
 Places measured: Start a session, Choose a persona, Jobs to be done, Information architecture, grouping Overview, `/supportables`, and Notifications. The same rendered shared heading is used by other visible detail/profile routes.
 
 Rest of product/documented value: **24px (`--space-5`)** between `PageHeading` and the first content block (`PROJECT.md:403`).
 
-Impact: this is the broadest spacing drift because it moves the first block on most full pages.
+Impact: this is the broadest spacing drift because it moves the first block on most full pages. A heading with no description and a 36px action already shrank from 36px to 32px tonight (A2); combining that −4px with this +4px gap lands those pages at net zero. Title-only headings with no action never took that 4px shrink, so they move down 4px only.
 
 ### S2 — Information architecture assumption-list indentation uses an unnamed 20px step
 
@@ -285,7 +289,7 @@ A 36px `md` avatar centred on a 20px (`text-sm`) name line has now caused two se
 
 The avatar-to-line-height ratio on these rows is worth revisiting. The alternative to asymmetric padding is a **smaller avatar** on this row type, which reduces the overflow at source. Do not act on it in this pass.
 
-Places: request-booking step 3 `workerRow` only. Other 36px avatar rows stay `items-center` against a two-line block and were not in this change.
+Places: request-booking step 3 `workerRow` only. Other 36px avatar rows stay `items-center` against a two-line block and were not in this change. Grouping Overview worker rows (A6) ask the same ratio question on a stacked row.
 
 ### A5 — Summary step-marker tick and numeral share a box but not a glyph — **open, do not act**
 
@@ -303,6 +307,20 @@ The two variants differ in glyph, not box: a 20px tick in a 24px circle versus 1
 
 Do not fix in this pass.
 
+### A6 — Overview worker rows trade density for labelled actions — **open, do not act**
+
+Place: grouping Overview **Recently booked workers** aside. Each row stacks name, last-worked evidence, and a **Message** / **Book** text-button row, so it runs roughly twice the height of a single-line row with inline actions.
+
+An earlier prototype fitted avatar, name, and two 32px icon actions on one line, and showed **ten** workers where the current aside shows **six**.
+
+This is a live tension, not drift. The 320px aside width is the constraint: Message and Book as text buttons need roughly 150px, which leaves too little for a name beside an avatar, so inline actions would have to be icon-only. Text labels were chosen deliberately on 15 September and are documented; icon-only actions are documented as the **location** Workers treatment.
+
+The evidence line is not part of the trade and stays. This block is ordered by most recent shift for recall, so the last-worked line is why the row exists. The earlier prototype ranked by volume and needed no equivalent.
+
+Do not build either variant now. Resolve after the scale seeding pass. Then measure, at a region with a realistic eight-week worker population: row height and total aside height for both treatments, how many rows fit above the fold, and what proportion of the window six versus ten rows represents.
+
+Relates to A4: whether a 36px avatar on a 20px name line is the right ratio for stacked rows generally.
+
 ## 5. Colour
 
 **No undocumented rendered colour inconsistency found.**
@@ -310,6 +328,14 @@ Do not fix in this pass.
 Matched browser declarations confirm the computed RGB values resolve from existing custom properties. In particular, primary/strong/secondary/tertiary text, page/surface backgrounds, borders, brand, status tones, and location greens are token-backed. Resolved RGB output alone was not treated as evidence of a literal colour.
 
 No rendered inline hex/rgb declaration belonging to the app was found. The only literal rgba values returned by the page-wide scan belonged to the Cursor browser’s URL/status overlay, not the prototype.
+
+## Scrollbar — closed non-finding
+
+The persistent grey scrollbar seen in the Cursor embedded browser is **browser chrome**, not product CSS.
+
+The repo has never contained `::-webkit-scrollbar`, `scrollbar-width`, `scrollbar-color`, or `scrollbar-gutter` (source and full `git log -S`). Page scroll belongs to `html`. On 15 Sep 2026 the computed document bar was `auto` on every scrollbar property, with about a **1px** gutter (`offsetWidth − clientWidth`). Live stylesheets had no scrollbar rules.
+
+Do not add overlay scrollbar CSS to compensate. Verify appearance in a standalone browser rather than the embedded one.
 
 ## 6. Duplication
 
@@ -625,7 +651,7 @@ Do not fix in this pass.
 ## Five fixes to do first
 
 1. ~~**Resolve the SectionHeadingRow alignment rule and implementation (A1/DC1).**~~ Done: rule in `PROJECT.md`, `LineAlignedControl` in code, A1/A2/A3 recomputed to 0px delta.
-2. **Replace the shared 20px PageHeading gap with the documented 24px step, or change the rule (S1).** One shared decision corrects the rhythm across most pages.
+2. ~~**Replace the shared 20px PageHeading gap with the documented 24px step, or change the rule (S1).**~~ Done: `mb-5` (20px) → `mb-6` (24px / `--space-5`).
 3. **Unify the direct-location row contract (T1/S4/D1).** Switching from Overview to `/supportables` currently changes hierarchy, density, colour, and click model for the same entity despite the docs saying the rows match.
 4. **Decide and document the in-progress-card inset (S3).** The placeholder is currently the most common rendered body because the landing flag is off, so its unexplained 24px treatment appears across many routes.
 5. **Bring the week-grid expander into the control-height system or document it (C1).** It is the only visible standalone button at 45px and appears inside the product’s most prominent calendar.
