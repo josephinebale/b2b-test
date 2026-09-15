@@ -1,5 +1,4 @@
 import type { MouseEvent, ReactNode } from 'react';
-import { Calendar, MessageSquare } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
 import { PinnedQuestion } from '../../components/PinnedQuestion';
 import { Button } from '../../components/ui/Button';
@@ -113,7 +112,6 @@ export function WorkersPanel({
                         onSelectLocation?.(primaryLocationId, '/messages');
                       }}
                     >
-                      <MessageSquare className="h-4 w-4" aria-hidden />
                       Message
                     </Button>
                     <Button
@@ -128,7 +126,6 @@ export function WorkersPanel({
                         );
                       }}
                     >
-                      <Calendar className="h-4 w-4" aria-hidden />
                       Book
                     </Button>
                   </div>

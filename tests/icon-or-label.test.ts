@@ -217,11 +217,10 @@ test('grouping dashboard worker rows carry labelled actions beneath the detail l
   assert.match(row, /text-xs text-text-tertiary/);
   assert.match(row, /mt-3 flex flex-wrap items-center gap-2/);
   assert.doesNotMatch(row, /IconButton/);
+  assert.doesNotMatch(row, /MessageSquare|Calendar/);
   assert.equal(row.match(/size="small"/g)?.length, 2);
   assert.equal(row.match(/variant="secondary"/g)?.length, 2);
-  assert.match(row, /<MessageSquare className="h-4 w-4" aria-hidden \/>/);
   assert.match(row, />\s*Message\s*</);
-  assert.match(row, /<Calendar className="h-4 w-4" aria-hidden \/>/);
   assert.match(row, />\s*Book\s*</);
   assert.match(panel, /dashboardWorkerPrimaryLocation/);
   assert.match(panel, /onSelectLocation\?\.\(primaryLocationId, '\/messages'\)/);

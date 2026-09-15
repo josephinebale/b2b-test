@@ -212,8 +212,7 @@ test('the grouping Overview leads with a full-width unfilled shifts calendar', (
   assert.doesNotMatch(workers, /lines\.join/);
   assert.match(workers, /mt-3 flex flex-wrap items-center gap-2/);
   assert.match(workers, /variant="secondary"/);
-  assert.match(workers, /MessageSquare/);
-  assert.match(workers, /Calendar/);
+  assert.doesNotMatch(workers, /MessageSquare|Calendar/);
   assert.match(workers, />\s*Message\s*</);
   assert.match(workers, />\s*Book\s*</);
   assert.doesNotMatch(workers, /IconButton/);

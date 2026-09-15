@@ -224,8 +224,7 @@ test('grouping Workers page stays hidden behind landing flags', () => {
   );
   assert.match(panel, /dashboardWorkerEvidenceLine/);
   assert.match(panel, /dashboardWorkerPrimaryLocation/);
-  assert.match(panel, /MessageSquare/);
-  assert.match(panel, /Calendar/);
+  assert.doesNotMatch(panel, /MessageSquare|Calendar/);
   assert.match(panel, /<Tag[\s\S]*tone="pending"/);
   assert.match(panel, /onSelectLocation\?\.\(primaryLocationId, '\/messages'\)/);
   assert.match(panel, /onSelectLocation\?\.\(\s*primaryLocationId,\s*'\/request-booking',/);
