@@ -47,26 +47,28 @@ export function WeekScheduleControls({
 }) {
   return (
     <div className="flex shrink-0 items-center gap-2">
-      <Button type="button" onClick={onToday}>
+      <Button type="button" size="small" onClick={onToday}>
         Today
       </Button>
       <IconButton
         type="button"
+        size="small"
         onClick={onPrevious}
         className="ui-tooltip"
         aria-label="Previous week"
         data-tooltip="Previous week"
       >
-        <ChevronLeft className="h-5 w-5" />
+        <ChevronLeft className="h-4 w-4" />
       </IconButton>
       <IconButton
         type="button"
+        size="small"
         onClick={onNext}
         className="ui-tooltip"
         aria-label="Next week"
         data-tooltip="Next week"
       >
-        <ChevronRight className="h-5 w-5" />
+        <ChevronRight className="h-4 w-4" />
       </IconButton>
     </div>
   );

@@ -39,6 +39,6 @@ test('GroupingLocationSortControl keeps label and select on one inline line', ()
 
   assert.match(row, /inline-flex shrink-0 items-center gap-2/);
   assert.match(row, /shrink-0 text-xs font-medium text-text">Sort by</);
-  assert.match(row, /h-9 w-full appearance-none/);
+  assert.match(row, /ui-select ui-select--small w-full/);
   assert.doesNotMatch(row, /<label[\s\S]*Sort by/);
 });

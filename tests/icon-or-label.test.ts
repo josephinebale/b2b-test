@@ -164,8 +164,9 @@ test('icon size is paired to button size so the inset stays even', () => {
   const workers = source('../src/pages/Workers.tsx');
   const messages = source('../src/pages/Messages.tsx');
 
-  assert.match(week, /<ChevronLeft className="h-5 w-5" \/>/);
-  assert.match(week, /<ChevronRight className="h-5 w-5" \/>/);
+  assert.match(week, /size="small"/);
+  assert.match(week, /<ChevronLeft className="h-4 w-4" \/>/);
+  assert.match(week, /<ChevronRight className="h-4 w-4" \/>/);
   assert.match(messages, /<MoreHorizontal className="h-4 w-4" \/>/);
 
   // The repeated worker-row actions take the same 32px control as the week arrows.

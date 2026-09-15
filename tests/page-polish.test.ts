@@ -247,6 +247,8 @@ test('the grouping Overview leads with a full-width unfilled shifts calendar', (
   assert.doesNotMatch(houses, /font-medium text-text-strong/);
   assert.match(houses, /\{item\.count\} \{item\.label\}/);
   assert.match(houses, /groupingDirectLocationListLabel/);
+  assert.match(houses, /directChildLocationTypeLine\(location\)/);
+  assert.doesNotMatch(houses, /locationTypeSuburbLine\(location\)/);
   assert.match(
     houses,
     /title=\{groupingDirectLocationListLabel\(housesAndCentres, clients\)\}/,
@@ -269,7 +271,7 @@ test('the grouping Overview leads with a full-width unfilled shifts calendar', (
   assert.match(sectionHeadingRow, /aria-label=\{ariaLabel\}/);
   assert.match(
     sectionHeadingRow,
-    /h-9 w-full appearance-none rounded-sm border border-border bg-surface px-2 pr-8 text-sm font-normal text-text/,
+    /ui-select ui-select--small w-full/,
   );
   assert.match(sectionHeadingRow, /ChevronDown/);
   assert.match(sectionHeadingRow, /h-4 w-4/);

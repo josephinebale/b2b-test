@@ -40,8 +40,8 @@ Organisation
 │       │                                  the landing.
 │       ├─ Child list (/supportables)     when direct children are groupings
 │       │                                  only: second-tier tab and landing;
-│       │                                  Groupings, derived place-based
-│       │                                  label, or Clients; omitted when
+│       │                                  Groupings or derived direct-child
+│       │                                  location list label; omitted when
 │       │                                  Overview is defined; also from
 │       │                                  Overview See all N
 │       ├─ Workers                        all-time history ranked by
@@ -87,7 +87,7 @@ There are three service types. All three are locations. Worker tiers, site cover
 
 - **SIL house**
 - **Centre or day program**
-- **Home and community** (the individual’s home is the location). On lists, the **person** is the name and the suburb is the place beneath: “Maya Nguyen” with “Home and community · Forestville”, not “Forestville (Maya Nguyen)”. In a grouping, a home and community location is a **client**, listed after houses and centres, because a house roster gap and a person with nobody are not comparable in one flat list. Aged-care clients display **Support at Home**; that is a label change only. **Superseded for this round:** the grouping Overview and child-list tab title now render one merged direct-child location list (`groupingDirectLocationListLabel`) so participants can judge whether houses, centres and clients belong in one flat list — the split on `/supportables` is unchanged.
+- **Home and community** (the individual’s home is the location). On lists, the **person** is the name and the suburb is the place beneath: “Maya Nguyen” with “Home and community · Forestville”, not “Forestville (Maya Nguyen)”. In a grouping, a home and community location is a **client**, listed after houses and centres, because a house roster gap and a person with nobody are not comparable in one flat list. Aged-care clients display **Support at Home**; that is a label change only. **Superseded for this round:** grouping Overview and `/supportables` now render one merged direct-child location list (`groupingDirectLocationListLabel`, one sort control on Overview when two or more rows) so participants can judge whether houses, centres and clients belong in one flat list. Client rows carry a **Client,** prefix on the type line (`directChildLocationTypeLine`) so the person/place distinction survives without a separate section.
 
 A location has **participants**. A booking is still booked against the location; it also carries which participants that shift covers:
 
@@ -131,7 +131,7 @@ A caseload uses the same grouping face as a region; it is not a fourth kind of n
 
 ### Navigation model at scale — first slice live
 
-**A node lists its children, not its descendants. Counts roll up; rows do not.** `descendantLocationIds` still resolves recursively for rolled-up counts and Notifications scope, but grouping Supportables renders only direct children. A child grouping has its own row with its name, recursively resolved contents and summed waiting work; selecting it enters that grouping's landing — Overview when direct children include locations, the child list when they are groupings only. Direct location children retain the place-based / **Clients** split (`groupingPlaceBasedLabel`). This matters because flattening works at Careforce area over five caseloads but stops working at an arm over 13 regions, where the manager would see leaves instead of their own structure.
+**A node lists its children, not its descendants. Counts roll up; rows do not.** `descendantLocationIds` still resolves recursively for rolled-up counts and Notifications scope, but grouping Supportables renders only direct children. A child grouping has its own row with its name, recursively resolved contents and summed waiting work; selecting it enters that grouping's landing — Overview when direct children include locations, the child list when they are groupings only. Direct location children render in one merged list (`groupingDirectLocationListLabel`); client rows use `directChildLocationTypeLine`. This matters because flattening works at Careforce area over five caseloads but stops working at an arm over 13 regions, where the manager would see leaves instead of their own structure.
 
 ### Navigation model at scale — second slice live
 

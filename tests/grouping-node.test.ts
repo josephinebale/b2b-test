@@ -317,8 +317,8 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
 
   assert.match(supportables, /groupingDashboardChildren\(grouping\)/);
   assert.match(supportables, /groupings\.length > 0/);
-  assert.match(supportables, /housesAndCentres\.length > 0/);
-  assert.match(supportables, /clients\.length > 0/);
+  assert.match(supportables, /hasDirectLocations/);
+  assert.match(supportables, /directLocations\.map/);
   assert.match(supportables, /pendingCountsForLocation/);
   assert.match(supportables, /pendingCountsForGrouping\(grouping\)/);
   assert.match(supportables, /groupingContentsSummary\(grouping\)/);
@@ -331,7 +331,7 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
   assert.match(supportables, /showSectionTitles/);
   assert.ok(
     supportables.indexOf('{groupings.length > 0') <
-      supportables.indexOf('{housesAndCentres.length > 0'),
+      supportables.indexOf('{hasDirectLocations'),
     'child groupings render before direct locations',
   );
   assert.doesNotMatch(groupingRow, /LocationMarker/);
@@ -349,9 +349,13 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
   assert.match(supportables, /onSelectGrouping\?\.\(grouping\.id\)/);
   assert.match(supportables, /\{grouping\.name\}/);
   assert.doesNotMatch(supportables, /Children of|supportable/);
-  assert.match(supportables, /groupingPlaceBasedLabel\(housesAndCentres\)/);
-  assert.match(supportables, /title="Clients"/);
-  assert.match(supportables, /clients\.length > 0/);
+  assert.match(
+    supportables,
+    /groupingDirectLocationListLabel\(housesAndCentres, clients\)/,
+  );
+  assert.match(supportables, /directChildLocationTypeLine\(location\)/);
+  assert.doesNotMatch(supportables, /title="Clients"/);
+  assert.doesNotMatch(supportables, /groupingPlaceBasedLabel\(housesAndCentres\)/);
   assert.match(supportables, /questionId="grouping-locations"/);
   assert.match(source('../src/pages/dashboard/BookingsNeedingAttention.tsx'), /questionId="grouping-requests"/);
   assert.match(dashboard, /questionId="grouping-usage"/);
@@ -615,7 +619,7 @@ test('a grouping row states only the waiting work a location actually has', () =
   );
   assert.match(supportables, /\{pendingWork\.length > 0 && \(/);
   assert.match(supportables, /\{pendingWork\.join\(' · '\)\}/);
-  assert.match(supportables, /locationTypeSuburbLine\(location\)/);
+  assert.match(supportables, /directChildLocationTypeLine\(location\)/);
   assert.doesNotMatch(supportables, /counts\.requests|counts\.approvals|counts\.messages/);
 });
 

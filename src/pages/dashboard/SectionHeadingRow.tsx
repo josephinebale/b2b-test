@@ -47,7 +47,7 @@ export function GroupingLocationSortControl({
             onSortChange(event.target.value as DashboardAsideSort)
           }
           aria-label={ariaLabel}
-          className="h-9 w-full appearance-none rounded-sm border border-border bg-surface px-2 pr-8 text-sm font-normal text-text"
+          className="ui-select ui-select--small w-full"
         >
           <option value="soonest-shift">Soonest shift</option>
           <option value="most-waiting">Most outstanding tasks</option>

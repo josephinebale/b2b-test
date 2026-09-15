@@ -83,7 +83,7 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
   );
   assert.match(
     source('../src/pages/dashboard/HousesAndCentresPanel.tsx'),
-    /locationTypeSuburbLine\(location\)/,
+    /directChildLocationTypeLine\(location\)/,
   );
   assert.doesNotMatch(dashboard, /Waiting work/);
   assert.doesNotMatch(dashboard, /Platform use/);
@@ -106,7 +106,7 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
   );
   assert.match(supportables, /onSelectLocation\?\.\(location\.id, '\/bookings'\)/);
   assert.match(supportables, /\{location\.name\}/);
-  assert.match(supportables, /locationTypeSuburbLine\(location\)/);
+  assert.match(supportables, /directChildLocationTypeLine\(location\)/);
 
   assert.match(
     breadcrumb,

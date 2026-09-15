@@ -83,6 +83,8 @@
   --avatar-md: 2.25rem;
   --avatar-lg: 2.75rem;
 
+  --control-height-small: 2rem;
+
   --footer-gap: var(--space-7);
 
   /* Tier 1 carries the global scope, tier 2 the working scope. */
@@ -152,7 +154,7 @@ body {
 }
 
 .ui-button--small {
-  height: 2rem;
+  height: var(--control-height-small);
   padding: 0 var(--space-3);
 }
 
@@ -210,8 +212,25 @@ body {
 }
 
 .ui-icon-button--small {
-  width: 2rem;
-  height: 2rem;
+  width: var(--control-height-small);
+  height: var(--control-height-small);
+}
+
+.ui-select {
+  appearance: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  padding: 0 var(--space-2);
+  padding-right: 2rem;
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-text);
+}
+
+.ui-select--small {
+  height: var(--control-height-small);
 }
 
 .pinned-question-trigger {

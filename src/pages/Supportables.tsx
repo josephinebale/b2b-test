@@ -12,14 +12,14 @@ import {
   pendingCountsForGrouping,
   pendingCountsForLocation,
   rootGroupingsForOrganisation,
-  locationTypeSuburbLine,
   type Grouping,
   type Location,
 } from '../data/locations';
 import { treeSectionLabel } from '../lib/informationArchitecture';
 import {
+  directChildLocationTypeLine,
   groupingChildListPageHeading,
-  groupingPlaceBasedLabel,
+  groupingDirectLocationListLabel,
   pendingWorkParts,
 } from '../lib/pageContent';
 
@@ -43,7 +43,7 @@ function GroupingLocationRow({
           {location.name}
         </EntityLink>
         <span className="mt-1 block text-sm text-text-secondary">
-          {locationTypeSuburbLine(location)}
+          {directChildLocationTypeLine(location)}
         </span>
         {pendingWork.length > 0 && (
           LANDING_CONTENT_ENABLED ? (
@@ -132,10 +132,10 @@ export function Supportables({
       }
     : groupingDashboardChildren(grouping);
 
+  const directLocations = [...housesAndCentres, ...clients];
+  const hasDirectLocations = directLocations.length > 0;
   const sectionCount =
-    (groupings.length > 0 ? 1 : 0) +
-    (housesAndCentres.length > 0 ? 1 : 0) +
-    (clients.length > 0 ? 1 : 0);
+    (groupings.length > 0 ? 1 : 0) + (hasDirectLocations ? 1 : 0);
   const tabLabel = atOrganisation
     ? treeSectionLabel(grouping, nodeType)
     : groupingChildListTabLabel(grouping);
@@ -176,43 +176,19 @@ export function Supportables({
         </section>
       )}
 
-      {housesAndCentres.length > 0 && (
+      {hasDirectLocations && (
         <section>
           <SectionHeading
-            title={groupingPlaceBasedLabel(housesAndCentres)}
+            title={groupingDirectLocationListLabel(housesAndCentres, clients)}
             showTitle={showSectionTitles}
             showPin={
               !pinOnPageHeading &&
               groupings.length === 0 &&
-              housesAndCentres.length > 0
+              hasDirectLocations
             }
           />
           <Card divided>
-            {housesAndCentres.map((location) => (
-              <GroupingLocationRow
-                key={location.id}
-                location={location}
-                onSelectLocation={onSelectLocation}
-              />
-            ))}
-          </Card>
-        </section>
-      )}
-
-      {clients.length > 0 && (
-        <section>
-          <SectionHeading
-            title="Clients"
-            showTitle={showSectionTitles}
-            showPin={
-              !pinOnPageHeading &&
-              groupings.length === 0 &&
-              housesAndCentres.length === 0 &&
-              clients.length > 0
-            }
-          />
-          <Card divided>
-            {clients.map((location) => (
+            {directLocations.map((location) => (
               <GroupingLocationRow
                 key={location.id}
                 location={location}

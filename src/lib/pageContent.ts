@@ -1,4 +1,9 @@
-import { findLocation, type Location } from '../data/locations.ts';
+import {
+  findLocation,
+  locationTypeSuburbLine,
+  serviceTypeLabel,
+  type Location,
+} from '../data/locations.ts';
 import {
   addDays,
   formatShiftClock,
@@ -73,6 +78,26 @@ export function groupingDirectLocationListLabel(
     return `${capitalize(parts[0])} and ${parts[1]}`;
   }
   return `${capitalize(parts[0])}, ${parts[1]} and ${parts[2]}`;
+}
+
+/**
+ * Type line on a merged direct-child location list. House and centre rows are
+ * unchanged; client rows carry a "Client," prefix so the person/place distinction
+ * survives without a separate section.
+ */
+export function directChildLocationTypeLine(
+  location: Pick<Location, 'serviceType' | 'sector' | 'suburb' | 'state'>,
+): string {
+  if (location.serviceType !== 'home-community') {
+    return locationTypeSuburbLine(location);
+  }
+
+  const type = serviceTypeLabel(location.serviceType, location.sector);
+  const typeLabel =
+    location.sector === 'aged care'
+      ? type
+      : `${type.charAt(0).toLowerCase()}${type.slice(1)}`;
+  return `Client, ${typeLabel}, ${location.suburb}`;
 }
 
 /** Child-list page title when more than one section renders — suffix matches the tab label, lowercase. */

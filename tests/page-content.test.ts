@@ -28,6 +28,7 @@ import {
   dashboardHouseRowPendingLinks,
   dashboardAsideWaitingCount,
   groupingChildListPageHeading,
+  directChildLocationTypeLine,
   groupingDirectLocationListLabel,
   groupingPlaceBasedLabel,
   groupingOverviewHeading,
@@ -139,6 +140,22 @@ test('the direct location list label follows every direct child service type', (
     ),
     'Centres and clients',
   );
+});
+
+test('the merged direct-child list prefixes client rows only', () => {
+  const maya = getLocationData('forestville-home').location;
+  const allambie = getLocationData('allambie-heights-day-program').location;
+  const deeWhy = getLocationData('dee-why-1').location;
+
+  assert.equal(
+    directChildLocationTypeLine(maya),
+    'Client, home and community, Forestville',
+  );
+  assert.equal(
+    directChildLocationTypeLine(allambie),
+    'Centre / day program, Allambie Heights',
+  );
+  assert.equal(directChildLocationTypeLine(deeWhy), 'SIL house, Dee Why');
 });
 
 test('the place-based label follows direct location service types', () => {

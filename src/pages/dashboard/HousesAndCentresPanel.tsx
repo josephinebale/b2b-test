@@ -6,7 +6,6 @@ import {
   groupingDirectChildrenCountLine,
   futureCancelledBookings,
   pendingCountsForLocation,
-  locationTypeSuburbLine,
   waitingRequestsForLocation,
   type Booking,
   type Grouping,
@@ -17,6 +16,7 @@ import { EntityLink } from '../../components/ui/EntityLink';
 import {
   dashboardHouseRowPendingLinks,
   dashboardAsideWaitingCount,
+  directChildLocationTypeLine,
   groupingDirectLocationListLabel,
   type DashboardAsideSort,
   EMPTY_STATES,
@@ -57,7 +57,7 @@ function LocationRow({
         {location.name}
       </EntityLink>
       <p className="mt-1 text-xs text-text-tertiary">
-        {locationTypeSuburbLine(location)}
+        {directChildLocationTypeLine(location)}
       </p>
       {pendingLinks.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
