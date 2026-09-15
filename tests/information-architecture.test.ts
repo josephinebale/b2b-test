@@ -150,11 +150,15 @@ test('grouping child-list tab labels follow direct children, never Supportables'
   assert.equal(groupingChildListTabLabel(careforce), 'Groupings');
   assert.equal(groupingChildListTabLabel(careforceArea), 'Groupings');
   assert.equal(groupingChildListTabLabel(hunter), 'Houses');
-  assert.equal(groupingChildListTabLabel(northernLifestyles), 'Centres');
+  assert.equal(groupingChildListTabLabel(northernLifestyles), 'Centres and clients');
   assert.equal(groupingChildListTabLabel(northernSydney), 'Houses and centres');
   assert.equal(
     groupingChildListTabLabel(findGrouping('careforce-northern-caseload')!),
-    'Houses',
+    'Houses and clients',
+  );
+  assert.equal(
+    groupingChildListTabLabel(findGrouping('western-lifestyles')!),
+    'Centres and clients',
   );
 
   assert.deepEqual(

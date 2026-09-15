@@ -529,13 +529,15 @@ test('the attention calendar collects requested and cancelled shifts across the 
   assert.match(housesPanel, /futureCancelledBookings/);
   assert.match(housesPanel, /dashboardHouseRowPendingLinks/);
   assert.doesNotMatch(housesPanel, /dashboardAsidePendingLinks/);
-  assert.match(housesPanel, /title=\{groupingPlaceBasedLabel\(housesAndCentres\)\}/);
-  assert.match(housesPanel, /title="Clients"/);
-  assert.match(housesPanel, /groupingHousesAndCentresCountLine/);
-  assert.match(housesPanel, /groupingClientsCountLine/);
-  assert.doesNotMatch(housesPanel, /groupingDirectChildrenCountLine/);
-  assert.match(housesPanel, /visibleHousesAndCentres\.length > 0/);
-  assert.match(housesPanel, /visibleClients\.length > 0/);
+  assert.match(
+    housesPanel,
+    /title=\{groupingDirectLocationListLabel\(housesAndCentres, clients\)\}/,
+  );
+  assert.match(housesPanel, /groupingDirectChildrenCountLine\(grouping\)/);
+  assert.match(housesPanel, /directLocations\.length >= 2/);
+  assert.match(housesPanel, /visibleLocations\.length > 0/);
+  assert.doesNotMatch(housesPanel, /visibleHousesAndCentres/);
+  assert.doesNotMatch(housesPanel, /visibleClients/);
 
   for (const locationId of descendantLocationIds(northern)) {
     const cancelledCount = waitingShiftsForLocation(locationId).filter(
@@ -717,14 +719,16 @@ test('regions that were previously gated still seed Overview content', () => {
   }
 });
 
-test('each direct-child location list gets its own sort control when it has two or more rows', () => {
+test('the Overview direct-child location list uses one sort control when it has two or more rows', () => {
   const housesPanel = source('../src/pages/dashboard/HousesAndCentresPanel.tsx');
 
-  assert.match(housesPanel, /housesSortOption/);
-  assert.match(housesPanel, /clientsSortOption/);
-  assert.match(housesPanel, /showSort=\{housesAndCentres\.length >= 2\}/);
-  assert.match(housesPanel, /showSort=\{clients\.length >= 2\}/);
-  assert.doesNotMatch(housesPanel, /setSortOption/);
+  assert.match(housesPanel, /groupingDirectLocationListLabel/);
+  assert.match(housesPanel, /groupingDirectChildrenCountLine\(grouping\)/);
+  assert.match(housesPanel, /showSort=\{directLocations\.length >= 2\}/);
+  assert.match(housesPanel, /useState<DashboardAsideSort>\('soonest-shift'\)/);
+  assert.doesNotMatch(housesPanel, /housesSortOption/);
+  assert.doesNotMatch(housesPanel, /clientsSortOption/);
+  assert.doesNotMatch(housesPanel, /title="Clients"/);
 
   const northernSydney = findGrouping('northern-sydney')!;
   const westernLifestyles = findGrouping('western-lifestyles')!;
@@ -734,12 +738,18 @@ test('each direct-child location list gets its own sort control when it has two 
   const western = groupingDashboardChildren(westernLifestyles);
   const northern = groupingDashboardChildren(careforceNorthern);
 
-  assert.equal(sydney.housesAndCentres.length >= 2, true);
-  assert.equal(sydney.clients.length >= 2, false);
-  assert.equal(western.housesAndCentres.length >= 2, false);
-  assert.equal(western.clients.length >= 2, false);
-  assert.equal(northern.housesAndCentres.length >= 2, true);
-  assert.equal(northern.clients.length >= 2, false);
+  assert.equal(
+    sydney.housesAndCentres.length + sydney.clients.length >= 2,
+    true,
+  );
+  assert.equal(
+    western.housesAndCentres.length + western.clients.length >= 2,
+    true,
+  );
+  assert.equal(
+    northern.housesAndCentres.length + northern.clients.length >= 2,
+    true,
+  );
 });
 
 test('landing follows direct children; a location still lands on Bookings', () => {

@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
 import {
   childGroupingSectionTitle,
-  groupingClientsCountLine,
   groupingContentsSummary,
   groupingDashboardChildren,
-  groupingHousesAndCentresCountLine,
+  groupingDirectChildrenCountLine,
   futureCancelledBookings,
   pendingCountsForLocation,
   locationTypeSuburbLine,
@@ -18,9 +17,9 @@ import { EntityLink } from '../../components/ui/EntityLink';
 import {
   dashboardHouseRowPendingLinks,
   dashboardAsideWaitingCount,
+  groupingDirectLocationListLabel,
   type DashboardAsideSort,
   EMPTY_STATES,
-  groupingPlaceBasedLabel,
   sortDashboardAsideLocations,
 } from '../../lib/pageContent';
 import { href } from '../../lib/router';
@@ -113,7 +112,6 @@ function LocationSection({
   showSort = false,
   sortOption,
   onSortChange,
-  sortAriaLabel = 'Sort houses and centres',
 }: {
   title: string;
   countLine: string;
@@ -123,7 +121,6 @@ function LocationSection({
   showSort?: boolean;
   sortOption?: DashboardAsideSort;
   onSortChange?: (value: DashboardAsideSort) => void;
-  sortAriaLabel?: string;
 }) {
   const hasSort =
     showSort && sortOption !== undefined && onSortChange !== undefined;
@@ -138,7 +135,6 @@ function LocationSection({
             <GroupingLocationSortControl
               sortOption={sortOption}
               onSortChange={onSortChange}
-              ariaLabel={sortAriaLabel}
             />
           ) : undefined
         }
@@ -168,51 +164,40 @@ export function HousesAndCentresPanel({
   onSelectLocation?: (locationId: string, path?: string) => void;
   onSelectGrouping?: (groupingId: string) => void;
 }) {
-  const [housesSortOption, setHousesSortOption] =
-    useState<DashboardAsideSort>('soonest-shift');
-  const [clientsSortOption, setClientsSortOption] =
+  const [sortOption, setSortOption] =
     useState<DashboardAsideSort>('soonest-shift');
   const { groupings, housesAndCentres, clients } =
     groupingDashboardChildren(grouping);
+  const directLocations = useMemo(
+    () => [...housesAndCentres, ...clients],
+    [clients, housesAndCentres],
+  );
   const sortMetrics = useMemo(
     () =>
       new Map(
-        [...housesAndCentres, ...clients].map((location) => [
+        directLocations.map((location) => [
           location.id,
           locationSortMetrics(location.id, extraBookings),
         ]),
       ),
-    [clients, extraBookings, housesAndCentres],
+    [directLocations, extraBookings],
   );
-  const sortedHousesAndCentres = useMemo(
+  const sortedLocations = useMemo(
     () =>
-      sortDashboardAsideLocations(
-        housesAndCentres,
-        housesSortOption,
-        sortMetrics,
-      ),
-    [housesAndCentres, sortMetrics, housesSortOption],
-  );
-  const sortedClients = useMemo(
-    () =>
-      sortDashboardAsideLocations(clients, clientsSortOption, sortMetrics),
-    [clients, sortMetrics, clientsSortOption],
+      sortDashboardAsideLocations(directLocations, sortOption, sortMetrics),
+    [directLocations, sortMetrics, sortOption],
   );
 
-  const totalRowCount =
-    groupings.length + housesAndCentres.length + clients.length;
+  const totalRowCount = groupings.length + directLocations.length;
   const visibleGroupingCount = Math.min(groupings.length, CHILDREN_PREVIEW);
-  let remainingPreview = CHILDREN_PREVIEW - visibleGroupingCount;
-  const visibleHouseCount = Math.min(housesAndCentres.length, remainingPreview);
-  remainingPreview -= visibleHouseCount;
-  const visibleClientCount = Math.min(clients.length, remainingPreview);
+  const remainingPreview = CHILDREN_PREVIEW - visibleGroupingCount;
+  const visibleLocationCount = Math.min(
+    directLocations.length,
+    remainingPreview,
+  );
 
   const visibleGroupings = groupings.slice(0, visibleGroupingCount);
-  const visibleHousesAndCentres = sortedHousesAndCentres.slice(
-    0,
-    visibleHouseCount,
-  );
-  const visibleClients = sortedClients.slice(0, visibleClientCount);
+  const visibleLocations = sortedLocations.slice(0, visibleLocationCount);
   if (totalRowCount === 0) {
     return (
       <section>
@@ -253,30 +238,16 @@ export function HousesAndCentresPanel({
         </section>
       )}
 
-      {visibleHousesAndCentres.length > 0 && (
+      {visibleLocations.length > 0 && (
         <LocationSection
-          title={groupingPlaceBasedLabel(housesAndCentres)}
-          countLine={groupingHousesAndCentresCountLine(grouping)}
-          locations={visibleHousesAndCentres}
+          title={groupingDirectLocationListLabel(housesAndCentres, clients)}
+          countLine={groupingDirectChildrenCountLine(grouping)}
+          locations={visibleLocations}
           extraBookings={extraBookings}
           onSelectLocation={onSelectLocation}
-          showSort={housesAndCentres.length >= 2}
-          sortOption={housesSortOption}
-          onSortChange={setHousesSortOption}
-        />
-      )}
-
-      {visibleClients.length > 0 && (
-        <LocationSection
-          title="Clients"
-          countLine={groupingClientsCountLine(grouping)}
-          locations={visibleClients}
-          extraBookings={extraBookings}
-          onSelectLocation={onSelectLocation}
-          showSort={clients.length >= 2}
-          sortOption={clientsSortOption}
-          onSortChange={setClientsSortOption}
-          sortAriaLabel="Sort clients"
+          showSort={directLocations.length >= 2}
+          sortOption={sortOption}
+          onSortChange={setSortOption}
         />
       )}
 

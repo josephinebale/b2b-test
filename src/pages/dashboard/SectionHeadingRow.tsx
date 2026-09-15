@@ -31,7 +31,7 @@ export function SectionHeadingRow({
 export function GroupingLocationSortControl({
   sortOption,
   onSortChange,
-  ariaLabel = 'Sort houses and centres',
+  ariaLabel = 'Sort locations',
 }: {
   sortOption: DashboardAsideSort;
   onSortChange: (value: DashboardAsideSort) => void;

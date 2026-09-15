@@ -5,6 +5,7 @@ import {
   bookingParticipantSummary,
   findGrouping,
   getLocationData,
+  groupingChildListTabLabel,
   groupingDashboardChildren,
 } from '../src/data/locations.ts';
 import {
@@ -27,6 +28,7 @@ import {
   dashboardHouseRowPendingLinks,
   dashboardAsideWaitingCount,
   groupingChildListPageHeading,
+  groupingDirectLocationListLabel,
   groupingPlaceBasedLabel,
   groupingOverviewHeading,
   groupingWorkersHeading,
@@ -75,12 +77,67 @@ test('grouping page headings carry the node name in sentence case', () => {
   assert.equal(groupingWorkersHeading(hunter.name), 'Hunter workers');
 
   assert.equal(
-    groupingChildListPageHeading('Northern Lifestyles', 'Centres'),
-    'Northern Lifestyles centres',
+    groupingChildListPageHeading('Northern Lifestyles', 'Centres and clients'),
+    'Northern Lifestyles centres and clients',
   );
   assert.equal(
-    groupingChildListPageHeading('Careforce Northern caseload', 'Houses'),
-    'Careforce Northern caseload houses',
+    groupingChildListPageHeading('Careforce Northern caseload', 'Houses and clients'),
+    'Careforce Northern caseload houses and clients',
+  );
+});
+
+test('the direct location list label follows every direct child service type', () => {
+  const northernSydney = findGrouping('northern-sydney');
+  const northernLifestyles = findGrouping('northern-lifestyles');
+  const careforceNorthern = findGrouping('careforce-northern-caseload');
+  const westernLifestyles = findGrouping('western-lifestyles');
+  assert.ok(
+    northernSydney &&
+      northernLifestyles &&
+      careforceNorthern &&
+      westernLifestyles,
+  );
+
+  for (const grouping of [
+    northernSydney,
+    northernLifestyles,
+    careforceNorthern,
+    westernLifestyles,
+  ]) {
+    const { housesAndCentres, clients } = groupingDashboardChildren(grouping);
+    assert.equal(
+      groupingDirectLocationListLabel(housesAndCentres, clients),
+      groupingChildListTabLabel(grouping),
+    );
+  }
+
+  assert.equal(
+    groupingDirectLocationListLabel(
+      groupingDashboardChildren(northernSydney).housesAndCentres,
+      groupingDashboardChildren(northernSydney).clients,
+    ),
+    'Houses and centres',
+  );
+  assert.equal(
+    groupingDirectLocationListLabel(
+      groupingDashboardChildren(careforceNorthern).housesAndCentres,
+      groupingDashboardChildren(careforceNorthern).clients,
+    ),
+    'Houses and clients',
+  );
+  assert.equal(
+    groupingDirectLocationListLabel(
+      groupingDashboardChildren(northernLifestyles).housesAndCentres,
+      groupingDashboardChildren(northernLifestyles).clients,
+    ),
+    'Centres and clients',
+  );
+  assert.equal(
+    groupingDirectLocationListLabel(
+      groupingDashboardChildren(westernLifestyles).housesAndCentres,
+      groupingDashboardChildren(westernLifestyles).clients,
+    ),
+    'Centres and clients',
   );
 });
 

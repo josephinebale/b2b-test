@@ -1,6 +1,10 @@
 import { addDays, startOfDay, startOfWeek } from '../lib/date.ts';
 import type { Organisation, Sector } from '../lib/informationArchitecture.ts';
-import { childCountLine, groupingPlaceBasedLabel } from '../lib/pageContent.ts';
+import {
+  childCountLine,
+  groupingDirectLocationListLabel,
+  groupingPlaceBasedLabel,
+} from '../lib/pageContent.ts';
 
 export type BookingStatus = 'confirmed' | 'requested' | 'ended' | 'cancelled';
 export type FatigueSignal = 'no-break' | 'short-rest' | null;
@@ -2104,10 +2108,7 @@ export function groupingChildListTabLabel(grouping: Grouping): string {
   if (groupings.length > 0) {
     return 'Groupings';
   }
-  if (housesAndCentres.length === 0 && clients.length > 0) {
-    return 'Clients';
-  }
-  return groupingPlaceBasedLabel(housesAndCentres);
+  return groupingDirectLocationListLabel(housesAndCentres, clients);
 }
 
 function housesAndCentresPhrase(locations: Location[], counted: boolean): string | null {

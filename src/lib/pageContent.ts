@@ -38,6 +38,43 @@ export function groupingPlaceBasedLabel(
   return 'Houses and centres';
 }
 
+/**
+ * Direct-child location list title from service types present among every direct
+ * location child — houses, then centres, then clients (same order as
+ * `childCountLine`), omitting zeros. Sentence case after the first word.
+ */
+export function groupingDirectLocationListLabel(
+  housesAndCentres: readonly Location[],
+  clients: readonly Location[],
+): string {
+  const parts: string[] = [];
+
+  if (
+    housesAndCentres.some((location) => location.serviceType === 'sil')
+  ) {
+    parts.push('houses');
+  }
+  if (
+    housesAndCentres.some((location) => location.serviceType === 'centre')
+  ) {
+    parts.push('centres');
+  }
+  if (clients.length > 0) {
+    parts.push('clients');
+  }
+
+  if (parts.length === 0) return 'Houses and centres';
+
+  const capitalize = (word: string) =>
+    word.charAt(0).toUpperCase() + word.slice(1);
+
+  if (parts.length === 1) return capitalize(parts[0]);
+  if (parts.length === 2) {
+    return `${capitalize(parts[0])} and ${parts[1]}`;
+  }
+  return `${capitalize(parts[0])}, ${parts[1]} and ${parts[2]}`;
+}
+
 /** Child-list page title when more than one section renders — suffix matches the tab label, lowercase. */
 export function groupingChildListPageHeading(
   groupingName: string,

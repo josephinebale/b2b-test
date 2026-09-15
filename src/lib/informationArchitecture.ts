@@ -261,6 +261,7 @@ export const NODE_NAV_ITEMS = [
     placement: 'main',
   },
   {
+    /** Visible label from `groupingChildListTabLabel` → `groupingDirectLocationListLabel`. */
     label: 'Child list',
     path: '/supportables',
     nodeTypes: ['grouping'],

@@ -246,14 +246,16 @@ test('the grouping Overview leads with a full-width unfilled shifts calendar', (
   assert.match(houses, /mt-2 flex flex-wrap gap-x-3 gap-y-1/);
   assert.doesNotMatch(houses, /font-medium text-text-strong/);
   assert.match(houses, /\{item\.count\} \{item\.label\}/);
-  assert.match(houses, /groupingPlaceBasedLabel/);
-  assert.match(houses, /title=\{groupingPlaceBasedLabel\(housesAndCentres\)\}/);
-  assert.match(houses, /title="Clients"/);
+  assert.match(houses, /groupingDirectLocationListLabel/);
+  assert.match(
+    houses,
+    /title=\{groupingDirectLocationListLabel\(housesAndCentres, clients\)\}/,
+  );
+  assert.doesNotMatch(houses, /title="Clients"/);
   assert.match(houses, /<SectionHeadingRow/);
   assert.match(houses, /GroupingLocationSortControl/);
-  assert.match(houses, /groupingHousesAndCentresCountLine\(grouping\)/);
-  assert.match(houses, /groupingClientsCountLine\(grouping\)/);
-  assert.doesNotMatch(houses, /groupingDirectChildrenCountLine/);
+  assert.match(houses, /groupingDirectChildrenCountLine\(grouping\)/);
+  assert.doesNotMatch(houses, /groupingHousesAndCentresCountLine/);
   assert.match(
     source('../src/pages/dashboard/SectionHeadingRow.tsx'),
     /Sort by/,
@@ -263,10 +265,7 @@ test('the grouping Overview leads with a full-width unfilled shifts calendar', (
   assert.match(sectionHeadingRow, />Soonest shift</);
   assert.match(sectionHeadingRow, />Most outstanding tasks</);
   assert.match(sectionHeadingRow, />Name A to Z</);
-  assert.match(
-    sectionHeadingRow,
-    /ariaLabel = 'Sort houses and centres'/,
-  );
+  assert.match(sectionHeadingRow, /ariaLabel = 'Sort locations'/);
   assert.match(sectionHeadingRow, /aria-label=\{ariaLabel\}/);
   assert.match(
     sectionHeadingRow,
@@ -277,12 +276,10 @@ test('the grouping Overview leads with a full-width unfilled shifts calendar', (
   assert.doesNotMatch(houses, /Sort by: Soonest shift/);
   assert.doesNotMatch(houses, /SortSelect/);
   assert.match(houses, /sortDashboardAsideLocations/);
-  assert.match(houses, /housesSortOption/);
-  assert.match(houses, /clientsSortOption/);
   assert.match(houses, /useState<DashboardAsideSort>\('soonest-shift'\)/);
-  assert.match(houses, /showSort=\{housesAndCentres\.length >= 2\}/);
-  assert.match(houses, /showSort=\{clients\.length >= 2\}/);
-  assert.match(houses, /sortAriaLabel="Sort clients"/);
+  assert.match(houses, /showSort=\{directLocations\.length >= 2\}/);
+  assert.doesNotMatch(houses, /housesSortOption/);
+  assert.doesNotMatch(houses, /clientsSortOption/);
   assert.doesNotMatch(houses, /showLocationSort/);
   assert.doesNotMatch(houses, /flex justify-end/);
   assert.match(houses, /groupingDashboardChildren/);
