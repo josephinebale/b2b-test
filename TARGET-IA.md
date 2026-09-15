@@ -38,12 +38,12 @@ Organisation
 │       │                                  When children are groupings only:
 │       │                                  in-progress card; child list is
 │       │                                  the landing.
-│       ├─ Child list (/supportables)     when direct children are groupings
-│       │                                  only: second-tier tab and landing;
-│       │                                  Groupings or derived direct-child
-│       │                                  location list label; omitted when
-│       │                                  Overview is defined; also from
-│       │                                  Overview See all N
+│       ├─ Child list (/supportables)     tab and landing only when
+│       │                                  children are groupings; tab
+│       │                                  omitted where Overview is
+│       │                                  defined; route and list
+│       │                                  retained everywhere, also
+│       │                                  from Overview See all N
 │       ├─ Workers                        all-time history ranked by
 │       │                                  shifts, then sites; per-location
 │       │                                  shift counts; read-only, no
@@ -71,7 +71,7 @@ Organisation
 
 A location may belong to more than one operational grouping at once: a **region** and a **caseload**. Those are the same kind of object at similar granularity, drawn by different service lines, not a stack. The tree above still shows Location under Grouping; it does not mean a location has only one parent. An arm’s children are always groupings. An operational grouping’s direct children may be child groupings, locations of any service type, or both.
 
-Chrome: two-tier header at every node. The identity row holds logo, breadcrumb, Notifications, and account; organisation-wide search is built but hidden by default while navigation and IA are the research focus. The section row follows `groupingHasDefinedOverview`: when direct children include locations, **Overview** then **Workers**; when they are groupings only (including the organisation), the derived child-list tab then **Overview** then **Workers**, with the child list as landing and Overview on the in-progress card. At a location: Bookings / Workers / Messages / Location settings. No persona enters at the organisation or an arm. The organisation crumb name walks up to that node's child list and carries no chevron, because organisation is a hard boundary with no siblings; its arms are reached from organisation Supportables. There is no organisation Workers page — `/workers` there falls back to the child list. Organisation settings stays in the account menu and is not a section of this face. Eligible breadcrumb crumbs open their siblings. The current node stays fully visible; when the path does not fit its available width, ancestors drop from the left and an interactive ellipsis opens the hidden path. A left scope rail was tried and reverted: rendering the whole organisation tree showed a house manager twenty-five things they would never open.
+Chrome: two-tier header at every node. The identity row holds logo, breadcrumb, Notifications, and account; organisation-wide search is built but hidden by default while navigation and IA are the research focus. The section row follows `groupingHasDefinedOverview`: when direct children include locations, **Overview** then **Workers**; when they are groupings only (including the organisation), the derived child-list tab then **Overview** then **Workers**, with the child list as landing and Overview on the in-progress card. At a location: Bookings / Workers / Messages / Location settings. No persona enters at the organisation or an arm. Organisation breadcrumb behaviour is in the breadcrumb dropdown rule below; its arms are reached from organisation Supportables. There is no organisation Workers page — `/workers` there falls back to the child list. Organisation settings stays in the account menu and is not a section of this face. Eligible breadcrumb crumbs open their siblings. The current node stays fully visible; when the path does not fit its available width, ancestors drop from the left and an interactive ellipsis opens the hidden path. A left scope rail was tried and reverted: rendering the whole organisation tree showed a house manager twenty-five things they would never open.
 
 ### Notifications (live)
 
@@ -147,7 +147,7 @@ Search is built as the low-frequency, wide-reach control but hidden by default w
 
 ### Navigation model at scale — fifth slice live
 
-**A breadcrumb dropdown on each eligible crumb** opens that crumb’s siblings only: the direct children of its parent. Not the tree, not descendants, not the organisation. The current node participates and is marked in its own sibling list. A crumb with no siblings has no chevron. The organisation is a quiet label for the hard boundary and never opens. Menus show the first twenty siblings and then say how many more there are; they contain no search and do not fall through to hidden header search. The truncation ellipsis opens the ancestors it replaced, keeping a narrow path navigable.
+**A breadcrumb dropdown on each eligible crumb** opens that crumb’s siblings only: the direct children of its parent. Not the tree, not descendants, not the organisation. The current node participates and is marked in its own sibling list. A crumb with no siblings has no chevron. The organisation name navigates to the child list; only the sibling dropdown never opens, and there is no chevron. Menus show the first twenty siblings and then say how many more there are; they contain no search and do not fall through to hidden header search. The truncation ellipsis opens the ancestors it replaced, keeping a narrow path navigable.
 
 This is a scoped return of the location switcher that was removed. The original was removed for its reach — it listed everything in the organisation, modelling access rather than work. Siblings only is the whole difference: Sofia can move sideways among direct supportables in her caseload, while Rachel can move between the direct caseloads in her area, without either seeing an organisation tree. A working set object was considered and dropped because the sibling dropdown gives a Roster Coordinator the same lateral movement without a new object anyone has to curate. It would come back only if someone’s real working set cuts across groupings.
 

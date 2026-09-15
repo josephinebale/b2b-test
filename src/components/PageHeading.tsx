@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { href } from '../lib/router';
+import { LineAlignedControl } from './LineAlignedControl';
 import { Button } from './ui/Button';
 
 export function RequestBookingButton() {
@@ -31,7 +32,11 @@ export function PageHeading({ title, description, actions }: PageHeadingProps) {
           </p>
         )}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {actions && (
+        <LineAlignedControl line="xl" className="shrink-0 gap-2">
+          {actions}
+        </LineAlignedControl>
+      )}
     </div>
   );
 }

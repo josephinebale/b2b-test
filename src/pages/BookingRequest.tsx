@@ -8,6 +8,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
+import { LineAlignedControl } from '../components/LineAlignedControl';
 import { LocationMarker } from '../components/LocationMarker';
 import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Button } from '../components/ui/Button';
@@ -615,15 +616,19 @@ function StepThree({
 
     return (
       <li key={worker.id}>
-        <label className="flex cursor-pointer items-start gap-3 py-3">
-          <input
-            type="checkbox"
-            checked={selected}
-            disabled={atLimit}
-            onChange={() => toggleWorker(worker.id)}
-            className="mt-2 h-4 w-4 shrink-0"
-          />
-          <Avatar name={worker.name} size="md" />
+        <label className="flex cursor-pointer items-start gap-3 pt-4 pb-3">
+          <LineAlignedControl line="sm" className="shrink-0">
+            <input
+              type="checkbox"
+              checked={selected}
+              disabled={atLimit}
+              onChange={() => toggleWorker(worker.id)}
+              className="h-4 w-4 shrink-0"
+            />
+          </LineAlignedControl>
+          <LineAlignedControl line="sm" className="shrink-0">
+            <Avatar name={worker.name} size="md" />
+          </LineAlignedControl>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-bold text-text">
               {worker.name}

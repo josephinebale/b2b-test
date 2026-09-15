@@ -16,7 +16,7 @@ test('SectionHeadingRow is the single Overview section heading structure', () =>
   assert.match(row, /<div className="min-w-0">/);
   assert.match(row, /<h2 className="text-md font-bold text-text">/);
   assert.match(row, /mt-1 max-w-content text-sm text-text-secondary/);
-  assert.match(row, /<div className="shrink-0">\{aside\}<\/div>/);
+  assert.match(row, /<LineAlignedControl line="md" className="shrink-0">/);
 
   assert.match(attention, /import \{ SectionHeadingRow \} from '\.\/SectionHeadingRow'/);
   assert.match(attention, /<SectionHeadingRow/);
@@ -32,6 +32,36 @@ test('SectionHeadingRow is the single Overview section heading structure', () =>
   assert.match(workers, /import \{ SectionHeadingRow \} from '\.\/SectionHeadingRow'/);
   assert.match(workers, /<SectionHeadingRow/);
   assert.doesNotMatch(workers, /mb-3 flex items-center justify-between/);
+});
+
+test('a control beside text centres on that text line through one shared wrapper', () => {
+  const wrapper = source('../src/components/LineAlignedControl.tsx');
+  const css = source('../src/index.css');
+  const row = source('../src/pages/dashboard/SectionHeadingRow.tsx');
+  const heading = source('../src/components/PageHeading.tsx');
+  const request = source('../src/pages/BookingRequest.tsx');
+
+  assert.match(wrapper, /line-aligned line-aligned--\$\{line\}/);
+  assert.match(
+    css,
+    /\.line-aligned \{\s*display: flex;\s*align-items: center;\s*height: var\(--line-aligned-height\);/,
+  );
+  assert.match(css, /\.line-aligned--sm \{\s*--line-aligned-height: var\(--text-sm--line-height\);/);
+  assert.match(css, /\.line-aligned--md \{\s*--line-aligned-height: var\(--text-md--line-height\);/);
+  assert.match(css, /\.line-aligned--xl \{\s*--line-aligned-height: var\(--text-xl--line-height\);/);
+
+  // One wrapper, three callers: the section aside, the page action, and the
+  // checkbox and avatar on a top-aligned worker-selection row.
+  for (const caller of [row, heading, request]) {
+    assert.match(caller, /import \{ LineAlignedControl \}/);
+  }
+  assert.match(heading, /<LineAlignedControl line="xl" className="shrink-0 gap-2">/);
+  assert.doesNotMatch(heading, /flex shrink-0 items-center gap-2/);
+  assert.equal(
+    request.match(/<LineAlignedControl line="sm" className="shrink-0">/g)?.length,
+    2,
+  );
+  assert.doesNotMatch(request, /className="mt-2 h-4 w-4 shrink-0"/);
 });
 
 test('GroupingLocationSortControl keeps label and select on one inline line', () => {

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { LineAlignedControl } from '../../components/LineAlignedControl';
 import type { DashboardAsideSort } from '../../lib/pageContent';
 
 type SectionHeadingRowProps = {
@@ -23,7 +24,11 @@ export function SectionHeadingRow({
           </p>
         ) : null}
       </div>
-      {aside ? <div className="shrink-0">{aside}</div> : null}
+      {aside ? (
+        <LineAlignedControl line="md" className="shrink-0">
+          {aside}
+        </LineAlignedControl>
+      ) : null}
     </div>
   );
 }

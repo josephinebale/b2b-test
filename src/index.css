@@ -709,6 +709,28 @@ a.ui-entity-link--plain:hover {
   width: var(--narrow-column-width);
 }
 
+/* A control beside text centres on the text LINE it sits beside. The wrapper is
+   that line box, so a control taller than the line overflows it evenly rather
+   than pushing the line down or growing the row. Never hand-tune a margin on
+   the control instead. */
+.line-aligned {
+  display: flex;
+  align-items: center;
+  height: var(--line-aligned-height);
+}
+
+.line-aligned--sm {
+  --line-aligned-height: var(--text-sm--line-height);
+}
+
+.line-aligned--md {
+  --line-aligned-height: var(--text-md--line-height);
+}
+
+.line-aligned--xl {
+  --line-aligned-height: var(--text-xl--line-height);
+}
+
 /* Worker rows stack detail lines and buttons; block rows on the divided card
    so each inset card owns its full height (list-item was collapsing in the aside). */
 .layout-content-aside aside .ui-card--divided > .ui-inset-card {
