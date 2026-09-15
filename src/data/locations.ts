@@ -1,6 +1,6 @@
 import { addDays, startOfDay, startOfWeek } from '../lib/date.ts';
 import type { Organisation, Sector } from '../lib/informationArchitecture.ts';
-import { childCountLine } from '../lib/pageContent.ts';
+import { childCountLine, groupingPlaceBasedLabel } from '../lib/pageContent.ts';
 
 export type BookingStatus = 'confirmed' | 'requested' | 'ended' | 'cancelled';
 export type FatigueSignal = 'no-break' | 'short-rest' | null;
@@ -68,6 +68,8 @@ export type Booking = {
   financeReference?: string;
   frequency?: 'one-off' | 'weekly' | 'fortnightly';
   requestedAt?: Date;
+  declinedWorkerNames?: string[];
+  lastActivityAt?: Date;
   participantIds: string[];
 };
 
@@ -116,6 +118,8 @@ export type ProviderWorkerSummary = {
   planConfirmed: boolean;
   shiftCount: number;
   totalHours: number;
+  lastWorkedAt?: Date;
+  lastWorkedLocationId?: string;
   assessments: WorkerAssessments;
   locations: WorkerLocationHistory[];
 };
@@ -174,6 +178,18 @@ export function serviceTypeLabel(
     return 'Support at Home';
   }
   return SERVICE_TYPE_LABEL[serviceType];
+}
+
+/** Service type and suburb on one line — comma-separated everywhere it appears. */
+export function locationTypeSuburbLine(
+  location: Pick<Location, 'serviceType' | 'sector' | 'suburb' | 'state'>,
+  options?: { includeState?: boolean },
+): string {
+  const type = serviceTypeLabel(location.serviceType, location.sector);
+  if (options?.includeState) {
+    return `${type}, ${location.suburb}, ${location.state}`;
+  }
+  return `${type}, ${location.suburb}`;
 }
 
 export const LOCATIONS: Location[] = [
@@ -862,6 +878,25 @@ const WORKER_POOL: Record<Organisation, string[]> = {
   ],
 };
 
+/** Sparse lapsed assessments so exception tags stay rare in the Overview aside. */
+function seededAssessmentStatus(index: number): {
+  medication: boolean;
+  driving: boolean;
+} {
+  switch (index % 22) {
+    case 4:
+      return { medication: true, driving: false };
+    case 9:
+      return { medication: false, driving: true };
+    case 13:
+      return { medication: false, driving: false };
+    case 17:
+      return { medication: false, driving: true };
+    default:
+      return { medication: true, driving: true };
+  }
+}
+
 function workerAssessments(
   medication: boolean,
   driving: boolean,
@@ -976,11 +1011,14 @@ function buildWorkerSeeds(): WorkerSeed[] {
           supportPlanReviewDueAt: planConfirmed
             ? null
             : addDays(startOfDay(new Date()), -(1 + (index % 14))),
-          assessments: workerAssessments(
-            index % 3 !== 1,
-            index % 4 !== 1,
-            index,
-          ),
+          assessments: (() => {
+            const status = seededAssessmentStatus(index);
+            return workerAssessments(
+              status.medication,
+              status.driving,
+              index,
+            );
+          })(),
         };
       }),
   );
@@ -1227,6 +1265,47 @@ function assignRequested(bookings: Booking[], locationIndex: number, now: Date):
   );
 }
 
+function assignRequestOutreach(
+  bookings: Booking[],
+  location: Location,
+  roster: { name: string }[],
+  now: Date,
+): void {
+  const requested = bookings
+    .filter((booking) => booking.status === 'requested')
+    .sort(
+      (a, b) =>
+        (a.requestedAt?.getTime() ?? 0) - (b.requestedAt?.getTime() ?? 0),
+    );
+  const sentNames = roster.slice(0, 5).map((worker) => worker.name);
+
+  requested.forEach((booking, index) => {
+    booking.lastActivityAt = booking.requestedAt;
+
+    booking.requestedWorkerNames = sentNames;
+
+    if (location.id === 'north-ryde-1' && index === 0) {
+      booking.declinedWorkerNames = sentNames.slice(0, 2);
+      return;
+    }
+
+    if (location.id === 'hornsby' && index === 0) {
+      booking.requestedAt = new Date(now.getTime() - 72 * 3600 * 1000);
+      booking.lastActivityAt = booking.requestedAt;
+      booking.declinedWorkerNames = [];
+      return;
+    }
+
+    if (location.id === 'hornsby' && index === 1) {
+      booking.declinedWorkerNames = sentNames.slice(0, 2);
+      return;
+    }
+
+    booking.declinedWorkerNames =
+      index % 3 === 1 ? sentNames.slice(0, 2) : [];
+  });
+}
+
 function assignCancellation(
   bookings: Booking[],
   location: Location,
@@ -1242,7 +1321,7 @@ function assignCancellation(
   if (!booking) return;
 
   booking.status = 'cancelled';
-  booking.cancelledBy = booking.workerName;
+  booking.cancelledBy = 'Beth C';
   booking.cancelledAt = new Date(now.getTime() - 2 * 3600 * 1000);
 }
 
@@ -1354,6 +1433,7 @@ function buildBookings(
   }
 
   assignRequested(bookings, locationIndex, now);
+  assignRequestOutreach(bookings, location, roster, now);
   assignCancellation(bookings, location, now);
   return bookings.sort((a, b) => a.start.getTime() - b.start.getTime());
 }
@@ -1426,18 +1506,32 @@ export function getLocationData(locationId: string): LocationData {
   return data;
 }
 
-export function pendingCountsForLocation(locationId: string) {
+export function pendingCountsForLocation(
+  locationId: string,
+  extraBookings: Booking[] = [],
+) {
   const data = getLocationData(locationId);
+  const today = startOfDay(new Date());
+  const extras = Array.isArray(extraBookings) ? extraBookings : [];
+  const extraRequests = extras.filter(
+    (booking) =>
+      booking.locationId === locationId &&
+      booking.status === 'requested' &&
+      booking.start >= today,
+  ).length;
   return {
-    requests: data.requestsToAccept,
+    requests: data.requestsToAccept + extraRequests,
     approvals: data.bookingsToApprove,
     messages: data.unreadMessages,
   };
 }
 
-export function pendingCountsForGrouping(grouping: Grouping) {
+export function pendingCountsForGrouping(
+  grouping: Grouping,
+  extraBookings: Booking[] = [],
+) {
   return descendantLocationIds(grouping)
-    .map(pendingCountsForLocation)
+    .map((locationId) => pendingCountsForLocation(locationId, extraBookings))
     .reduce(
       (total, counts) => ({
         requests: total.requests + counts.requests,
@@ -1446,6 +1540,404 @@ export function pendingCountsForGrouping(grouping: Grouping) {
       }),
       { requests: 0, approvals: 0, messages: 0 },
     );
+}
+
+export function locationBookings(
+  locationId: string,
+  extraBookings: Booking[] = [],
+): Booking[] {
+  const extras = extraBookings.filter(
+    (booking) => booking.locationId === locationId,
+  );
+  return [...extras, ...getLocationData(locationId).bookings];
+}
+
+export function waitingRequestsForLocation(
+  locationId: string,
+  extraBookings: Booking[] = [],
+  now = new Date(),
+): Booking[] {
+  const today = startOfDay(now);
+  return locationBookings(locationId, extraBookings).filter(
+    (booking) => booking.status === 'requested' && booking.start >= today,
+  );
+}
+
+export function futureCancelledBookings(
+  locationId: string,
+  extraBookings: Booking[] = [],
+  now = new Date(),
+): Booking[] {
+  return locationBookings(locationId, extraBookings).filter(
+    (booking) => booking.status === 'cancelled' && booking.start > now,
+  );
+}
+
+export function locationHasWaitingWork(
+  locationId: string,
+  extraBookings: Booking[] = [],
+  now = new Date(),
+): boolean {
+  const counts = pendingCountsForLocation(locationId, extraBookings);
+  if (counts.requests > 0 || counts.approvals > 0 || counts.messages > 0) {
+    return true;
+  }
+  return futureCancelledBookings(locationId, extraBookings, now).length > 0;
+}
+
+export function groupingHasWaitingWork(
+  grouping: Grouping,
+  extraBookings: Booking[] = [],
+  now = new Date(),
+): boolean {
+  return descendantLocationIds(grouping).some((locationId) =>
+    locationHasWaitingWork(locationId, extraBookings, now),
+  );
+}
+
+export function waitingDashboardChildren(
+  grouping: Grouping,
+  extraBookings: Booking[] = [],
+  now = new Date(),
+) {
+  const children = groupingDashboardChildren(grouping);
+  return {
+    groupings: children.groupings.filter((child) =>
+      groupingHasWaitingWork(child, extraBookings, now),
+    ),
+    housesAndCentres: children.housesAndCentres.filter((location) =>
+      locationHasWaitingWork(location.id, extraBookings, now),
+    ),
+    clients: children.clients.filter((location) =>
+      locationHasWaitingWork(location.id, extraBookings, now),
+    ),
+  };
+}
+
+function requestIsUnacted(booking: Booking): boolean {
+  const declined = booking.declinedWorkerNames?.length ?? 0;
+  return declined === 0;
+}
+
+export function comparePressingBookings(first: Booking, second: Booking): number {
+  const firstUnacted = requestIsUnacted(first);
+  const secondUnacted = requestIsUnacted(second);
+  if (firstUnacted !== secondUnacted) return firstUnacted ? -1 : 1;
+  const startDiff = first.start.getTime() - second.start.getTime();
+  if (startDiff !== 0) return startDiff;
+  return (first.requestedAt?.getTime() ?? 0) - (second.requestedAt?.getTime() ?? 0);
+}
+
+export function mostPressingWaitingBooking(
+  locationId: string,
+  extraBookings: Booking[] = [],
+  now = new Date(),
+): Booking | undefined {
+  const requests = waitingRequestsForLocation(locationId, extraBookings, now);
+  if (requests.length > 0) {
+    return [...requests].sort(comparePressingBookings)[0];
+  }
+  return futureCancelledBookings(locationId, extraBookings, now)[0];
+}
+
+export function waitingShiftsForLocation(
+  locationId: string,
+  extraBookings: Booking[] = [],
+  now = new Date(),
+): Booking[] {
+  return [
+    ...waitingRequestsForLocation(locationId, extraBookings, now),
+    ...futureCancelledBookings(locationId, extraBookings, now),
+  ].sort((first, second) => first.start.getTime() - second.start.getTime());
+}
+
+export const GROUPING_DASHBOARD_WORKER_WEEKS = 8;
+
+type DashboardRecencyStamp = {
+  workerId: string;
+  dayOffset: number;
+};
+
+/**
+ * Most recent completed shift per worker within each grouping's locations.
+ * Day offsets are from today; booking dates are rewritten after generation so
+ * the evidence line stays derived from real ended bookings.
+ */
+const GROUPING_DASHBOARD_RECENCY: Record<string, DashboardRecencyStamp[]> = {
+  'northern-sydney': [
+    { workerId: 'farah-t', dayOffset: 0 },
+    { workerId: 'joel-v', dayOffset: 0 },
+    { workerId: 'john-m', dayOffset: -1 },
+    { workerId: 'sally-m', dayOffset: -3 },
+    { workerId: 'geoffrey-l', dayOffset: -6 },
+    { workerId: 'scarlett-o', dayOffset: -14 },
+    { workerId: 'eleni-p', dayOffset: -21 },
+    { workerId: 'han-hendrick-p', dayOffset: -49 },
+    { workerId: 'erica-o', dayOffset: -2 },
+    { workerId: 'charlies-k', dayOffset: -4 },
+  ],
+  illawarra: [
+    { workerId: 'ira-j', dayOffset: 0 },
+    { workerId: 'ginger-n', dayOffset: -1 },
+    { workerId: 'geoffrey-l', dayOffset: -3 },
+    { workerId: 'charlies-k', dayOffset: -5 },
+    { workerId: 'brian-r', dayOffset: -10 },
+    { workerId: 'mandii-z', dayOffset: -14 },
+    { workerId: 'scarlett-o', dayOffset: -21 },
+    { workerId: 'han-hendrick-p', dayOffset: -49 },
+  ],
+  hunter: [
+    { workerId: 'kim-r', dayOffset: 0 },
+    { workerId: 'luke-a', dayOffset: 0 },
+    { workerId: 'pete-c', dayOffset: -1 },
+    { workerId: 'geoffrey-l', dayOffset: -3 },
+    { workerId: 'han-hendrick-p', dayOffset: -6 },
+    { workerId: 'charlies-k', dayOffset: -14 },
+    { workerId: 'ira-j', dayOffset: -21 },
+    { workerId: 'john-m', dayOffset: -49 },
+  ],
+};
+
+/** One worker per grouping sits just outside the eight-week window. */
+const GROUPING_DASHBOARD_OUTSIDE_WINDOW: Record<string, string[]> = {
+  'northern-sydney': ['maxine-r'],
+  illawarra: ['luke-a'],
+  hunter: ['erica-o'],
+};
+
+let dashboardRecencyApplied = false;
+
+function ensureAllLocationsLoaded(): void {
+  for (const location of LOCATIONS) {
+    getLocationData(location.id);
+  }
+}
+
+function retargetBookingDay(booking: Booking, dayOffset: number, now: Date): void {
+  const newStart = at(addDays(startOfDay(now), dayOffset), 7, 0);
+  const duration = booking.end.getTime() - booking.start.getTime();
+  booking.start = newStart;
+  booking.end = new Date(newStart.getTime() + duration);
+}
+
+function endedBookingsForWorker(
+  workerId: string,
+  locationIds: readonly string[],
+): Booking[] {
+  const bookings: Booking[] = [];
+  for (const locationId of locationIds) {
+    for (const booking of getLocationData(locationId).bookings) {
+      if (booking.workerId === workerId && booking.status === 'ended') {
+        bookings.push(booking);
+      }
+    }
+  }
+  return bookings.sort((first, second) => second.start.getTime() - first.start.getTime());
+}
+
+/** Keep lastWorkedAt on the stamp while preserving in-window shift counts. */
+function stampWorkerRecency(
+  workerId: string,
+  locationIds: readonly string[],
+  dayOffset: number,
+  now: Date,
+): void {
+  const bookings = endedBookingsForWorker(workerId, locationIds);
+  if (bookings.length === 0) return;
+
+  retargetBookingDay(bookings[0], dayOffset, now);
+  for (let index = 1; index < bookings.length; index += 1) {
+    retargetBookingDay(bookings[index], dayOffset - index, now);
+  }
+}
+
+function applyDashboardRecencyStamps(now = new Date()): void {
+  if (dashboardRecencyApplied) return;
+  ensureAllLocationsLoaded();
+
+  const today = startOfDay(now);
+  const windowStart = addDays(today, -GROUPING_DASHBOARD_WORKER_WEEKS * 7);
+  const outsideOffset = -(GROUPING_DASHBOARD_WORKER_WEEKS * 7 + 5);
+
+  for (const grouping of GROUPINGS) {
+    const locationIds = descendantLocationIds(grouping);
+    if (locationIds.length === 0) continue;
+
+    for (const workerId of GROUPING_DASHBOARD_OUTSIDE_WINDOW[grouping.id] ?? []) {
+      for (const locationId of locationIds) {
+        for (const booking of getLocationData(locationId).bookings) {
+          if (booking.workerId !== workerId || booking.status !== 'ended') continue;
+          if (booking.start >= windowStart) {
+            retargetBookingDay(booking, outsideOffset, now);
+          }
+        }
+      }
+    }
+
+    for (const stamp of GROUPING_DASHBOARD_RECENCY[grouping.id] ?? []) {
+      stampWorkerRecency(stamp.workerId, locationIds, stamp.dayOffset, now);
+    }
+  }
+
+  dashboardRecencyApplied = true;
+}
+export const GROUPING_ATTENTION_GRID_LOCATION_THRESHOLD = 20;
+
+export type AttentionBooking = Booking & {
+  locationName: string;
+};
+
+export function directLocationCount(grouping: Grouping): number {
+  const { housesAndCentres, clients } = groupingDashboardChildren(grouping);
+  return housesAndCentres.length + clients.length;
+}
+
+export function groupingAttentionBookings(
+  groupingId = GROUPING.id,
+  extraBookings: Booking[] = [],
+  now = new Date(),
+): AttentionBooking[] {
+  const grouping = findGrouping(groupingId) ?? GROUPING;
+  const bookings: AttentionBooking[] = [];
+
+  for (const locationId of descendantLocationIds(grouping)) {
+    const location = findLocation(locationId);
+    if (!location) continue;
+    for (const booking of waitingShiftsForLocation(
+      locationId,
+      extraBookings,
+      now,
+    )) {
+      bookings.push({ ...booking, locationName: location.name });
+    }
+  }
+
+  return bookings.sort(comparePressingBookings);
+}
+
+function completedShiftsInWindow(
+  locationId: string,
+  workerId: string,
+  from: Date,
+  until: Date,
+): Booking[] {
+  return getLocationData(locationId).bookings.filter(
+    (booking) =>
+      booking.workerId === workerId &&
+      booking.status === 'ended' &&
+      booking.start >= from &&
+      booking.start < until,
+  );
+}
+
+export function groupingDashboardWorkers(
+  groupingId = GROUPING.id,
+  now = new Date(),
+): ProviderWorkerSummary[] {
+  applyDashboardRecencyStamps(now);
+  const grouping = findGrouping(groupingId) ?? GROUPING;
+  const today = startOfDay(now);
+  const from = addDays(today, -GROUPING_DASHBOARD_WORKER_WEEKS * 7);
+  const until = addDays(today, 1);
+
+  return WORKER_SEEDS.map((seed) => {
+    const locations = descendantLocationIds(grouping)
+      .map(findLocation)
+      .flatMap((location) => {
+        if (!location) return [];
+        const shifts = completedShiftsInWindow(
+          location.id,
+          seed.id,
+          from,
+          until,
+        );
+        if (shifts.length === 0) return [];
+        return [
+          {
+            locationId: location.id,
+            locationName: location.name,
+            bookingCount: shifts.length,
+          },
+        ];
+      });
+
+    const shiftCount = locations.reduce(
+      (sum, location) => sum + location.bookingCount,
+      0,
+    );
+    let totalHours = 0;
+    let lastWorkedAt: Date | undefined;
+    let lastWorkedLocationId: string | undefined;
+    for (const locationId of descendantLocationIds(grouping)) {
+      for (const booking of completedShiftsInWindow(
+        locationId,
+        seed.id,
+        from,
+        until,
+      )) {
+        totalHours += (booking.end.getTime() - booking.start.getTime()) / 36e5;
+        if (!lastWorkedAt || booking.start > lastWorkedAt) {
+          lastWorkedAt = booking.start;
+          lastWorkedLocationId = locationId;
+        }
+      }
+    }
+
+    return {
+      id: seed.id,
+      name: seed.name,
+      planConfirmed: seed.planConfirmed,
+      shiftCount,
+      totalHours: Math.round(totalHours),
+      lastWorkedAt,
+      lastWorkedLocationId,
+      assessments: seed.assessments,
+      locations,
+    };
+  })
+    .filter((worker) => worker.shiftCount > 0)
+    .sort(
+      (first, second) =>
+        (second.lastWorkedAt?.getTime() ?? 0) -
+          (first.lastWorkedAt?.getTime() ?? 0) ||
+        second.shiftCount - first.shiftCount ||
+        first.name.localeCompare(second.name),
+    );
+}
+
+export function compareWaitingLocationRows(
+  firstId: string,
+  secondId: string,
+  extraBookings: Booking[] = [],
+  now = new Date(),
+): number {
+  const first = mostPressingWaitingBooking(firstId, extraBookings, now);
+  const second = mostPressingWaitingBooking(secondId, extraBookings, now);
+  if (first && second) return comparePressingBookings(first, second);
+  if (first) return -1;
+  if (second) return 1;
+  return 0;
+}
+
+export function compareSoonestShiftRows(
+  firstId: string,
+  secondId: string,
+  extraBookings: Booking[] = [],
+  now = new Date(),
+): number {
+  const first = mostPressingWaitingBooking(firstId, extraBookings, now);
+  const second = mostPressingWaitingBooking(secondId, extraBookings, now);
+  if (first && second) {
+    const startDiff = first.start.getTime() - second.start.getTime();
+    if (startDiff !== 0) return startDiff;
+  } else if (first) {
+    return -1;
+  } else if (second) {
+    return 1;
+  }
+  const firstName = findLocation(firstId)?.name ?? firstId;
+  const secondName = findLocation(secondId)?.name ?? secondId;
+  return firstName.localeCompare(secondName);
 }
 
 export function compareRequestUrgency(
@@ -1605,6 +2097,19 @@ export function childGroupingSectionTitle(groupings: Grouping[]): string {
     : 'Groupings';
 }
 
+/** Child-list tab and single-section page title — never "Supportables". */
+export function groupingChildListTabLabel(grouping: Grouping): string {
+  const { groupings, housesAndCentres, clients } =
+    groupingDashboardChildren(grouping);
+  if (groupings.length > 0) {
+    return 'Groupings';
+  }
+  if (housesAndCentres.length === 0 && clients.length > 0) {
+    return 'Clients';
+  }
+  return groupingPlaceBasedLabel(housesAndCentres);
+}
+
 function housesAndCentresPhrase(locations: Location[], counted: boolean): string | null {
   if (locations.length === 0) return null;
   const count = locations.length;
@@ -1644,6 +2149,49 @@ export function groupingContentsSummary(grouping: Grouping): string {
       (location) => location.serviceType === 'home-community',
     ).length,
   });
+}
+
+function housesAndCentresChildCount(housesAndCentres: Location[]) {
+  return childCountLine({
+    houses: housesAndCentres.filter((location) => location.serviceType === 'sil')
+      .length,
+    centres: housesAndCentres.filter(
+      (location) => location.serviceType === 'centre',
+    ).length,
+    clients: 0,
+  });
+}
+
+/** Direct SIL houses and centres at this node, for the Overview supporting line. */
+export function groupingHousesAndCentresCountLine(grouping: Grouping): string {
+  const { housesAndCentres } = groupingDashboardChildren(grouping);
+  const summary = housesAndCentresChildCount(housesAndCentres);
+  return summary ? `${summary} in ${grouping.name}` : '';
+}
+
+/** Direct home and community clients at this node, for the Overview supporting line. */
+export function groupingClientsCountLine(grouping: Grouping): string {
+  const { clients } = groupingDashboardChildren(grouping);
+  const summary = childCountLine({
+    houses: 0,
+    centres: 0,
+    clients: clients.length,
+  });
+  return summary ? `${summary} in ${grouping.name}` : '';
+}
+
+/** Direct supportables at this node — all location kinds combined. */
+export function groupingDirectChildrenCountLine(grouping: Grouping): string {
+  const { housesAndCentres, clients } = groupingDashboardChildren(grouping);
+  const summary = childCountLine({
+    houses: housesAndCentres.filter((location) => location.serviceType === 'sil')
+      .length,
+    centres: housesAndCentres.filter(
+      (location) => location.serviceType === 'centre',
+    ).length,
+    clients: clients.length,
+  });
+  return `${summary} in ${grouping.name}`;
 }
 
 /** Page description keyed to the node's direct children, never "children" or "nodes". */

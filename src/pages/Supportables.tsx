@@ -6,18 +6,22 @@ import { PinnedQuestion } from '../components/PinnedQuestion';
 import { Card } from '../components/ui/Card';
 import { EntityLink } from '../components/ui/EntityLink';
 import {
-  childGroupingSectionTitle,
+  groupingChildListTabLabel,
   groupingContentsSummary,
   groupingDashboardChildren,
   pendingCountsForGrouping,
   pendingCountsForLocation,
   rootGroupingsForOrganisation,
-  serviceTypeLabel,
+  locationTypeSuburbLine,
   type Grouping,
   type Location,
 } from '../data/locations';
-import { pendingWorkParts } from '../lib/pageContent';
 import { treeSectionLabel } from '../lib/informationArchitecture';
+import {
+  groupingChildListPageHeading,
+  groupingPlaceBasedLabel,
+  pendingWorkParts,
+} from '../lib/pageContent';
 
 function GroupingLocationRow({
   location,
@@ -39,8 +43,7 @@ function GroupingLocationRow({
           {location.name}
         </EntityLink>
         <span className="mt-1 block text-sm text-text-secondary">
-          {serviceTypeLabel(location.serviceType, location.sector)} ·{' '}
-          {location.suburb}
+          {locationTypeSuburbLine(location)}
         </span>
         {pendingWork.length > 0 && (
           LANDING_CONTENT_ENABLED ? (
@@ -90,6 +93,25 @@ function ChildGroupingRow({
   );
 }
 
+function SectionHeading({
+  title,
+  showTitle,
+  showPin,
+}: {
+  title: string;
+  showTitle: boolean;
+  showPin: boolean;
+}) {
+  if (!showTitle && !showPin) return null;
+
+  return (
+    <div className="mb-3 flex items-center gap-2">
+      {showTitle && <h2 className="text-md font-bold text-text">{title}</h2>}
+      {showPin && <PinnedQuestion questionId="grouping-locations" />}
+    </div>
+  );
+}
+
 export function Supportables({
   grouping,
   nodeType = 'grouping',
@@ -110,18 +132,38 @@ export function Supportables({
       }
     : groupingDashboardChildren(grouping);
 
+  const sectionCount =
+    (groupings.length > 0 ? 1 : 0) +
+    (housesAndCentres.length > 0 ? 1 : 0) +
+    (clients.length > 0 ? 1 : 0);
+  const tabLabel = atOrganisation
+    ? treeSectionLabel(grouping, nodeType)
+    : groupingChildListTabLabel(grouping);
+  const pageTitle =
+    !atOrganisation && sectionCount > 1
+      ? groupingChildListPageHeading(grouping.name, tabLabel)
+      : tabLabel;
+  const showSectionTitles = sectionCount > 1;
+  const pinOnPageHeading = sectionCount === 1;
+
   return (
     <div className="width-main-column space-y-8">
-      <PageHeading title={treeSectionLabel(grouping, nodeType)} />
+      <PageHeading
+        title={pageTitle}
+        actions={
+          pinOnPageHeading ? (
+            <PinnedQuestion questionId="grouping-locations" />
+          ) : undefined
+        }
+      />
 
       {groupings.length > 0 && (
         <section>
-          <div className="mb-3 flex items-center gap-2">
-            <h2 className="text-md font-bold text-text">
-              {childGroupingSectionTitle(groupings)}
-            </h2>
-            <PinnedQuestion questionId="grouping-locations" />
-          </div>
+          <SectionHeading
+            title="Groupings"
+            showTitle={showSectionTitles}
+            showPin={!pinOnPageHeading && groupings.length > 0}
+          />
           <Card divided>
             {groupings.map((child) => (
               <ChildGroupingRow
@@ -136,14 +178,15 @@ export function Supportables({
 
       {housesAndCentres.length > 0 && (
         <section>
-          <div className="mb-3 flex items-center gap-2">
-            <h2 className="text-md font-bold text-text">
-              Houses and centres
-            </h2>
-            {groupings.length === 0 && (
-              <PinnedQuestion questionId="grouping-locations" />
-            )}
-          </div>
+          <SectionHeading
+            title={groupingPlaceBasedLabel(housesAndCentres)}
+            showTitle={showSectionTitles}
+            showPin={
+              !pinOnPageHeading &&
+              groupings.length === 0 &&
+              housesAndCentres.length > 0
+            }
+          />
           <Card divided>
             {housesAndCentres.map((location) => (
               <GroupingLocationRow
@@ -158,12 +201,16 @@ export function Supportables({
 
       {clients.length > 0 && (
         <section>
-          <div className="mb-3 flex items-center gap-2">
-            <h2 className="text-md font-bold text-text">Clients</h2>
-            {groupings.length === 0 && housesAndCentres.length === 0 && (
-              <PinnedQuestion questionId="grouping-locations" />
-            )}
-          </div>
+          <SectionHeading
+            title="Clients"
+            showTitle={showSectionTitles}
+            showPin={
+              !pinOnPageHeading &&
+              groupings.length === 0 &&
+              housesAndCentres.length === 0 &&
+              clients.length > 0
+            }
+          />
           <Card divided>
             {clients.map((location) => (
               <GroupingLocationRow

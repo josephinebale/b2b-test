@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { startOfDay } from '../src/lib/date.ts';
+import {
+  addDays,
+  isSameDay,
+  startOfDay,
+  startOfWeek,
+} from '../src/lib/date.ts';
 import { pendingWorkParts } from '../src/lib/pageContent.ts';
 import {
   GROUPING,
@@ -10,17 +15,34 @@ import {
   childGroupingSectionTitle,
   groupingContentsSummary,
   groupingDashboardDescription,
+  groupingClientsCountLine,
+  groupingDirectChildrenCountLine,
+  groupingHousesAndCentresCountLine,
   compareRequestUrgency,
   descendantLocationIds,
   findGrouping,
   getLocationData,
   groupingDashboardChildren,
+  comparePressingBookings,
   groupingOpenRequests,
   groupingUsageLast7Days,
+  locationHasWaitingWork,
   partitionGroupingLocations,
   pendingCountsForGrouping,
   pendingCountsForLocation,
+  compareWaitingLocationRows,
+  groupingAttentionBookings,
+  groupingDashboardWorkers,
+  mostPressingWaitingBooking,
+  waitingDashboardChildren,
+  waitingShiftsForLocation,
 } from '../src/data/locations.ts';
+import {
+  attentionCardSendLine,
+  shiftSendDetail,
+  shiftDateTime,
+} from '../src/lib/pageContent.ts';
+import { groupingChildListTabLabel } from '../src/data/locations.ts';
 import { nodeLandingPath } from '../src/lib/informationArchitecture.ts';
 
 function source(path: string): string {
@@ -143,6 +165,37 @@ test('child grouping rows roll up counts but retain their own kind', () => {
     'The centres and clients in Northern Lifestyles',
   );
   assert.equal(
+    groupingDirectChildrenCountLine(findGrouping('hunter')!),
+    '2 houses in Hunter',
+  );
+  assert.equal(
+    groupingDirectChildrenCountLine(findGrouping('northern-sydney')!),
+    '5 houses and 1 centre in Northern Sydney',
+  );
+  assert.equal(
+    groupingHousesAndCentresCountLine(findGrouping('northern-sydney')!),
+    '5 houses and 1 centre in Northern Sydney',
+  );
+  assert.equal(groupingClientsCountLine(findGrouping('northern-sydney')!), '');
+  assert.equal(
+    groupingHousesAndCentresCountLine(
+      findGrouping('careforce-northern-caseload')!,
+    ),
+    '5 houses in Careforce Northern caseload',
+  );
+  assert.equal(
+    groupingClientsCountLine(findGrouping('careforce-northern-caseload')!),
+    '1 client in Careforce Northern caseload',
+  );
+  assert.equal(
+    groupingHousesAndCentresCountLine(findGrouping('northern-lifestyles')!),
+    '2 centres in Northern Lifestyles',
+  );
+  assert.equal(
+    groupingClientsCountLine(findGrouping('northern-lifestyles')!),
+    '2 clients in Northern Lifestyles',
+  );
+  assert.equal(
     groupingContentsSummary(findGrouping('cpa-sil')!),
     '11 houses and 1 centre',
   );
@@ -178,7 +231,7 @@ test('child grouping rows roll up counts but retain their own kind', () => {
   const locations = source('../src/data/locations.ts');
   const summary = locations.slice(
     locations.indexOf('export function groupingContentsSummary'),
-    locations.indexOf('export function groupingDashboardDescription'),
+    locations.indexOf('function housesAndCentresChildCount'),
   );
   assert.match(summary, /childCountLine\(\{/);
   assert.doesNotMatch(summary, /join\(' · '\)|houses and centres/);
@@ -252,7 +305,10 @@ test('usage is recent booking volume, counted per location', () => {
 test('grouping content is split between Dashboard, Supportables, and Workers', () => {
   const dashboard = source('../src/pages/Dashboard.tsx');
   const supportables = source('../src/pages/Supportables.tsx');
-  const groupingWorkersPage = source('../src/pages/GroupingWorkers.tsx');
+  const groupingWorkersBranch = source('../src/pages/Workers.tsx').slice(
+    source('../src/pages/Workers.tsx').indexOf('if (!data)'),
+    source('../src/pages/Workers.tsx').indexOf('const client ='),
+  );
   const workers = source('../src/pages/dashboard/WorkersPanel.tsx');
   const groupingRow = supportables.slice(
     supportables.indexOf('function ChildGroupingRow'),
@@ -268,9 +324,11 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
   assert.match(supportables, /groupingContentsSummary\(grouping\)/);
   assert.doesNotMatch(supportables, /groupingDashboardDescription/);
   assert.doesNotMatch(supportables, /organisationSupportablesDescription/);
-  assert.match(supportables, /title=\{treeSectionLabel\(grouping, nodeType\)\}/);
+  assert.match(supportables, /groupingChildListTabLabel\(grouping\)/);
   assert.doesNotMatch(supportables, /<PageHeading\s+title="Supportables"/);
-  assert.match(supportables, /childGroupingSectionTitle\(groupings\)/);
+  assert.doesNotMatch(supportables, /childGroupingSectionTitle\(groupings\)/);
+  assert.match(supportables, /groupingChildListPageHeading\(grouping\.name, tabLabel\)/);
+  assert.match(supportables, /showSectionTitles/);
   assert.ok(
     supportables.indexOf('{groupings.length > 0') <
       supportables.indexOf('{housesAndCentres.length > 0'),
@@ -279,8 +337,11 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
   assert.doesNotMatch(groupingRow, /LocationMarker/);
   assert.doesNotMatch(groupingRow, /serviceTypeLabel/);
   assert.doesNotMatch(groupingRow, /\.suburb/);
-  assert.match(dashboard, /groupingOpenRequests\(grouping\.id\)/);
-  assert.match(dashboard, /groupingUsageLast7Days\(grouping\.id\)/);
+  assert.match(
+    source('../src/pages/dashboard/HousesAndCentresPanel.tsx'),
+    /groupingDashboardChildren\(grouping\)/,
+  );
+  assert.match(dashboard, /WorkersPanel|BookingsNeedingAttention|HousesAndCentresPanel/);
   assert.match(
     supportables,
     /onSelectLocation\?\.\(location\.id, '\/bookings'\)/,
@@ -288,21 +349,34 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
   assert.match(supportables, /onSelectGrouping\?\.\(grouping\.id\)/);
   assert.match(supportables, /\{grouping\.name\}/);
   assert.doesNotMatch(supportables, /Children of|supportable/);
-  assert.match(dashboard, /bookingsViewPath\('requested'\)/);
-  assert.match(supportables, /Houses and centres/);
-  assert.match(supportables, />Clients</);
+  assert.match(supportables, /groupingPlaceBasedLabel\(housesAndCentres\)/);
+  assert.match(supportables, /title="Clients"/);
   assert.match(supportables, /clients\.length > 0/);
   assert.match(supportables, /questionId="grouping-locations"/);
-  assert.match(dashboard, /questionId="grouping-requests"/);
+  assert.match(source('../src/pages/dashboard/BookingsNeedingAttention.tsx'), /questionId="grouping-requests"/);
   assert.match(dashboard, /questionId="grouping-usage"/);
-  assert.match(groupingWorkersPage, /<WorkersPanel grouping=\{grouping\}/);
-  assert.match(workers, /groupingWorkers\(grouping\.id\)/);
-  assert.match(workers, /Workers used regularly/);
-  assert.match(workers, /questionId="workers-grouping-order"/);
-  assert.doesNotMatch(dashboard, /groupingDashboardChildren|GroupingLocationRow|ChildGroupingRow/);
-  assert.doesNotMatch(dashboard, /WorkersPanel|groupingWorkers/);
+  assert.match(
+    source('../src/pages/Workers.tsx'),
+    /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
+  );
+  assert.match(
+    source('../src/pages/Workers.tsx'),
+    /<GroupingWorkersTable grouping=\{grouping\}/,
+  );
+  assert.match(
+    source('../src/pages/GroupingWorkersTable.tsx'),
+    /groupingWorkers\(grouping\.id\)/,
+  );
+  assert.match(
+    source('../src/pages/dashboard/WorkersPanel.tsx'),
+    /Recently booked workers/,
+  );
+  assert.match(
+    source('../src/pages/GroupingWorkersTable.tsx'),
+    /questionId="workers-grouping-order"/,
+  );
   assert.doesNotMatch(supportables, /groupingOpenRequests|groupingUsageLast7Days|WorkersPanel/);
-  assert.doesNotMatch(groupingWorkersPage, /Search workers|nearbyWorkers|MessageSquare|Calendar/);
+  assert.doesNotMatch(groupingWorkersBranch, /Search workers|nearbyWorkers|MessageSquare/);
   assert.doesNotMatch(dashboard, /plans to review/);
   assert.doesNotMatch(dashboard, /counts\.plans/);
   assert.doesNotMatch(dashboard, /\brisk\b/i);
@@ -310,14 +384,10 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
   assert.doesNotMatch(dashboard, /vacanc/i);
   assert.doesNotMatch(dashboard, /coverage/i);
   assert.doesNotMatch(dashboard, /staffing/i);
+  assert.doesNotMatch(dashboard, /at risk|stalled|urgent|critical/i);
 
-  assert.equal(
-    [...dashboard.matchAll(/groupingOpenRequests/g)].length,
-    2,
-    'requests waiting stays one ordered list',
-  );
-
-  assert.doesNotMatch(dashboard, /NotificationStrip|BookingsWeek/);
+  assert.match(dashboard, /BookingsNeedingAttention/);
+  assert.doesNotMatch(dashboard, /NotificationStrip|<BookingsWeek/);
   assert.doesNotMatch(dashboard, /nodeType|LocationData|calendarBookings/);
 });
 
@@ -329,6 +399,7 @@ test('Galston is busy but has no shift actions waiting on its manager', () => {
 
   assert.equal(galston.requestsToAccept, 0);
   assert.equal(galston.bookingsToApprove, 0);
+  assert.equal(locationHasWaitingWork('galston-1'), false);
   assert.ok(
     galston.bookings.some(
       (booking) =>
@@ -338,6 +409,180 @@ test('Galston is busy but has no shift actions waiting on its manager', () => {
     ),
   );
   assert.ok(galston.workers.length > 0);
+});
+
+test('a house with nothing waiting is absent from the grouping Dashboard waiting block', () => {
+  const northern = findGrouping('northern-sydney');
+  assert.ok(northern);
+
+  const waiting = waitingDashboardChildren(northern);
+  assert.ok(
+    !waiting.housesAndCentres.some((location) => location.id === 'galston-1'),
+    'Galston 1 has nothing waiting and must not render a row',
+  );
+  assert.ok(waiting.housesAndCentres.some((location) => location.id === 'hornsby'));
+  assert.ok(waiting.housesAndCentres.some((location) => location.id === 'dee-why-1'));
+  assert.ok(waiting.housesAndCentres.some((location) => location.id === 'north-ryde-1'));
+});
+
+test('the activity line states what happened to a request with no acceptances', () => {
+  const hornsby = getLocationData('hornsby');
+  const unanswered = hornsby.bookings.find(
+    (booking) =>
+      booking.status === 'requested' &&
+      (booking.requestedWorkerNames?.length ?? 0) > 0 &&
+      (booking.declinedWorkerNames?.length ?? 0) === 0,
+  );
+  assert.ok(unanswered, 'Hornsby should seed a sent request with no acceptances');
+
+  const send = shiftSendDetail(unanswered);
+  assert.match(send ?? '', /sent to \d+ workers, none accepted/);
+  assert.match(shiftDateTime(unanswered), /\d+(am|pm) to \d+(am|pm)/);
+
+  const attention = source('../src/pages/dashboard/BookingsNeedingAttention.tsx');
+  assert.match(attention, /attentionCardSendLine/);
+  assert.equal(attentionCardSendLine(unanswered), 'Not yet accepted');
+  assert.doesNotMatch(attention, /Waiting items|<details/);
+  assert.doesNotMatch(attention, /And \d+ others waiting/);
+  assert.doesNotMatch(attention, /at risk|stalled|urgent|critical/i);
+});
+
+test('the attention calendar count matches the visible week and changes when paging', () => {
+  const northern = findGrouping('northern-sydney');
+  assert.ok(northern);
+
+  const attention = groupingAttentionBookings(northern.id);
+  const today = startOfDay(new Date());
+  const weekStart = startOfWeek(today);
+  const weekEnd = addDays(weekStart, 6);
+  const inWeek = attention.filter(
+    (booking) =>
+      booking.start >= weekStart && booking.start < addDays(weekEnd, 1),
+  );
+  const renderedCount = inWeek.reduce((total, booking) => total + 1, 0);
+  assert.equal(renderedCount, inWeek.length);
+  assert.ok(inWeek.length > 0);
+
+  const nextWeekStart = addDays(weekStart, 7);
+  const nextWeekEnd = addDays(nextWeekStart, 6);
+  const nextWeek = attention.filter(
+    (booking) =>
+      booking.start >= nextWeekStart &&
+      booking.start < addDays(nextWeekEnd, 1),
+  );
+  assert.notEqual(inWeek.length, nextWeek.length);
+
+  const attentionSource = source('../src/pages/dashboard/BookingsNeedingAttention.tsx');
+  assert.match(attentionSource, /<Tag tone="neutral">\{inWeek\.length\}<\/Tag>/);
+});
+
+test('the attention calendar collects requested and cancelled shifts across the region', () => {
+  const northern = findGrouping('northern-sydney');
+  assert.ok(northern);
+
+  const attention = groupingAttentionBookings(northern.id);
+  assert.ok(attention.length > 0);
+  assert.ok(
+    attention.every(
+      (booking) => booking.status === 'requested' || booking.status === 'cancelled',
+    ),
+  );
+  assert.ok(attention.every((booking) => booking.locationName.length > 0));
+  assert.ok(
+    attention.every(
+      (booking) =>
+        booking.status !== 'requested' ||
+        (booking.requestedWorkerNames?.length ?? 0) > 0,
+    ),
+    'every requested shift must list workers contacted',
+  );
+  assert.ok(
+    attention.some(
+      (booking) =>
+        booking.locationId === 'north-ryde-1' &&
+        booking.status === 'requested' &&
+        attentionCardSendLine(booking) === '2 of 5 declined',
+    ),
+  );
+
+  const hornsby = waitingShiftsForLocation('hornsby');
+  assert.ok(hornsby.length > 3, 'Hornsby must seed more than three waiting shifts');
+  for (let index = 1; index < hornsby.length; index += 1) {
+    assert.ok(
+      hornsby[index].start.getTime() >= hornsby[index - 1].start.getTime(),
+      'shifts inside a house are soonest start first',
+    );
+  }
+
+  const deeWhy = waitingShiftsForLocation('dee-why-1');
+  assert.ok(
+    deeWhy.some((shift) => shift.status === 'cancelled'),
+    'a cancelled shift must remain reachable in the attention calendar',
+  );
+
+  const calendar = source('../src/pages/dashboard/BookingsNeedingAttention.tsx');
+  assert.match(calendar, /COLLAPSED_BOOKINGS_PER_DAY/);
+  assert.match(calendar, /groupingAttentionBookings/);
+
+  const housesPanel = source('../src/pages/dashboard/HousesAndCentresPanel.tsx');
+  assert.match(housesPanel, /waitingRequestsForLocation/);
+  assert.match(housesPanel, /futureCancelledBookings/);
+  assert.match(housesPanel, /dashboardHouseRowPendingLinks/);
+  assert.doesNotMatch(housesPanel, /dashboardAsidePendingLinks/);
+  assert.match(housesPanel, /title=\{groupingPlaceBasedLabel\(housesAndCentres\)\}/);
+  assert.match(housesPanel, /title="Clients"/);
+  assert.match(housesPanel, /groupingHousesAndCentresCountLine/);
+  assert.match(housesPanel, /groupingClientsCountLine/);
+  assert.doesNotMatch(housesPanel, /groupingDirectChildrenCountLine/);
+  assert.match(housesPanel, /visibleHousesAndCentres\.length > 0/);
+  assert.match(housesPanel, /visibleClients\.length > 0/);
+
+  for (const locationId of descendantLocationIds(northern)) {
+    const cancelledCount = waitingShiftsForLocation(locationId).filter(
+      (booking) => booking.status === 'cancelled',
+    ).length;
+    const awaitingCount = waitingShiftsForLocation(locationId).filter(
+      (booking) => booking.status === 'requested',
+    ).length;
+    const calendarCancelled = attention.filter(
+      (booking) =>
+        booking.locationId === locationId && booking.status === 'cancelled',
+    ).length;
+    const calendarAwaiting = attention.filter(
+      (booking) =>
+        booking.locationId === locationId && booking.status === 'requested',
+    ).length;
+    assert.equal(
+      cancelledCount,
+      calendarCancelled,
+      `${locationId} cancelled count must match the attention calendar`,
+    );
+    assert.equal(
+      awaitingCount,
+      calendarAwaiting,
+      `${locationId} awaiting count must match the attention calendar`,
+    );
+  }
+});
+
+test('the same request orders a waiting row and fills its activity line', () => {
+  const featured = mostPressingWaitingBooking('hornsby');
+  assert.ok(featured);
+  assert.equal(featured.status, 'requested');
+
+  const others = getLocationData('hornsby').bookings.filter(
+    (booking) =>
+      booking.status === 'requested' && booking.id !== featured.id,
+  );
+  for (const other of others) {
+    assert.ok(
+      comparePressingBookings(featured, other) <= 0,
+      'the activity-line request must also be the most pressing at that house',
+    );
+  }
+
+  const line = shiftSendDetail(featured);
+  assert.match(line ?? '', /none accepted|declined/);
 });
 
 /* A quiet location read as quiet on its own page and as
@@ -368,7 +613,7 @@ test('a grouping row states only the waiting work a location actually has', () =
   );
   assert.match(supportables, /\{pendingWork\.length > 0 && \(/);
   assert.match(supportables, /\{pendingWork\.join\(' · '\)\}/);
-  assert.match(supportables, /serviceTypeLabel\(location\.serviceType, location\.sector\)/);
+  assert.match(supportables, /locationTypeSuburbLine\(location\)/);
   assert.doesNotMatch(supportables, /counts\.requests|counts\.approvals|counts\.messages/);
 });
 
@@ -385,23 +630,28 @@ test('the breadcrumb keeps grouping context while menus stay one level deep', ()
   assert.doesNotMatch(breadcrumb, /orderedGroupingsForMenu|descendantLocationIds/);
 });
 
-test('a grouping renders Dashboard, Supportables, and Workers in the second tier', () => {
+test('a grouping second tier shows the child list, Overview, and Workers', () => {
   const header = source('../src/components/AppHeader.tsx');
   const app = source('../src/App.tsx');
   const navigation = source('../src/lib/informationArchitecture.ts');
 
-  assert.match(
-    header,
-    /NODE_NAV_ITEMS\.filter[\s\S]*?item\.placement === 'main'[\s\S]*?item\.nodeTypes\.some/,
-  );
+  assert.match(header, /visibleMainNavItems\(nodeType, grouping\)/);
   assert.match(header, /href=\{href\(NOTIFICATIONS_NODE_ITEM\.path\)\}/);
   assert.match(header, /\{visibleNavItems\.length > 0 && \(/);
   assert.match(header, /app-header-nav-row/);
-  assert.match(header, /treeSectionLabel\(grouping, nodeType\)/);
+  assert.match(header, /groupingChildListTabLabel\(grouping\)/);
   assert.match(app, /nodeType === 'grouping'/);
   assert.match(app, /<Dashboard\s+grouping=\{grouping\}/);
   assert.match(app, /path === '\/supportables'[\s\S]*?<Supportables/);
-  assert.match(app, /path === '\/workers'[\s\S]*?<GroupingWorkers/);
+  assert.match(app, /path === '\/workers'[\s\S]*?<Workers grouping=\{grouping\}/);
+  assert.match(
+    navigation,
+    /label: 'Supportables',[\s\S]*?nodeTypes: \['organisation'\]/,
+  );
+  assert.match(
+    navigation,
+    /path: '\/supportables',[\s\S]*?nodeTypes: \['grouping'\]/,
+  );
   const groupingShell = app.slice(
     app.indexOf("if (nodeType === 'grouping' || nodeType === 'organisation')"),
     app.indexOf('if (!activeLocation) return null'),
@@ -411,10 +661,10 @@ test('a grouping renders Dashboard, Supportables, and Workers in the second tier
   assert.equal(app.match(/<Dashboard/g)?.length, 1);
   assert.doesNotMatch(app, /<Workers nodeType="grouping"/);
   assert.match(app, /selectGrouping/);
-  assert.match(app, /navigate\(nodeLandingPath\('grouping'\)\)/);
+  assert.match(app, /navigate\(nodeLandingPath\('grouping', nextGrouping\)\)/);
   assert.match(
     navigation,
-    /label: 'Dashboard',[\s\S]*?nodeTypes: \['grouping', 'organisation'\]/,
+    /label: 'Overview',[\s\S]*?nodeTypes: \['grouping', 'organisation'\]/,
   );
   assert.match(
     navigation,
@@ -427,12 +677,82 @@ test('a grouping renders Dashboard, Supportables, and Workers in the second tier
   assert.match(app, /navigate\('\/bookings'\)/);
 });
 
-test('every node above a location lands on its child list, not the placeholder Dashboard', () => {
+test('Careforce arm navigation walks down the tree and lands on the child list until locations appear', () => {
+  const careforce = findGrouping('cpa-careforce');
+  const careforceArea = findGrouping('careforce-area');
+  const careforceCaseload = findGrouping('careforce-caseload');
+  assert.ok(careforce && careforceArea && careforceCaseload);
+
+  assert.equal(nodeLandingPath('grouping', careforce), '/supportables');
+  assert.equal(nodeLandingPath('grouping', careforceArea), '/supportables');
+  assert.equal(nodeLandingPath('grouping', careforceCaseload), '/');
+  assert.equal(groupingChildListTabLabel(careforce), 'Groupings');
+  assert.equal(groupingChildListTabLabel(careforceArea), 'Groupings');
+
+  const { groupings } = groupingDashboardChildren(careforce);
+  assert.equal(groupings[0]?.id, 'careforce-area');
+  const areaChildren = groupingDashboardChildren(careforceArea).groupings;
+  assert.ok(areaChildren.some((child) => child.id === 'careforce-caseload'));
+  const caseloadLocations = groupingDashboardChildren(careforceCaseload);
+  assert.ok(caseloadLocations.housesAndCentres.length > 0);
+});
+
+test('regions that were previously gated still seed Overview content', () => {
+  const today = startOfDay(new Date());
+  const weekStart = startOfWeek(today);
+  const weekEnd = addDays(weekStart, 6);
+
+  for (const id of ['hunter', 'illawarra', 'cpa-western-sydney']) {
+    const attention = groupingAttentionBookings(id);
+    const inWeek = attention.filter(
+      (booking) =>
+        booking.start >= weekStart &&
+        booking.start < addDays(weekEnd, 1),
+    );
+    assert.ok(inWeek.length > 0, `${id} needs shifts in the current week`);
+    assert.ok(
+      groupingDashboardWorkers(id).length >= 6,
+      `${id} needs enough workers for the aside preview`,
+    );
+  }
+});
+
+test('each direct-child location list gets its own sort control when it has two or more rows', () => {
+  const housesPanel = source('../src/pages/dashboard/HousesAndCentresPanel.tsx');
+
+  assert.match(housesPanel, /housesSortOption/);
+  assert.match(housesPanel, /clientsSortOption/);
+  assert.match(housesPanel, /showSort=\{housesAndCentres\.length >= 2\}/);
+  assert.match(housesPanel, /showSort=\{clients\.length >= 2\}/);
+  assert.doesNotMatch(housesPanel, /setSortOption/);
+
+  const northernSydney = findGrouping('northern-sydney')!;
+  const westernLifestyles = findGrouping('western-lifestyles')!;
+  const careforceNorthern = findGrouping('careforce-northern-caseload')!;
+
+  const sydney = groupingDashboardChildren(northernSydney);
+  const western = groupingDashboardChildren(westernLifestyles);
+  const northern = groupingDashboardChildren(careforceNorthern);
+
+  assert.equal(sydney.housesAndCentres.length >= 2, true);
+  assert.equal(sydney.clients.length >= 2, false);
+  assert.equal(western.housesAndCentres.length >= 2, false);
+  assert.equal(western.clients.length >= 2, false);
+  assert.equal(northern.housesAndCentres.length >= 2, true);
+  assert.equal(northern.clients.length >= 2, false);
+});
+
+test('landing follows direct children; a location still lands on Bookings', () => {
   const app = source('../src/App.tsx');
   const header = source('../src/components/AppHeader.tsx');
+  const arm = findGrouping('cpa-sil');
+  const northernSydney = findGrouping('northern-sydney');
 
+  assert.ok(arm && northernSydney);
+  assert.equal(arm.kind, 'arm');
   assert.equal(nodeLandingPath('organisation'), '/supportables');
-  assert.equal(nodeLandingPath('grouping'), '/supportables');
+  assert.equal(nodeLandingPath('grouping', northernSydney), '/');
+  assert.equal(nodeLandingPath('grouping', arm), '/supportables');
   assert.equal(nodeLandingPath('location'), '/bookings');
 
   /* Child-list rows, breadcrumb crumbs and breadcrumb dropdowns all enter a
@@ -443,11 +763,11 @@ test('every node above a location lands on its child list, not the placeholder D
   );
   assert.match(
     app,
-    /const selectGrouping = useCallback\([\s\S]*?navigate\(nodeLandingPath\('grouping'\)\)/,
+    /const selectGrouping = useCallback\([\s\S]*?navigate\(nodeLandingPath\('grouping', nextGrouping\)\)/,
   );
-  assert.match(app, /navigate\(nodeLandingPath\(persona\.entry\.nodeType\)\)/);
-  assert.match(app, /navigate\(nodeLandingPath\(nodeType\)\)/);
-  assert.match(header, /href=\{href\(nodeLandingPath\(nodeType\)\)\}/);
+  assert.match(app, /navigate\(\s*nodeLandingPath\(/);
+  assert.match(app, /nodeType === 'grouping' \? grouping : undefined/);
+  assert.match(header, /href=\{href\(nodeLandingPath\(nodeType, grouping\)\)\}/);
   assert.doesNotMatch(
     header,
     /href\(nodeType === 'location' \? '\/bookings' : '\/'\)/,

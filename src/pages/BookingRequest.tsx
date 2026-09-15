@@ -1156,6 +1156,8 @@ export function BookingRequest({
       workerId: requestedWorkers[0]?.id ?? draft.selectedWorkerIds[0],
       workerName: requestedWorkers[0]?.name ?? '',
       requestedWorkerNames: requestedWorkers.map((worker) => worker.name),
+      declinedWorkerNames: [],
+      lastActivityAt: new Date(),
       start,
       end,
       status: 'requested',

@@ -23,7 +23,7 @@ test('the IA screen derives every node instead of hardcoding the tree', () => {
   assert.match(page, /PERSONAS/);
   assert.match(page, /GROUPINGS/);
   assert.match(page, /LOCATIONS/);
-  assert.match(page, /NODE_NAV_ITEMS/);
+  assert.match(page, /visibleMainNavItems/);
   assert.match(page, /VISIBLE_ORGANISATIONS\.filter/);
   assert.match(page, /rootGroupingsForOrganisation/);
   assert.match(page, /grouping\.groupingIds/);
@@ -71,20 +71,25 @@ test('node pages come from one definition shared with signed-in navigation', () 
   assert.match(model, /export const NODE_NAV_ITEMS/);
   assert.match(
     model,
+    /label: 'Overview',[\s\S]*?nodeTypes: \['grouping', 'organisation'\]/,
+  );
+  assert.match(
+    model,
     /label: 'Workers',[\s\S]*?nodeTypes: \['grouping', 'location'\]/,
   );
   assert.match(
     model,
-    /label: 'Supportables',[\s\S]*?path: '\/supportables',[\s\S]*?nodeTypes: \['grouping', 'organisation'\]/,
+    /label: 'Supportables',[\s\S]*?path: '\/supportables',[\s\S]*?nodeTypes: \['organisation'\]/,
   );
+  assert.doesNotMatch(model, /label: 'Jobs'/);
+  assert.doesNotMatch(model, /label: 'Notification preferences'/);
   assert.match(model, /label: 'Notifications'/);
   assert.match(model, /label: 'Location settings'/);
-  assert.match(header, /NODE_NAV_ITEMS/);
+  assert.match(header, /visibleMainNavItems/);
   assert.doesNotMatch(header, /const NAV_ITEMS/);
   assert.match(header, /location\?\.serviceType === 'home-community'/);
-  assert.match(page, /NODE_NAV_ITEMS\.filter/);
-  assert.match(page, /item\.placement === 'main'/);
-  assert.match(page, /treeSectionLabel\(grouping, nodeType\)/);
+  assert.match(page, /visibleMainNavItems\(nodeType, grouping\)/);
+  assert.match(page, /groupingChildListTabLabel\(grouping\)/);
 });
 
 test('persona filtering is an organisation boundary, not role permissions', () => {

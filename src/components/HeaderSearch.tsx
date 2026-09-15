@@ -8,7 +8,7 @@ import {
 import {
   groupingContentsSummary,
   searchOrganisation,
-  serviceTypeLabel,
+  locationTypeSuburbLine,
 } from '../data/locations';
 import type { Organisation } from '../lib/informationArchitecture';
 import { Card } from './ui/Card';
@@ -125,8 +125,7 @@ export function HeaderSearch({
                     >
                       <EntityLink as="span">{result.name}</EntityLink>
                       <span className="mt-1 block text-xs text-text-secondary">
-                        {serviceTypeLabel(result.serviceType, result.sector)} ·{' '}
-                        {result.suburb}
+                        {locationTypeSuburbLine(result)}
                       </span>
                     </ResultButton>
                   ))}
@@ -144,8 +143,7 @@ export function HeaderSearch({
                     >
                       <EntityLink as="span">{result.name}</EntityLink>
                       <span className="mt-1 block text-xs text-text-secondary">
-                        {serviceTypeLabel(result.serviceType, result.sector)} ·{' '}
-                        {result.suburb}
+                        {locationTypeSuburbLine(result)}
                       </span>
                     </ResultButton>
                   ))}

@@ -4,6 +4,9 @@
   --color-brand: #1424E0;
   --color-brand-hover: #0F1CB8;
   --color-badge: #D6244A;
+  /* Light tint of badge, mixed the same way pending-surface sits against pending.
+     Used only by ui-tag--attention for a state that has already gone wrong. */
+  --color-badge-surface: color-mix(in srgb, var(--color-badge) 14%, white);
   --color-page: #eff1f5;
   --color-surface: #ffffff;
   --color-surface-subtle: var(--gray-50);
@@ -18,6 +21,7 @@
   --color-success-surface: #ddf3e9;
   --color-pending: #704600;
   --color-pending-surface: #f9e7c8;
+  --color-attention-surface: color-mix(in srgb, var(--color-badge) 14%, white);
   --color-neutral: #4b5362;
   /* Must stay a step darker than --color-page, or a neutral fill disappears. */
   --color-neutral-surface: var(--gray-200);
@@ -101,6 +105,10 @@
   --panel-max-height: 75vh;
   --messages-shell-height: 40rem;
   --booking-grid-min-height: 17.5rem;
+  /* Week grid columns must not shrink below card-readable width — without this,
+     min-w-0 in the Dashboard column squeezes seven equal fr tracks until text
+     stacks one character per line. */
+  --booking-day-column-min-width: 8.125rem;
 }
 
 body {
@@ -270,6 +278,11 @@ body {
   background: var(--color-pending-surface);
 }
 
+.ui-card--attention {
+  border-color: var(--color-badge);
+  background: var(--color-attention-surface);
+}
+
 .ui-card--neutral {
   border-color: var(--color-border-subtle);
   background: var(--color-surface);
@@ -419,6 +432,23 @@ a.ui-entity-link--plain:hover {
     in srgb,
     var(--color-pending-surface) 88%,
     var(--color-pending)
+  );
+}
+
+.ui-linked-surface:hover > .ui-card--attention {
+  border-color: var(--color-badge);
+  background: color-mix(
+    in srgb,
+    var(--color-attention-surface) 94%,
+    var(--color-badge)
+  );
+}
+
+.ui-linked-surface:active > .ui-card--attention {
+  background: color-mix(
+    in srgb,
+    var(--color-attention-surface) 88%,
+    var(--color-badge)
   );
 }
 
@@ -579,6 +609,24 @@ a.ui-entity-link--plain:hover {
   color: var(--color-pending);
 }
 
+.ui-tag--attention {
+  /* Attention cards use the same mix as --color-badge-surface; white keeps
+     the pill visible on an attention-toned card. */
+  background: white;
+  color: var(--color-badge);
+}
+
+/* Grouping attention calendar: inverted fills only — layout matches StatusPill. */
+.attention-grid-status-pill--pending {
+  background: var(--color-pending);
+  color: var(--color-surface);
+}
+
+.attention-grid-status-pill--attention {
+  background: var(--color-badge);
+  color: var(--color-surface);
+}
+
 .avatar {
   flex: 0 0 auto;
   border-radius: 9999px;
@@ -623,8 +671,30 @@ a.ui-entity-link--plain:hover {
   grid-template-columns: var(--narrow-column-width) minmax(0, 1fr);
 }
 
+.layout-content-aside {
+  display: grid;
+  align-items: start;
+  gap: var(--space-5);
+  grid-template-columns: minmax(0, 1fr) var(--narrow-column-width);
+}
+
+/* One optional supporting line beneath the heading; keeps column cards level
+   when only the calendar carries supporting copy. */
+.dashboard-section-header__intro {
+  min-height: calc(
+    var(--text-md--line-height) + var(--space-1) + var(--text-sm--line-height)
+  );
+}
+
 .layout-content-aside > aside {
   width: var(--narrow-column-width);
+}
+
+/* Worker rows stack detail lines and buttons; block rows on the divided card
+   so each inset card owns its full height (list-item was collapsing in the aside). */
+.layout-content-aside aside .ui-card--divided > .ui-inset-card {
+  display: block;
+  background: var(--color-surface);
 }
 
 /* Pages without an aside still sit on the Dashboard's main column, so the left
@@ -784,8 +854,28 @@ a.ui-entity-link--plain:hover {
   grid-template-rows: minmax(0, 1fr);
 }
 
+.booking-week-scroll {
+  overflow-x: auto;
+  min-width: 0;
+}
+
+.booking-week-grid {
+  display: grid;
+  min-width: calc(7 * var(--booking-day-column-min-width));
+  grid-template-columns: repeat(
+    7,
+    minmax(var(--booking-day-column-min-width), 1fr)
+  );
+}
+
 .booking-grid {
   min-height: var(--booking-grid-min-height);
+}
+
+/* Attention calendar: column borders run the grid height; cards stay at the top. */
+#bookings-attention-grid > div {
+  display: flex;
+  flex-direction: column;
 }
 
 .message-composer-input {

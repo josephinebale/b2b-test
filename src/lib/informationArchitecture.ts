@@ -1,3 +1,5 @@
+import type { Grouping } from '../data/locations';
+
 export const ORGANISATION_NAME = 'Cerebral Palsy Alliance';
 export const CAN_EDIT_ORGANISATION_DETAILS = false;
 
@@ -33,6 +35,13 @@ export type PersonaId =
   | 'lwb-reactive-rostering-officer'
   | 'lwb-forward-rostering-officer'
   | 'lwb-rostering-lead';
+
+/** Flip to all twelve ids to restore every persona in Choose a persona and the dock. */
+export const VISIBLE_PERSONA_IDS: readonly PersonaId[] = [
+  'house-manager',
+  'regional-manager',
+  'roster-coordinator',
+];
 
 export type Persona = {
   id: PersonaId;
@@ -210,6 +219,16 @@ export function personasForOrganisation(organisation: Organisation): Persona[] {
   return PERSONAS.filter((persona) => persona.organisation === organisation);
 }
 
+export function visiblePersonasForOrganisation(
+  organisation: Organisation,
+): Persona[] {
+  return PERSONAS.filter(
+    (persona) =>
+      persona.organisation === organisation &&
+      VISIBLE_PERSONA_IDS.includes(persona.id),
+  );
+}
+
 export const ROUTES = {
   manageLocation: '/manage-location',
   organisationSettings: '/organisation-settings',
@@ -217,7 +236,7 @@ export const ROUTES = {
 } as const;
 
 export type NavigationNodeType = 'grouping' | 'location' | 'organisation';
-export type NodeNavigationPlacement = 'main' | 'utility';
+export type NodeNavigationPlacement = 'main' | 'utility' | 'account';
 
 export const NOTIFICATIONS_NODE_ITEM = {
   label: 'Notifications',
@@ -238,11 +257,17 @@ export const NODE_NAV_ITEMS = [
   {
     label: 'Supportables',
     path: '/supportables',
-    nodeTypes: ['grouping', 'organisation'],
+    nodeTypes: ['organisation'],
     placement: 'main',
   },
   {
-    label: 'Dashboard',
+    label: 'Child list',
+    path: '/supportables',
+    nodeTypes: ['grouping'],
+    placement: 'main',
+  },
+  {
+    label: 'Overview',
     path: '/',
     nodeTypes: ['grouping', 'organisation'],
     placement: 'main',
@@ -278,14 +303,43 @@ export function treeSectionLabel(
   return (grouping.groupingIds?.length ?? 0) > 0 ? 'Groupings' : 'Supportables';
 }
 
-/**
- * Where entering a node lands. Above a location that is the child list, because
- * Dashboard is a placeholder while landing content is hidden. Revisit once
- * Dashboard has content: a manager arriving at their own grouping may want what
- * needs attention before a list of children.
- */
-export function nodeLandingPath(nodeType: NavigationNodeType): string {
-  return nodeType === 'location' ? '/bookings' : '/supportables';
+/** Overview is defined when direct children include locations — any location is enough. */
+export function groupingHasDefinedOverview(grouping: Grouping): boolean {
+  return grouping.locationIds.length > 0;
+}
+
+export function visibleMainNavItems(
+  nodeType: NavigationNodeType,
+  grouping: Grouping,
+) {
+  const showChildListTab =
+    nodeType === 'organisation' ||
+    (nodeType === 'grouping' && !groupingHasDefinedOverview(grouping));
+
+  return NODE_NAV_ITEMS.filter((item) => {
+    if (item.placement !== 'main') return false;
+    if (!item.nodeTypes.some((itemNodeType) => itemNodeType === nodeType)) {
+      return false;
+    }
+    if (item.path === '/supportables' && item.label === 'Supportables') {
+      return nodeType === 'organisation';
+    }
+    if (item.path === '/supportables' && item.label === 'Child list') {
+      return showChildListTab;
+    }
+    return true;
+  });
+}
+
+/** Where entering a node lands. Derived from direct children, not node names. */
+export function nodeLandingPath(
+  nodeType: NavigationNodeType,
+  grouping?: Grouping,
+): string {
+  if (nodeType === 'location') return '/bookings';
+  if (nodeType === 'organisation') return '/supportables';
+  if (grouping && groupingHasDefinedOverview(grouping)) return '/';
+  return '/supportables';
 }
 
 export type SettingsSection = {

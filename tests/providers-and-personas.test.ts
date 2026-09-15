@@ -13,7 +13,9 @@ import {
   ORGANISATIONS,
   PERSONAS,
   VISIBLE_ORGANISATIONS,
+  VISIBLE_PERSONA_IDS,
   personasForOrganisation,
+  visiblePersonasForOrganisation,
 } from '../src/lib/informationArchitecture.ts';
 
 function source(path: string): string {
@@ -131,10 +133,44 @@ test('Northcott and Life Without Barriers sit behind one off flag', () => {
   }
 });
 
+test('only three personas are visible in Choose a persona and the dock', () => {
+  const model = source('../src/lib/informationArchitecture.ts');
+  const picker = source('../src/components/PageVariantToggle.tsx');
+  const landing = source('../src/pages/SessionLanding.tsx');
+  const session = source('../src/lib/session.ts');
+  const project = source('../PROJECT.md');
+
+  assert.deepEqual([...VISIBLE_PERSONA_IDS], [
+    'house-manager',
+    'regional-manager',
+    'roster-coordinator',
+  ]);
+  assert.equal(PERSONAS.length, 12);
+  assert.match(model, /export const VISIBLE_PERSONA_IDS/);
+  assert.match(picker, /visiblePersonasForOrganisation/);
+  assert.doesNotMatch(picker, /personasForOrganisation\(organisation\)/);
+  assert.match(landing, /visiblePersonasForOrganisation/);
+  assert.doesNotMatch(landing, /personasForOrganisation\(organisation\)/);
+  assert.match(session, /VISIBLE_PERSONA_IDS\.includes/);
+  assert.match(project, /VISIBLE_PERSONA_IDS/);
+
+  assert.deepEqual(
+    visiblePersonasForOrganisation('Cerebral Palsy Alliance').map(
+      (persona) => persona.name,
+    ),
+    ['Helen Dawson', 'Marcus Lee', 'Sofia Patel'],
+  );
+  assert.equal(visiblePersonasForOrganisation('Northcott').length, 0);
+  assert.equal(
+    VISIBLE_ORGANISATIONS.flatMap(visiblePersonasForOrganisation).length,
+    3,
+  );
+});
+
 test('the persona picker groups people by organisation rather than one flat list', () => {
   const picker = source('../src/components/PageVariantToggle.tsx');
   assert.match(picker, /VISIBLE_ORGANISATIONS\.map/);
-  assert.match(picker, /personasForOrganisation\(organisation\)/);
+  assert.match(picker, /visiblePersonasForOrganisation\(organisation\)/);
   assert.match(picker, /\{organisation\}/);
   assert.doesNotMatch(picker, /\{PERSONAS\.map/);
 });

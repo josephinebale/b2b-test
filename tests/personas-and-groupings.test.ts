@@ -411,7 +411,7 @@ test('persona switching is moderator-only, changes entry, and roles do not gate 
   assert.match(personaControl, /role="menu"/);
   assert.match(personaControl, /role="menuitem"/);
   assert.match(personaControl, /VISIBLE_ORGANISATIONS\.map/);
-  assert.match(personaControl, /personasForOrganisation\(organisation\)/);
+  assert.match(personaControl, /visiblePersonasForOrganisation\(organisation\)/);
   assert.match(personaControl, /persona\.name/);
   assert.match(personaControl, /persona\.role/);
   assert.match(personaControl, /<IconButton/);
@@ -453,8 +453,8 @@ test('grouping sections and breadcrumb keep grouping and location context reacha
   assert.match(breadcrumb, /location\.name/);
   assert.match(supportables, /groupingDashboardChildren\(grouping\)/);
   assert.match(supportables, /onSelectGrouping\?\.\(grouping\.id\)/);
-  assert.match(dashboard, /groupingOpenRequests\(grouping\.id\)/);
-  assert.match(dashboard, /groupingUsageLast7Days\(grouping\.id\)/);
+  assert.match(dashboard, /BookingsNeedingAttention/);
+  assert.match(dashboard, /WorkersPanel/);
   assert.match(app, /onSelectGrouping=\{selectGrouping\}/);
   assert.match(app, /preferredGroupingId/);
 });

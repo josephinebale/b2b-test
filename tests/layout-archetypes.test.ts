@@ -30,6 +30,20 @@ test('all split layouts share one 320px narrow-column token', () => {
   assert.doesNotMatch(css, /--messages-list-width/);
 });
 
+test('week grids keep a minimum day-column width and scroll instead of crushing', () => {
+  const week = readFileSync(
+    new URL('../src/pages/dashboard/BookingsWeek.tsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(css, /--booking-day-column-min-width:/);
+  assert.match(css, /\.booking-week-grid \{/);
+  assert.match(css, /\.booking-week-scroll \{/);
+  assert.match(week, /booking-week-scroll/);
+  assert.match(week, /booking-week-grid/);
+  assert.doesNotMatch(week, /grid-cols-7/);
+});
+
 test('page shell is 1440px with 56px identity and 48px navigation rows', () => {
   assert.match(css, /--container-page:\s*90rem/);
   assert.match(css, /--header-identity-height:\s*3\.5rem/);
@@ -51,8 +65,24 @@ test('pages declare their distinct layout archetype', () => {
   assert.match(bookings, /layout-rail-content/);
   assert.match(settings, /layout-rail-content/);
   assert.match(messages, /layout-master-detail/);
-  assert.match(dashboard, /width-main-column/);
-  assert.doesNotMatch(dashboard, /layout-content-aside/);
+  assert.match(dashboard, /layout-content-aside/);
+  assert.match(dashboard, /HousesAndCentresPanel/);
+  assert.match(dashboard, /<aside>[\s\S]*WorkersPanel/);
+  assert.doesNotMatch(
+    dashboard.slice(
+      dashboard.indexOf('layout-content-aside'),
+      dashboard.indexOf('<aside>'),
+    ),
+    /WorkersPanel/,
+  );
+  assert.doesNotMatch(
+    dashboard.slice(
+      dashboard.indexOf('layout-content-aside'),
+      dashboard.indexOf('HousesAndCentresPanel'),
+    ),
+    /width-main-column/,
+  );
+  assert.doesNotMatch(dashboard, /layout-rail-content/);
 });
 
 test('Workers keeps a narrow measure without centring its left edge', () => {

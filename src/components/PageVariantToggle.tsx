@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import { Check, Layers, UserRoundCog } from 'lucide-react';
 import {
   VISIBLE_ORGANISATIONS,
-  personasForOrganisation,
+  visiblePersonasForOrganisation,
   type PersonaId,
 } from '../lib/informationArchitecture';
 import { variantLabel } from '../lib/pageVariants';
@@ -64,7 +64,7 @@ export function PageVariantToggle({
                   >
                     {organisation}
                   </p>
-                  {personasForOrganisation(organisation).map((persona) => {
+                  {visiblePersonasForOrganisation(organisation).map((persona) => {
                     const selected = persona.id === currentPersonaId;
                     return (
                       <button

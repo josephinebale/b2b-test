@@ -2,8 +2,21 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 export type ButtonSize = 'default' | 'small';
 export type IconButtonSize = 'default' | 'small';
 export type AvatarSize = 'sm' | 'md' | 'lg';
-export type CardTone = 'default' | 'success' | 'pending' | 'neutral' | 'subtle';
-export type TagTone = 'neutral' | 'success' | 'validated' | 'pending';
+export type CardTone =
+  | 'default'
+  | 'success'
+  | 'pending'
+  | 'attention'
+  | 'neutral'
+  | 'subtle';
+export type TagTone =
+  | 'neutral'
+  | 'success'
+  | 'validated'
+  | 'pending'
+  | 'attention'
+  | 'attention-grid-pending'
+  | 'attention-grid-attention';
 
 export function buttonClasses(variant: ButtonVariant, size: ButtonSize): string {
   return `ui-button ui-button--${variant} ui-button--${size}`;

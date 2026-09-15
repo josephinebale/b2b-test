@@ -73,11 +73,20 @@ test('the identity card treats support plan as status, not a verification', () =
 test('worker-name links open profiles where action is supported, not on grouping oversight', () => {
   const workers = source('../src/pages/Workers.tsx');
   const dashboardWorkers = source('../src/pages/dashboard/WorkersPanel.tsx');
+  const groupingWorkersTable = source('../src/pages/GroupingWorkersTable.tsx');
   const bookings = source('../src/pages/Bookings.tsx');
   const messages = source('../src/pages/Messages.tsx');
+  const groupingWorkersBranch = workers.slice(
+    workers.indexOf('if (!data)'),
+    workers.indexOf('const client ='),
+  );
 
   assert.match(workers, /href=\{href\(workerProfilePath\(worker\.id\)\)\}/);
-  assert.doesNotMatch(dashboardWorkers, /workerProfilePath|href=\{href\(/);
+  assert.match(dashboardWorkers, /workerProfilePath\(worker\.id\)/);
+  assert.match(groupingWorkersTable, /EntityLink as="span"/);
+  assert.doesNotMatch(groupingWorkersTable, /workerProfilePath/);
+  assert.doesNotMatch(groupingWorkersBranch, /workerProfilePath/);
+  assert.match(dashboardWorkers, /href=\{href\('\/workers'\)\}/);
   assert.match(bookings, /workerProfilePath\(worker\.id\)/);
   assert.match(messages, /href=\{href\(workerProfilePath\(selected\.id\)\)\}/);
   assert.match(messages, /selectConversation\(conversation\)/);

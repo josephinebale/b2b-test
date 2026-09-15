@@ -103,6 +103,36 @@ test('booking cards and details retain duration without vehicle allowance', () =
   assert.doesNotMatch(`${cards}\n${detail}`, /vehicle allowance/i);
 });
 
+test('grouping worker rows omit location-scoped support plan status', () => {
+  const pageContent = source('../src/lib/pageContent.ts');
+  const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
+  const table = source('../src/pages/GroupingWorkersTable.tsx');
+  const exceptionHelper = pageContent.slice(
+    pageContent.indexOf('export function dashboardWorkerExceptionLines'),
+    pageContent.indexOf('export function dashboardWorkerLastWorkedLabel'),
+  );
+
+  assert.doesNotMatch(exceptionHelper, /Support plan/i);
+  assert.match(panel, /dashboardWorkerExceptionLines/);
+  assert.doesNotMatch(
+    table.slice(table.indexOf('function exceptionLines')),
+    /Support plan/i,
+  );
+});
+
+test('location-scoped surfaces still show support plan status', () => {
+  const workers = source('../src/pages/Workers.tsx');
+  const request = source('../src/pages/BookingRequest.tsx');
+  const profile = source('../src/pages/WorkerProfile.tsx');
+  const notifications = source('../src/pages/Notifications.tsx');
+
+  assert.match(workers, /supportPlanLabel\(worker\.planConfirmed\)/);
+  assert.match(request, /supportPlanLabel\(worker\.planConfirmed\)/);
+  assert.match(profile, /Support plan confirmed/);
+  assert.match(profile, /Support plan needs review/);
+  assert.match(notifications, /support plan needs review/i);
+});
+
 test('discussion questions cover the new worker-row evidence', () => {
   assert.match(
     questionById('workers-location-tiers')?.text ?? '',

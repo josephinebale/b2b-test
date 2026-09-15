@@ -1,4 +1,9 @@
-import { ALL_ORGANISATIONS_VISIBLE, ORGANISATION_NAME, PERSONAS } from './informationArchitecture';
+import {
+  ALL_ORGANISATIONS_VISIBLE,
+  ORGANISATION_NAME,
+  PERSONAS,
+  VISIBLE_PERSONA_IDS,
+} from './informationArchitecture';
 
 const LOCATION_KEY = 'hm.lastLocationId';
 const LEGACY_HOUSE_KEY = 'hm.lastHouseId';
@@ -82,6 +87,9 @@ export function readPersonaId(): PersonaId {
     !ALL_ORGANISATIONS_VISIBLE &&
     known.organisation !== ORGANISATION_NAME
   ) {
+    return 'house-manager';
+  }
+  if (!VISIBLE_PERSONA_IDS.includes(known.id)) {
     return 'house-manager';
   }
   return known.id;

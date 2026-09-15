@@ -14,6 +14,7 @@ import {
   ORGANISATIONS,
   personasForOrganisation,
   personaById,
+  visiblePersonasForOrganisation,
 } from '../src/lib/informationArchitecture.ts';
 
 function source(path: string): string {
@@ -24,7 +25,7 @@ test('the moderator persona picker covers every organisation after the node menu
   const picker = source('../src/components/PageVariantToggle.tsx');
 
   assert.match(picker, /VISIBLE_ORGANISATIONS\.map/);
-  assert.match(picker, /personasForOrganisation\(organisation\)\.map/);
+  assert.match(picker, /visiblePersonasForOrganisation\(organisation\)\.map/);
   for (const organisation of ORGANISATIONS) {
     assert.ok(personasForOrganisation(organisation).length > 0);
     assert.ok(

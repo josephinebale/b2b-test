@@ -61,7 +61,6 @@ import { Notifications, notificationCount } from './pages/Notifications';
 import { LocationProfilePreview } from './pages/LocationProfilePreview';
 import { InformationArchitecture } from './pages/InformationArchitecture';
 import { JobsToBeDone } from './pages/JobsToBeDone';
-import { GroupingWorkers } from './pages/GroupingWorkers';
 import { OrganisationDashboard } from './pages/OrganisationDashboard';
 import { PrototypeStart } from './pages/PrototypeStart';
 import { SessionLanding } from './pages/SessionLanding';
@@ -171,7 +170,7 @@ export default function App() {
       setGroupingId(nextGrouping.id);
       setNodeType('grouping');
       setUnreadOverride(null);
-      navigate(nodeLandingPath('grouping'));
+      navigate(nodeLandingPath('grouping', nextGrouping));
     },
     [persona.organisation],
   );
@@ -208,7 +207,14 @@ export default function App() {
     } else {
       setLocationId(null);
     }
-    navigate(nodeLandingPath(persona.entry.nodeType));
+    navigate(
+      nodeLandingPath(
+        persona.entry.nodeType,
+        persona.entry.nodeType === 'grouping'
+          ? findGrouping(persona.entry.groupingId) ?? undefined
+          : undefined,
+      ),
+    );
   }, []);
 
   const onUnreadChange = useCallback((count: number) => {
@@ -297,7 +303,12 @@ export default function App() {
         onSignInAsReturning={() => {
           writeSignedIn(true);
           setSignedIn(true);
-          navigate(nodeLandingPath(nodeType));
+          navigate(
+            nodeLandingPath(
+              nodeType,
+              nodeType === 'grouping' ? grouping : undefined,
+            ),
+          );
         }}
         onSignInAsNewUser={() => {
           clearLastLocationId();
@@ -367,13 +378,25 @@ export default function App() {
                   navigate(nextPath);
                 }}
               />
+            ) : nodeType === 'organisation' && path === '/workers' ? (
+              <Supportables
+                grouping={grouping}
+                nodeType={nodeType}
+                onSelectGrouping={selectGrouping}
+                onSelectLocation={(nextLocationId, nextPath = '/bookings') => {
+                  selectLocation(nextLocationId);
+                  navigate(nextPath);
+                }}
+              />
             ) : nodeType === 'organisation' ? (
               <OrganisationDashboard />
             ) : path === '/workers' ? (
-              <GroupingWorkers grouping={grouping} />
+              <Workers grouping={grouping} />
             ) : (
               <Dashboard
                 grouping={grouping}
+                createdBookings={createdBookings}
+                onSelectGrouping={selectGrouping}
                 onSelectLocation={(nextLocationId, path = '/bookings') => {
                   selectLocation(nextLocationId);
                   navigate(path);

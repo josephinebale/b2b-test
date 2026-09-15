@@ -278,10 +278,8 @@ test('children menu rows name the node and what it is', () => {
   const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
 
   assert.match(breadcrumb, /groupingContentsSummary\(item\.grouping\)/);
-  assert.match(breadcrumb, /serviceTypeLabel\(/);
-  assert.match(breadcrumb, /item\.location\.serviceType/);
-  assert.match(breadcrumb, /item\.location\.sector/);
-  assert.match(breadcrumb, /\{item\.location\.suburb\}/);
+  assert.match(breadcrumb, /locationTypeSuburbLine\(item\.location\)/);
+  assert.doesNotMatch(breadcrumb, /serviceTypeLabel\(item\.location/);
   assert.match(breadcrumb, /mt-1 block text-xs text-text-secondary/);
   assert.doesNotMatch(breadcrumb, /LocationMarker/);
 });

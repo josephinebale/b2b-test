@@ -25,7 +25,8 @@ test('dense week cells stay tight while cards and rows step up', () => {
   assert.match(calendar, /ui-inset-compact/);
   assert.doesNotMatch(calendar, /ui-inset-card|ui-inset-row/);
 
-  assert.match(bookings, /<Card as="article" className="ui-inset-card/);
+  assert.match(bookings, /tone=\{bookingWeekCardTone\(booking\)\}/);
+  assert.match(bookings, /className="ui-inset-card ui-target-row"/);
 });
 
 test('every list row uses the row step, so their content shares one left edge', () => {
@@ -35,10 +36,21 @@ test('every list row uses the row step, so their content shares one left edge', 
     notifications: read('../src/pages/Notifications.tsx'),
     settings: read('../src/pages/Settings.tsx'),
     workers: read('../src/pages/Workers.tsx'),
-    workersPanel: read('../src/pages/dashboard/WorkersPanel.tsx'),
   };
 
   for (const [name, source] of Object.entries(rows)) {
     assert.match(source, /ui-inset-row/, `${name} should use the row inset`);
   }
+
+  const housesPanel = read('../src/pages/dashboard/HousesAndCentresPanel.tsx');
+  assert.match(
+    housesPanel,
+    /className="ui-inset-card"/,
+    'Overview location rows should use the card inset',
+  );
+  assert.match(
+    read('../src/pages/dashboard/WorkersPanel.tsx'),
+    /className="ui-inset-card"/,
+    'Overview worker rows should use the card inset',
+  );
 });

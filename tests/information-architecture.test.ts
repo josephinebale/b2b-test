@@ -11,11 +11,17 @@ import {
   ORGANISATION_SECTIONS,
   PERSONAL_MENU_ITEMS,
   ROUTES,
+  groupingHasDefinedOverview,
   menuIndexAfterKey,
+  nodeLandingPath,
   sectionFromPath,
   treeSectionLabel,
+  visibleMainNavItems,
 } from '../src/lib/informationArchitecture.ts';
-import { findGrouping } from '../src/data/locations.ts';
+import {
+  findGrouping,
+  groupingChildListTabLabel,
+} from '../src/data/locations.ts';
 
 test('settings sections are split by scope without changing existing labels', () => {
   assert.deepEqual(LOCATION_SECTIONS.map(({ label }) => label), [
@@ -31,9 +37,7 @@ test('settings sections are split by scope without changing existing labels', ()
     'Documents',
     'People',
   ]);
-  assert.deepEqual(ACCOUNT_SECTIONS.map(({ label }) => label), [
-    'Account',
-  ]);
+  assert.deepEqual(ACCOUNT_SECTIONS.map(({ label }) => label), ['Account']);
 });
 
 test('the account menu exposes person and organisation settings together', () => {
@@ -58,11 +62,35 @@ test('both node types have a complete second-tier navigation', () => {
     'Location settings',
   ]);
   assert.deepEqual(mainLabelsFor('grouping'), [
-    'Supportables',
-    'Dashboard',
+    'Child list',
+    'Overview',
     'Workers',
   ]);
-  assert.deepEqual(mainLabelsFor('organisation'), ['Supportables', 'Dashboard']);
+  assert.deepEqual(mainLabelsFor('organisation'), ['Supportables', 'Overview']);
+  assert.ok(
+    NODE_NAV_ITEMS.some(
+      (item) =>
+        item.label === 'Supportables' &&
+        item.path === '/supportables' &&
+        item.nodeTypes.includes('organisation'),
+    ),
+  );
+  assert.ok(
+    NODE_NAV_ITEMS.some(
+      (item) =>
+        item.path === '/supportables' && item.nodeTypes.includes('grouping'),
+    ),
+  );
+  assert.ok(
+    !NODE_NAV_ITEMS.some(
+      (item) =>
+        item.label === 'Supportables' && item.nodeTypes.includes('grouping'),
+    ),
+  );
+  assert.ok(!NODE_NAV_ITEMS.some((item) => item.label === 'Jobs'));
+  assert.ok(
+    !NODE_NAV_ITEMS.some((item) => item.label === 'Notification preferences'),
+  );
 });
 
 test('the tree section is named by whether the node holds groupings or locations', () => {
@@ -84,6 +112,62 @@ test('the tree section is named by whether the node holds groupings or locations
   assert.match(
     model,
     /label: 'Supportables',[\s\S]*?path: '\/supportables'/,
+  );
+});
+
+test('landing follows whether direct children include locations', () => {
+  const arm = findGrouping('cpa-sil');
+  const northernSydney = findGrouping('northern-sydney');
+  const careforceArea = findGrouping('careforce-area');
+  const careforceCaseload = findGrouping('careforce-caseload');
+  assert.ok(arm && northernSydney && careforceArea && careforceCaseload);
+  assert.equal(arm.kind, 'arm');
+
+  assert.equal(nodeLandingPath('organisation'), '/supportables');
+  assert.equal(nodeLandingPath('location'), '/bookings');
+  assert.equal(nodeLandingPath('grouping', northernSydney), '/');
+  assert.equal(nodeLandingPath('grouping', careforceCaseload), '/');
+  assert.equal(nodeLandingPath('grouping', arm), '/supportables');
+  assert.equal(nodeLandingPath('grouping', careforceArea), '/supportables');
+
+  assert.equal(groupingHasDefinedOverview(northernSydney), true);
+  assert.equal(groupingHasDefinedOverview(arm), false);
+  assert.equal(groupingHasDefinedOverview(careforceArea), false);
+});
+
+test('grouping child-list tab labels follow direct children, never Supportables', () => {
+  const sil = findGrouping('cpa-sil');
+  const careforce = findGrouping('cpa-careforce');
+  const careforceArea = findGrouping('careforce-area');
+  const hunter = findGrouping('hunter');
+  const northernLifestyles = findGrouping('northern-lifestyles');
+  const northernSydney = findGrouping('northern-sydney');
+  assert.ok(
+    sil && careforce && careforceArea && hunter && northernLifestyles && northernSydney,
+  );
+
+  assert.equal(groupingChildListTabLabel(sil), 'Groupings');
+  assert.equal(groupingChildListTabLabel(careforce), 'Groupings');
+  assert.equal(groupingChildListTabLabel(careforceArea), 'Groupings');
+  assert.equal(groupingChildListTabLabel(hunter), 'Houses');
+  assert.equal(groupingChildListTabLabel(northernLifestyles), 'Centres');
+  assert.equal(groupingChildListTabLabel(northernSydney), 'Houses and centres');
+  assert.equal(
+    groupingChildListTabLabel(findGrouping('careforce-northern-caseload')!),
+    'Houses',
+  );
+
+  assert.deepEqual(
+    visibleMainNavItems('grouping', northernSydney).map((item) => item.path),
+    ['/', '/workers'],
+  );
+  assert.deepEqual(
+    visibleMainNavItems('grouping', sil).map((item) => item.path),
+    ['/supportables', '/', '/workers'],
+  );
+  assert.deepEqual(
+    visibleMainNavItems('organisation', sil).map((item) => item.path),
+    ['/supportables', '/'],
   );
 });
 

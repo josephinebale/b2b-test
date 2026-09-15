@@ -9,7 +9,7 @@ function source(path: string): string {
 test('landing bodies sit behind one off flag so the real screens cannot rot', () => {
   const placeholder = source('../src/components/LandingPlaceholder.tsx');
   const dashboard = source('../src/pages/Dashboard.tsx');
-  const groupingWorkers = source('../src/pages/GroupingWorkers.tsx');
+  const groupingWorkers = source('../src/pages/Workers.tsx');
   const bookings = source('../src/pages/Bookings.tsx');
   const workers = source('../src/pages/Workers.tsx');
   const messages = source('../src/pages/Messages.tsx');
@@ -23,6 +23,11 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
     placeholder,
     /export const LANDING_CONTENT_ENABLED = false/,
   );
+  assert.match(
+    placeholder,
+    /export const GROUPING_WORKERS_CONTENT_ENABLED = false/,
+  );
+  assert.match(placeholder, /GroupingWorkersTable\.tsx/);
   assert.match(placeholder, /This screen is in progress\./);
   assert.doesNotMatch(placeholder, /not been designed|navigation and structure/);
   assert.doesNotMatch(placeholder, /nothing here|No .*yet|empty/i);
@@ -31,8 +36,6 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
   assert.equal((placeholder.match(/<p /g) ?? []).length, 1);
 
   for (const [name, page] of [
-    ['dashboard', dashboard],
-    ['grouping workers', groupingWorkers],
     ['bookings', bookings],
     ['workers', workers],
     ['messages', messages],
@@ -48,9 +51,42 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
     );
   }
 
-  assert.match(dashboard, /Requests waiting/);
-  assert.match(dashboard, /Platform use/);
-  assert.match(groupingWorkers, /<WorkersPanel grouping=\{grouping\}/);
+  assert.match(groupingWorkers, /GROUPING_WORKERS_CONTENT_ENABLED/);
+  assert.match(groupingWorkers, /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED/);
+  assert.match(groupingWorkers, /<LandingPlaceholder/);
+  assert.match(groupingWorkers, /<PageHeading/);
+  assert.match(groupingWorkers, /<GroupingWorkersTable grouping=\{grouping\}/);
+  assert.match(
+    groupingWorkers,
+    /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?<PageHeading[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
+    'grouping Workers shows only the placeholder while both flags are off',
+  );
+
+  assert.doesNotMatch(dashboard, /groupingOverviewContentEnabled/);
+  assert.match(dashboard, /groupingHasDefinedOverview\(grouping\)/);
+  assert.match(dashboard, /<LandingPlaceholder/);
+  assert.match(dashboard, /<PageHeading/);
+  assert.match(dashboard, /<BookingsNeedingAttention/);
+  assert.match(dashboard, /<HousesAndCentresPanel/);
+  assert.match(source('../src/pages/dashboard/BookingsNeedingAttention.tsx'), />Unfilled shifts:</);
+  assert.match(
+    source('../src/pages/dashboard/HousesAndCentresPanel.tsx'),
+    /dashboardHouseRowPendingLinks/,
+  );
+  assert.match(
+    source('../src/pages/dashboard/HousesAndCentresPanel.tsx'),
+    /waitingRequestsForLocation/,
+  );
+  assert.match(
+    source('../src/pages/dashboard/HousesAndCentresPanel.tsx'),
+    /futureCancelledBookings/,
+  );
+  assert.match(
+    source('../src/pages/dashboard/HousesAndCentresPanel.tsx'),
+    /locationTypeSuburbLine\(location\)/,
+  );
+  assert.doesNotMatch(dashboard, /Waiting work/);
+  assert.doesNotMatch(dashboard, /Platform use/);
   assert.match(bookings, /<BookingsWeek/);
   assert.match(workers, /Your location team/);
   assert.match(messages, /Search messages/);
@@ -58,6 +94,7 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
   assert.match(settings, /function OrganisationSection/);
   assert.match(settings, /function AccountSection/);
   assert.match(settings, /layout-rail-content/);
+  assert.match(settings, /<LandingPlaceholder/);
 
   assert.match(
     supportables,
@@ -69,14 +106,14 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
   );
   assert.match(supportables, /onSelectLocation\?\.\(location\.id, '\/bookings'\)/);
   assert.match(supportables, /\{location\.name\}/);
-  assert.match(supportables, /\{location\.suburb\}/);
+  assert.match(supportables, /locationTypeSuburbLine\(location\)/);
 
   assert.match(
     breadcrumb,
     /pendingWork\.length > 0 && \(\s*LANDING_CONTENT_ENABLED \?/,
   );
   assert.match(breadcrumb, /groupingContentsSummary\(item\.grouping\)/);
-  assert.match(breadcrumb, /\{item\.location\.suburb\}/);
+  assert.match(breadcrumb, /locationTypeSuburbLine\(item\.location\)/);
 
   assert.match(
     header,
@@ -93,4 +130,18 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
   assert.match(project, /LANDING_CONTENT_ENABLED/);
   assert.match(project, /temporary/);
   assert.match(project, /navigation and information architecture/);
+  assert.doesNotMatch(project, /GROUPING_OVERVIEW_CONTENT_GROUPING_IDS/);
+});
+
+test('grouping Overview renders only when direct children include locations', () => {
+  const dashboard = source('../src/pages/Dashboard.tsx');
+  const navigation = source('../src/lib/informationArchitecture.ts');
+
+  assert.doesNotMatch(dashboard, /groupingOverviewContentEnabled/);
+  assert.match(dashboard, /groupingHasDefinedOverview\(grouping\)/);
+  assert.match(dashboard, /<LandingPlaceholder/);
+  assert.match(dashboard, /groupingOverviewHeading\(grouping\.name\)/);
+  assert.match(navigation, /export function groupingHasDefinedOverview/);
+  assert.doesNotMatch(navigation, /GROUPING_OVERVIEW_CONTENT_GROUPING_IDS/);
+  assert.doesNotMatch(navigation, /groupingOverviewContentEnabled/);
 });

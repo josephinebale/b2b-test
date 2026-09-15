@@ -3,6 +3,9 @@ import { Card } from './ui/Card';
 /** Flip to true to restore landing page bodies, badges, and waiting-work counts. */
 export const LANDING_CONTENT_ENABLED = false;
 
+/** Table built in GroupingWorkersTable.tsx — flip to true to show grouping Workers while LANDING_CONTENT_ENABLED stays off. */
+export const GROUPING_WORKERS_CONTENT_ENABLED = false;
+
 export function LandingPlaceholder() {
   return (
     <Card className="p-6">

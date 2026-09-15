@@ -3,13 +3,19 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   LOCATIONS,
+  descendantLocationIds,
   getLocationData,
+  groupingDashboardWorkers,
   groupingWorkers,
   locationWorkerTiers,
   nearbyWorkers,
+  GROUPING,
 } from '../src/data/locations.ts';
 import {
   WORKERS_ROUTE,
+  dashboardWorkerExceptionLines,
+  dashboardWorkerLastWorkedLabel,
+  namedLocationList,
   workerIdFromPath,
   workerProfilePath,
 } from '../src/lib/pageContent.ts';
@@ -32,12 +38,9 @@ test('Workers is a destination at both node types with node-specific content', (
   assert.ok(item);
   assert.equal(item.path, WORKERS_ROUTE);
   assert.deepEqual(item.nodeTypes, ['grouping', 'location']);
-  assert.match(
-    header,
-    /NODE_NAV_ITEMS\.filter[\s\S]*?item\.nodeTypes\.some/,
-  );
+  assert.match(header, /visibleMainNavItems\(nodeType, grouping\)/);
   assert.match(app, /<Workers/);
-  assert.match(app, /<GroupingWorkers/);
+  assert.match(app, /<Workers grouping=\{grouping\}/);
   assert.doesNotMatch(app, /<Workers nodeType="grouping"/);
   assert.match(router, /\/team/);
   assert.match(router, /\/workers/);
@@ -88,20 +91,49 @@ test('location Workers has three ordered, disjoint populations', () => {
   }
 });
 
-test('the grouping dashboard population ranks by shifts then locations', () => {
-  const workers = groupingWorkers();
+test('grouping dashboard workers spread last-worked dates across the eight-week window', () => {
+  const now = new Date('2026-09-15T12:00:00');
+  const northern = groupingDashboardWorkers('northern-sydney', now);
+  const labels = northern.map(
+    (worker) => dashboardWorkerLastWorkedLabel(worker.lastWorkedAt!, now),
+  );
+
+  assert.ok(labels.includes('Last worked today'));
+  assert.ok(labels.includes('Last worked yesterday'));
+  assert.ok(labels.some((label) => /Last worked \d+ days ago/.test(label)));
+  assert.ok(labels.some((label) => /Last worked \d+ weeks ago/.test(label)));
+  assert.ok(northern.some((worker) => worker.id === 'farah-t'));
+  assert.equal(northern[0]?.id, 'farah-t');
+  assert.ok(!northern.some((worker) => worker.id === 'maxine-r'));
+
+  const byShiftCount = [...northern].sort(
+    (first, second) => second.shiftCount - first.shiftCount,
+  );
+  assert.notDeepEqual(
+    northern.slice(0, 6).map((worker) => worker.id),
+    byShiftCount.slice(0, 6).map((worker) => worker.id),
+  );
+});
+
+test('the grouping dashboard population ranks most recent shift then shifts in the window', () => {
+  const workers = groupingDashboardWorkers();
 
   assert.ok(workers.length > 0);
   assert.ok(workers.every((worker) => worker.locations.length > 0));
   assert.ok(workers.every((worker) => worker.shiftCount > 0));
+  assert.ok(workers.every((worker) => worker.lastWorkedAt instanceof Date));
 
   for (let index = 1; index < workers.length; index += 1) {
     const previous = workers[index - 1];
     const current = workers[index];
+    const previousWorked = previous.lastWorkedAt?.getTime() ?? 0;
+    const currentWorked = current.lastWorkedAt?.getTime() ?? 0;
     assert.ok(
-      previous.shiftCount > current.shiftCount ||
-        (previous.shiftCount === current.shiftCount &&
-          previous.locations.length >= current.locations.length),
+      previousWorked > currentWorked ||
+        (previousWorked === currentWorked &&
+          (previous.shiftCount > current.shiftCount ||
+            (previous.shiftCount === current.shiftCount &&
+              previous.name.localeCompare(current.name) <= 0))),
       `${previous.name} should rank ahead of ${current.name}`,
     );
   }
@@ -109,6 +141,31 @@ test('the grouping dashboard population ranks by shifts then locations', () => {
   assert.ok(
     workers.some((worker) => worker.locations.length > 1),
     'the grouping population should include workers with history across locations',
+  );
+});
+
+test('grouping dashboard worker exceptions stay sparse in the aside preview', () => {
+  const preview = (groupingId: string) =>
+    groupingDashboardWorkers(groupingId)
+      .slice(0, 6)
+      .map((worker) => dashboardWorkerExceptionLines(worker));
+
+  const northernSydney = preview('northern-sydney');
+  const illawarra = preview('illawarra');
+  const hunter = preview('hunter');
+
+  assert.equal(
+    northernSydney.filter((lines) => lines.length > 0).length,
+    0,
+  );
+  assert.equal(
+    illawarra.filter((lines) => lines.length > 0).length,
+    2,
+  );
+  assert.ok(illawarra.some((lines) => lines.length === 2));
+  assert.equal(
+    hunter.filter((lines) => lines.length > 0).length,
+    2,
   );
 });
 
@@ -128,26 +185,136 @@ test('Workers page keeps the location team first and the other tiers below it', 
   assert.doesNotMatch(workers, /Paying at|pay level/i);
 });
 
-test('grouping Workers is its own read-only page without search or marketplace rows', () => {
+test('grouping Workers page stays hidden behind landing flags', () => {
   const workers = source('../src/pages/Workers.tsx');
   const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
   const dashboard = source('../src/pages/Dashboard.tsx');
-  const groupingWorkersPage = source('../src/pages/GroupingWorkers.tsx');
+  const groupingWorkersBranch = workers.slice(
+    workers.indexOf('if (!data)'),
+    workers.indexOf('const client ='),
+  );
 
-  assert.doesNotMatch(workers, /nodeType === 'grouping'|groupingWorkers\(/);
-  assert.match(panel, /groupingWorkers\(grouping\.id\)/);
-  assert.match(panel, /Ranked by completed shifts, then locations worked/);
+  assert.match(groupingWorkersBranch, /GROUPING_WORKERS_CONTENT_ENABLED/);
+  assert.match(
+    groupingWorkersBranch,
+    /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED/,
+  );
+  assert.match(groupingWorkersBranch, /<GroupingWorkersTable grouping=\{grouping\}/);
+  assert.match(
+    source('../src/pages/GroupingWorkers.tsx'),
+    /groupingWorkersHeading\(grouping\.name\)/,
+  );
+  assert.match(
+    groupingWorkersBranch,
+    /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
+  );
+  assert.doesNotMatch(groupingWorkersBranch, /Search workers|nearbyWorkers|MessageSquare/);
+  assert.doesNotMatch(groupingWorkersBranch, /workerProfilePath/);
+
+  assert.match(panel, /groupingDashboardWorkers\(grouping\.id\)/);
+  assert.doesNotMatch(panel, /groupingWorkers\(grouping\.id\)/);
+  assert.doesNotMatch(
+    panel,
+    /Everyone who&apos;s had a shift in the region in the last eight weeks\./,
+  );
+  assert.match(panel, /Recently booked workers/);
   assert.match(
     panel,
-    /\{worker\.totalHours\} hours[\s\S]*?\{supportPlanLabel\(worker\.planConfirmed\)\}[\s\S]*?\{assessmentSummary\(worker\.assessments\)\}/,
+    /export const GROUPING_OVERVIEW_WORKER_EXCEPTION_TAGS_VISIBLE = false/,
   );
-  assert.match(panel, /needsAttentionClass\(!worker\.planConfirmed\)/);
-  assert.doesNotMatch(panel, /nearbyWorkers|Search workers|MessageSquare|Calendar/);
-  assert.match(panel, /questionId="workers-grouping-order"/);
-  assert.doesNotMatch(dashboard, /<WorkersPanel grouping=\{grouping\}/);
-  assert.match(groupingWorkersPage, /<WorkersPanel grouping=\{grouping\}/);
+  assert.match(panel, /dashboardWorkerEvidenceLine/);
+  assert.match(panel, /dashboardWorkerPrimaryLocation/);
+  assert.match(panel, /MessageSquare/);
+  assert.match(panel, /Calendar/);
+  assert.match(panel, /<Tag[\s\S]*tone="pending"/);
+  assert.match(panel, /onSelectLocation\?\.\(primaryLocationId, '\/messages'\)/);
+  assert.match(panel, /onSelectLocation\?\.\(\s*primaryLocationId,\s*'\/request-booking',/);
+  assert.match(panel, /dashboardWorkerExceptionLines/);
+  assert.match(panel, /workerProfilePath\(worker\.id\)/);
+  assert.doesNotMatch(panel, /variant === 'tab'|<Clock /);
+  assert.match(panel, /workers\.slice\(0, WORKERS_PREVIEW\)/);
+  assert.doesNotMatch(panel, /See all workers/);
+  assert.match(panel, /<SectionHeadingRow/);
+  assert.match(panel, /View all/);
+  assert.match(panel, /href=\{href\('\/workers'\)\}/);
+  assert.doesNotMatch(panel, /LANDING_CONTENT_ENABLED|GROUPING_WORKERS_CONTENT_ENABLED/);
+  assert.match(dashboard, /<aside>[\s\S]*<WorkersPanel[\s\S]*grouping=\{grouping\}/);
+  assert.match(dashboard, /<HousesAndCentresPanel/);
   assert.match(workers, /questionId="workers-location-tiers"/);
   assert.match(workers, /questionId="workers-search"/);
+});
+
+test('GroupingWorkersTable is a sortable comparison table without search or marketplace rows', () => {
+  const table = source('../src/pages/GroupingWorkersTable.tsx');
+
+  assert.match(table, /<table/);
+  assert.match(table, /label="Worker"/);
+  assert.match(table, /label="Houses"/);
+  assert.match(table, /label="Shifts"/);
+  assert.match(table, /label="Hours"/);
+  assert.match(table, />\s*Status\s*</);
+  assert.match(
+    table,
+    /Everyone who has worked in this region, and how much they have worked at[\s\S]*each house\./,
+  );
+  assert.match(table, /groupingWorkers\(grouping\.id\)/);
+  assert.match(table, /descendantLocationIds\(grouping\)/);
+  assert.match(table, /\{worker\.locations\.length\} of \{locationTotal\}/);
+  assert.match(table, /namedLocationList\(houseNames, 3\)/);
+  assert.match(table, /EntityLink as="span"/);
+  assert.doesNotMatch(table, /workerProfilePath/);
+  assert.match(table, /tone="pending"/);
+  assert.match(table, /tabular-nums/);
+  assert.match(table, /border-border-subtle/);
+  assert.match(table, /ui-inset-row/);
+  assert.match(table, /aria-sort/);
+  assert.match(table, /ChevronUp/);
+  assert.match(table, /ChevronDown/);
+  assert.match(table, /useState<SortColumn>\('shifts'\)/);
+  assert.match(table, /useState<SortDirection>\('desc'\)/);
+  assert.match(table, /setSortDirection\(\(current\) => \(current === 'asc' \? 'desc' : 'asc'\)\)/);
+  assert.match(table, /questionId="workers-grouping-order"/);
+  assert.doesNotMatch(table, /useSearchParams|localStorage|sessionStorage/);
+});
+
+test('grouping Workers default sort preserves the groupingWorkers rank', () => {
+  const workers = groupingWorkers();
+  const locationTotal = descendantLocationIds(GROUPING).length;
+
+  assert.ok(workers.length > 0);
+  assert.ok(locationTotal > 0);
+  assert.ok(workers.every((worker) => worker.locations.length <= locationTotal));
+
+  for (let index = 1; index < workers.length; index += 1) {
+    const previous = workers[index - 1];
+    const current = workers[index];
+    assert.ok(
+      previous.shiftCount > current.shiftCount ||
+        (previous.shiftCount === current.shiftCount &&
+          (previous.locations.length > current.locations.length ||
+            (previous.locations.length === current.locations.length &&
+              previous.name.localeCompare(current.name) <= 0))),
+      `${previous.name} should rank ahead of ${current.name}`,
+    );
+  }
+});
+
+test('grouping Workers house names show the top three then and N more', () => {
+  const worker = groupingWorkers().find((entry) => entry.locations.length > 3);
+  assert.ok(worker, 'expected a worker with more than three houses');
+
+  const names = [...worker.locations]
+    .sort(
+      (first, second) =>
+        second.bookingCount - first.bookingCount ||
+        first.locationName.localeCompare(second.locationName),
+    )
+    .map((location) => location.locationName);
+
+  assert.equal(
+    namedLocationList(names, 3),
+    `${names.slice(0, 3).join(', ')} and ${names.length - 3} more`,
+  );
 });
 
 test('location Workers keeps search across all three location-relative tiers', () => {

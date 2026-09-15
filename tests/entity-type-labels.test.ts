@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   LOCATIONS,
+  locationTypeSuburbLine,
   serviceTypeLabel,
 } from '../src/data/locations.ts';
 import {
@@ -14,6 +15,22 @@ import { questionById } from '../src/data/discussionQuestions.ts';
 function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
 }
+
+test('location type lines join service type and suburb with a comma', () => {
+  const deeWhy = LOCATIONS.find((location) => location.id === 'dee-why-1');
+  const forestville = LOCATIONS.find((location) => location.id === 'forestville-home');
+  assert.ok(deeWhy && forestville);
+
+  assert.equal(locationTypeSuburbLine(deeWhy), 'SIL house, Dee Why');
+  assert.equal(
+    locationTypeSuburbLine(forestville),
+    'Home and community, Forestville',
+  );
+  assert.equal(
+    locationTypeSuburbLine(deeWhy, { includeState: true }),
+    'SIL house, Dee Why, NSW',
+  );
+});
 
 test('client type labels follow sector without changing the service type', () => {
   assert.equal(

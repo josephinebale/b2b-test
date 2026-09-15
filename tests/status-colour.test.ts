@@ -12,12 +12,16 @@ function source(path: string): string {
 
 test('only a booking awaiting a decision tints its card', () => {
   const week = source('../src/pages/dashboard/BookingsWeek.tsx');
-  const tones = week.slice(week.indexOf('CARD_TONES'), week.indexOf('COLLAPSED_BOOKINGS_PER_DAY'));
+  const pageContent = source('../src/lib/pageContent.ts');
+  const tones = pageContent.slice(
+    pageContent.indexOf('export function bookingWeekCardTone'),
+    pageContent.indexOf('export function attentionCardStatusTone'),
+  );
 
-  assert.match(tones, /confirmed: 'default'/);
-  assert.match(tones, /requested: 'pending'/);
-  assert.match(tones, /ended: 'default'/);
-  assert.match(tones, /cancelled: 'pending'/);
+  assert.match(week, /bookingWeekCardTone\(booking\)/);
+  assert.match(tones, /requested.*pending/s);
+  assert.match(tones, /cancelled.*attention/s);
+  assert.match(tones, /return 'default'/);
 });
 
 test('a solid pill means a decision is waiting, a tinted pill only informs', () => {
@@ -27,6 +31,48 @@ test('a solid pill means a decision is waiting, a tinted pill only informs', () 
   assert.match(pill, /requested: 'bg-pending text-surface'/);
   assert.match(pill, /ended: 'bg-neutral-surface text-neutral'/);
   assert.match(pill, /cancelled: 'bg-pending text-surface'/);
+});
+
+test('a cancelled week card uses the attention tone and names who cancelled', () => {
+  const week = source('../src/pages/dashboard/BookingsWeek.tsx');
+  const card = week.slice(
+    week.indexOf('function BookingCard'),
+    week.indexOf('export function BookingsWeek'),
+  );
+
+  assert.match(card, /tone=\{bookingWeekCardTone\(booking\)\}/);
+  assert.match(card, /attentionCardSendLine\(booking\)/);
+  assert.match(card, /text-badge/);
+  assert.match(
+    card,
+    /booking\.status === 'cancelled'[\s\S]*attentionCardSendLine\(booking\)/,
+  );
+});
+
+test('a declined request still tints pending on the Dashboard attention calendar', () => {
+  const attention = source('../src/pages/dashboard/BookingsNeedingAttention.tsx');
+  const css = source('../src/index.css');
+
+  assert.match(attention, /tone=\{bookingWeekCardTone\(booking\)\}/);
+  assert.match(attention, /attention-grid-status-pill--pending/);
+  assert.match(attention, /attention-grid-status-pill--attention/);
+  assert.match(attention, /<Tag tone="neutral">\{inWeek\.length\}<\/Tag>/);
+  assert.doesNotMatch(attention, /<Tag tone="pending"/);
+  assert.doesNotMatch(attention, /attentionCardTone/);
+  assert.match(
+    css,
+    /\.attention-grid-status-pill--pending \{[\s\S]*?background: var\(--color-pending\);[\s\S]*?color: var\(--color-surface\);/,
+  );
+  assert.match(
+    css,
+    /\.attention-grid-status-pill--attention \{[\s\S]*?background: var\(--color-badge\);[\s\S]*?color: var\(--color-surface\);/,
+  );
+  assert.match(
+    attention,
+    /flex w-full items-center justify-center rounded px-1\.5 py-1/,
+  );
+  assert.match(attention, /<div className="mt-3">/);
+  assert.doesNotMatch(css, /\.attention-grid-status-pill \{/);
 });
 
 test('booking prices stay a neutral tag; provenance colour is jobs-only', () => {

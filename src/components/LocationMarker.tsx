@@ -20,14 +20,20 @@ const MARKER_SIZE = {
 export function LocationMarker({
   location,
   size = 'md',
+  worked = true,
 }: {
   location: Pick<Location, 'id' | 'name'>;
   size?: keyof typeof MARKER_SIZE;
+  worked?: boolean;
 }) {
+  const colour = worked
+    ? 'bg-location-surface text-location-foreground'
+    : 'bg-surface-subtle text-text-tertiary';
+
   return (
     <span
       aria-hidden="true"
-      className={`inline-flex ${MARKER_SIZE[size]} shrink-0 items-center justify-center bg-location-surface text-xs leading-none font-bold text-location-foreground`}
+      className={`inline-flex ${MARKER_SIZE[size]} shrink-0 items-center justify-center ${colour} text-xs leading-none font-bold`}
     >
       {initials(location.name)}
     </span>

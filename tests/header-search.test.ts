@@ -114,8 +114,8 @@ test('header search sits between the breadcrumb and Notifications at every node'
   assert.match(search, /title="Clients"/);
   assert.match(search, /title="Workers"/);
   assert.match(search, /title="Groupings"/);
-  assert.match(search, /serviceTypeLabel\(result\.serviceType, result\.sector\)/);
-  assert.match(search, /\{result\.suburb\}/);
+  assert.match(search, /locationTypeSuburbLine\(result\)/);
+  assert.doesNotMatch(search, /serviceTypeLabel\(result\.serviceType, result\.sector\)/);
   assert.match(search, /\{result\.totalHours\} hours at this provider/);
   assert.match(search, /groupingContentsSummary\(result\)/);
   assert.match(search, /query\.trim\(\) !== ''/);

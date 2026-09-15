@@ -1,87 +1,141 @@
+import type { MouseEvent, ReactNode } from 'react';
+import { Calendar, MessageSquare } from 'lucide-react';
 import { Avatar } from '../../components/Avatar';
 import { PinnedQuestion } from '../../components/PinnedQuestion';
+import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { EntityLink } from '../../components/ui/EntityLink';
+import { Tag } from '../../components/ui/Tag';
 import {
-  groupingWorkers,
+  descendantLocationIds,
+  groupingDashboardWorkers,
   type Grouping,
-  type WorkerAssessments,
 } from '../../data/locations';
-import { EMPTY_STATES } from '../../lib/pageContent';
+import {
+  dashboardWorkerEvidenceLine,
+  dashboardWorkerExceptionLines,
+  dashboardWorkerPrimaryLocation,
+  EMPTY_STATES,
+  workerProfilePath,
+} from '../../lib/pageContent';
+import { href } from '../../lib/router';
+import { SectionHeadingRow } from './SectionHeadingRow';
 
-function supportPlanLabel(confirmed: boolean): string {
-  return confirmed ? 'Support plan confirmed' : 'Support plan needs review';
-}
+export const GROUPING_OVERVIEW_WORKER_EXCEPTION_TAGS_VISIBLE = false;
 
-function needsAttentionClass(needsAttention: boolean): string {
-  return needsAttention ? 'font-medium text-text' : 'text-text-tertiary';
-}
+const WORKERS_PREVIEW = 6;
 
-function assessmentSummary(assessments: WorkerAssessments) {
+function WorkerExceptionTags({ lines }: { lines: string[] }) {
+  if (lines.length === 0) return null;
+
   return (
-    <>
-      <span className={needsAttentionClass(!assessments.medication)}>
-        Medication assessment {assessments.medication ? 'current' : 'not current'}
-      </span>
-      <span aria-hidden="true" className="text-text-tertiary">·</span>
-      <span className={needsAttentionClass(!assessments.driving)}>
-        Driving assessment {assessments.driving ? 'current' : 'not current'}
-      </span>
-    </>
+    <div className="mt-2 flex flex-wrap gap-2">
+      {lines.map((line) => (
+        <Tag key={line} tone="pending">
+          {line}
+        </Tag>
+      ))}
+    </div>
   );
 }
 
-export function WorkersPanel({ grouping }: { grouping: Grouping }) {
-  const workers = groupingWorkers(grouping.id);
+export function WorkersPanel({
+  grouping,
+  extraQuestion,
+  preview = false,
+  onSelectLocation,
+}: {
+  grouping: Grouping;
+  extraQuestion?: ReactNode;
+  preview?: boolean;
+  onSelectLocation?: (locationId: string, path?: string) => void;
+}) {
+  const workers = groupingDashboardWorkers(grouping.id);
+  const visible = preview ? workers.slice(0, WORKERS_PREVIEW) : workers;
+  const locationOrder = descendantLocationIds(grouping);
 
   return (
     <section>
-      <div className="flex items-center gap-2">
-        <h2 className="text-md font-bold text-text">Workers used regularly</h2>
-        <PinnedQuestion questionId="workers-grouping-order" />
-      </div>
-      <p className="mt-1 text-sm text-text-secondary">
-        Ranked by completed shifts, then locations worked.
-      </p>
+      <SectionHeadingRow
+        title={
+          <span className="flex min-w-0 items-center gap-2">
+            <span>Recently booked workers</span>
+            <PinnedQuestion questionId="workers-grouping-order" />
+            {extraQuestion}
+          </span>
+        }
+        aside={
+          <a href={href('/workers')} className="ui-link text-sm">
+            View all
+          </a>
+        }
+      />
 
       {workers.length === 0 ? (
-        <Card className="mt-3 p-4">
-          <p className="text-lg font-bold text-text">
+        <Card>
+          <p className="ui-inset-row text-sm font-bold text-text">
             {EMPTY_STATES.dashboardWorkers.title}
-          </p>
-          <p className="mt-1 max-w-content text-sm text-text-secondary">
-            {EMPTY_STATES.dashboardWorkers.description}
           </p>
         </Card>
       ) : (
-        <Card as="ul" divided className="mt-3">
-          {workers.map((worker) => (
-            <li
-              key={worker.id}
-              className="ui-inset-row flex items-center gap-3"
-            >
-              <Avatar name={worker.name} size="md" />
-              <div className="min-w-0 flex-1">
-                <EntityLink as="span">{worker.name}</EntityLink>
-                <p className="mt-1 text-sm text-text-secondary">
-                  {worker.totalHours} hours at this provider · {worker.shiftCount}{' '}
-                  shifts across {worker.locations.length} locations:{' '}
-                  {worker.locations
-                    .map((location) => location.locationName)
-                    .join(', ')}
-                </p>
-                <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs">
-                  <span
-                    className={needsAttentionClass(!worker.planConfirmed)}
-                  >
-                    {supportPlanLabel(worker.planConfirmed)}
-                  </span>
-                  <span aria-hidden="true" className="text-text-tertiary">·</span>
-                  {assessmentSummary(worker.assessments)}
-                </p>
+        <Card divided>
+          {visible.map((worker) => {
+            const primaryLocationId = dashboardWorkerPrimaryLocation(
+              worker,
+              locationOrder,
+            );
+            const exceptions = dashboardWorkerExceptionLines(worker);
+
+            return (
+              <div key={worker.id} className="ui-inset-card">
+                <div className="flex items-center gap-3">
+                  <Avatar name={worker.name} size="md" />
+                  <div className="min-w-0 flex-1">
+                    <EntityLink href={href(workerProfilePath(worker.id))}>
+                      {worker.name}
+                    </EntityLink>
+                    <p className="mt-1 text-xs text-text-tertiary">
+                      {dashboardWorkerEvidenceLine(worker)}
+                    </p>
+                  </div>
+                </div>
+                {GROUPING_OVERVIEW_WORKER_EXCEPTION_TAGS_VISIBLE ? (
+                  <WorkerExceptionTags lines={exceptions} />
+                ) : null}
+                {primaryLocationId && (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Button
+                      href={href('/messages')}
+                      size="small"
+                      variant="secondary"
+                      onClick={(event: MouseEvent) => {
+                        event.preventDefault();
+                        onSelectLocation?.(primaryLocationId, '/messages');
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4" aria-hidden />
+                      Message
+                    </Button>
+                    <Button
+                      href={href('/request-booking')}
+                      size="small"
+                      variant="secondary"
+                      onClick={(event: MouseEvent) => {
+                        event.preventDefault();
+                        onSelectLocation?.(
+                          primaryLocationId,
+                          '/request-booking',
+                        );
+                      }}
+                    >
+                      <Calendar className="h-4 w-4" aria-hidden />
+                      Book
+                    </Button>
+                  </div>
+                )}
               </div>
-            </li>
-          ))}
+            );
+          })}
         </Card>
       )}
     </section>

@@ -25,6 +25,7 @@ import {
   EMPTY_STATES,
   WORKERS_ROUTE,
   bookingActionItems,
+  bookingWeekCardTone,
   bookingsViewPath,
   workerProfilePath,
   type BookingViewId,
@@ -145,7 +146,11 @@ function BookingCard({
       : href('/bookings');
 
   return (
-    <Card as="article" className="ui-inset-card ui-target-row">
+    <Card
+      as="article"
+      tone={bookingWeekCardTone(booking)}
+      className="ui-inset-card ui-target-row"
+    >
       <h3>
         <a href={detailHref} className="ui-target-row__link">
           {bookingTitle(booking)}

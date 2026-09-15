@@ -15,12 +15,13 @@ import {
   type Grouping,
   type Location,
 } from '../data/locations';
+import { groupingChildListTabLabel } from '../data/locations';
 import {
-  NODE_NAV_ITEMS,
   PERSONAS,
   ROUTES,
   VISIBLE_ORGANISATIONS,
   treeSectionLabel,
+  visibleMainNavItems,
   type NavigationNodeType,
   type Organisation,
   type Persona,
@@ -71,19 +72,17 @@ function NodePages({
   grouping: Grouping;
   location?: Location;
 }) {
-  const pages = NODE_NAV_ITEMS.filter(
-    (item) =>
-      item.placement === 'main' &&
-      item.nodeTypes.some((itemNodeType) => itemNodeType === nodeType),
-  );
+  const pages = visibleMainNavItems(nodeType, grouping);
 
   return (
     <div className="flex flex-wrap gap-2">
       {pages.map((page) => {
         const label =
-          page.path === '/supportables'
+          page.path === '/supportables' && nodeType === 'organisation'
             ? treeSectionLabel(grouping, nodeType)
-            : page.path === ROUTES.manageLocation &&
+            : page.path === '/supportables' && nodeType === 'grouping'
+              ? groupingChildListTabLabel(grouping)
+              : page.path === ROUTES.manageLocation &&
                 location?.serviceType === 'home-community'
               ? `${location.name} settings`
               : page.label;

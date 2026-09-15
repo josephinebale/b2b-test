@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   avatarToken,
@@ -7,6 +8,10 @@ import {
   iconButtonClasses,
   tagClasses,
 } from '../src/components/ui/classes.ts';
+
+function source(path: string): string {
+  return readFileSync(new URL(path, import.meta.url), 'utf8');
+}
 
 test('Button classes expose every supported variant and size', () => {
   assert.match(buttonClasses('primary', 'default'), /ui-button--primary/);
@@ -34,6 +39,13 @@ test('Tag exposes the tones the product labels use', () => {
   assert.equal(tagClasses('success'), 'ui-tag ui-tag--success');
   assert.equal(tagClasses('validated'), 'ui-tag ui-tag--validated');
   assert.equal(tagClasses('pending'), 'ui-tag ui-tag--pending');
+  assert.equal(tagClasses('attention'), 'ui-tag ui-tag--attention');
+  const css = source('../src/index.css');
+  assert.match(css, /\.ui-tag--attention \{/);
+  assert.match(css, /color: var\(--color-badge\)/);
+  assert.match(css, /color-mix\([^)]*var\(--color-badge\)/);
+  assert.match(css, /\.attention-grid-status-pill--pending \{/);
+  assert.match(css, /\.attention-grid-status-pill--attention \{/);
 });
 
 test('Avatar names map to exactly three token values', () => {

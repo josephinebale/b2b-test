@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import {
   fatigueSignalForBooking,
@@ -13,7 +13,12 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { IconButton } from '../../components/ui/IconButton';
 import { Tag } from '../../components/ui/Tag';
-import { bookingDetailPath, EMPTY_STATES } from '../../lib/pageContent';
+import {
+  attentionCardSendLine,
+  bookingDetailPath,
+  bookingWeekCardTone,
+  EMPTY_STATES,
+} from '../../lib/pageContent';
 import { href } from '../../lib/router';
 import {
   addDays,
@@ -25,19 +30,147 @@ import {
   weekdayShort,
 } from '../../lib/date';
 
-/* Confirmed is the norm and ended is history, so neither earns a tint. Only a
-   booking waiting on a decision colours its card. */
-const CARD_TONES: Record<Booking['status'], 'default' | 'pending'> = {
-  confirmed: 'default',
-  requested: 'pending',
-  ended: 'default',
-  cancelled: 'pending',
-};
-
-const COLLAPSED_BOOKINGS_PER_DAY = 4;
+export const COLLAPSED_BOOKINGS_PER_DAY = 4;
 
 function plural(count: number, singular: string, pluralForm: string): string {
   return count === 1 ? singular : pluralForm;
+}
+
+export function WeekScheduleControls({
+  onToday,
+  onPrevious,
+  onNext,
+}: {
+  onToday: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      <Button type="button" onClick={onToday}>
+        Today
+      </Button>
+      <IconButton
+        type="button"
+        onClick={onPrevious}
+        className="ui-tooltip"
+        aria-label="Previous week"
+        data-tooltip="Previous week"
+      >
+        <ChevronLeft className="h-5 w-5" />
+      </IconButton>
+      <IconButton
+        type="button"
+        onClick={onNext}
+        className="ui-tooltip"
+        aria-label="Next week"
+        data-tooltip="Next week"
+      >
+        <ChevronRight className="h-5 w-5" />
+      </IconButton>
+    </div>
+  );
+}
+
+export function WeekScheduleGrid<T extends { id: string }>({
+  days,
+  today,
+  bookingsByDay,
+  gridId,
+  expanded,
+  onToggleExpanded,
+  hiddenBookingCount,
+  emptyDayLabel,
+  emptyDayClassName = '',
+  renderCard,
+  stretchColumns = true,
+}: {
+  days: Date[];
+  today: Date;
+  bookingsByDay: T[][];
+  gridId: string;
+  expanded: boolean;
+  onToggleExpanded: () => void;
+  hiddenBookingCount: number;
+  emptyDayLabel: string;
+  emptyDayClassName?: string;
+  renderCard: (booking: T) => ReactNode;
+  stretchColumns?: boolean;
+}) {
+  return (
+    <>
+      <div className="booking-week-scroll">
+        <div className="booking-week-grid">
+          {days.map((day) => {
+            const isToday = isSameDay(day, today);
+            return (
+              <div
+                key={day.toISOString()}
+                className={`ui-inset-compact border-t-2 border-b border-l border-border-subtle first:border-l-0 ${
+                  isToday ? 'border-t-brand' : 'border-t-transparent'
+                }`}
+              >
+                <p
+                  className={`text-xs ${isToday ? 'font-bold text-text' : 'text-text-strong'}`}
+                >
+                  {isToday ? 'Today' : weekdayShort(day)}
+                </p>
+                <p className="text-sm font-bold text-text">{day.getDate()}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        <div
+          id={gridId}
+          className={`booking-week-grid${stretchColumns ? ' booking-grid' : ''}`}
+        >
+          {days.map((day, index) => {
+            const dayBookings = bookingsByDay[index];
+            const visibleDayBookings = expanded
+              ? dayBookings
+              : dayBookings.slice(0, COLLAPSED_BOOKINGS_PER_DAY);
+            return (
+              <div
+                key={day.toISOString()}
+                className="ui-inset-compact space-y-2 border-l border-border-subtle first:border-l-0"
+              >
+                {dayBookings.length === 0 ? (
+                  <p
+                    className={`ui-inset-compact border border-transparent text-xs text-text-tertiary ${emptyDayClassName}`.trim()}
+                  >
+                    {emptyDayLabel}
+                  </p>
+                ) : (
+                  visibleDayBookings.map((booking) => (
+                    <div key={booking.id}>{renderCard(booking)}</div>
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {hiddenBookingCount > 0 && (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={gridId}
+          onClick={onToggleExpanded}
+          className="ui-link ui-link--flush flex w-full items-center justify-center gap-1 border-t border-border-subtle px-4 py-3 text-sm font-medium"
+        >
+          {expanded
+            ? 'Show less'
+            : `${hiddenBookingCount} more ${plural(hiddenBookingCount, 'booking', 'bookings')}`}
+          {expanded ? (
+            <ChevronUp className="h-5 w-5" />
+          ) : (
+            <ChevronDown className="h-5 w-5" />
+          )}
+        </button>
+      )}
+    </>
+  );
 }
 
 function BookingCard({
@@ -65,7 +198,7 @@ function BookingCard({
       className="ui-linked-surface"
     >
       <Card
-        tone={CARD_TONES[booking.status]}
+        tone={bookingWeekCardTone(booking)}
         className="ui-inset-compact !rounded-sm"
       >
         <p className="text-xs text-text">
@@ -90,9 +223,15 @@ function BookingCard({
             {fatigueSignalLabel(fatigueSignal)}
           </p>
         )}
-        <div className="mt-3">
-          <StatusPill status={booking.status} />
-        </div>
+        {booking.status === 'cancelled' ? (
+          <p className="mt-3 text-xs font-bold text-badge break-words">
+            {attentionCardSendLine(booking)}
+          </p>
+        ) : (
+          <div className="mt-3">
+            <StatusPill status={booking.status} />
+          </div>
+        )}
       </Card>
     </a>
   );
@@ -138,68 +277,23 @@ export function BookingsWeek({
           </p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <Button
-            type="button"
-            onClick={() => {
-              setWeekOffset(0);
-              setExpanded(false);
-            }}
-            size="small"
-          >
-            Today
-          </Button>
-          <IconButton
-            type="button"
-            size="small"
-            onClick={() => {
-              setWeekOffset((value) => value - 1);
-              setExpanded(false);
-            }}
-            className="ui-tooltip"
-            aria-label="Previous week"
-            data-tooltip="Previous week"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </IconButton>
-          <IconButton
-            type="button"
-            size="small"
-            onClick={() => {
-              setWeekOffset((value) => value + 1);
-              setExpanded(false);
-            }}
-            className="ui-tooltip"
-            aria-label="Next week"
-            data-tooltip="Next week"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </IconButton>
-        </div>
+        <WeekScheduleControls
+          onToday={() => {
+            setWeekOffset(0);
+            setExpanded(false);
+          }}
+          onPrevious={() => {
+            setWeekOffset((value) => value - 1);
+            setExpanded(false);
+          }}
+          onNext={() => {
+            setWeekOffset((value) => value + 1);
+            setExpanded(false);
+          }}
+        />
       </div>
 
       <Card>
-        <div className="grid grid-cols-7">
-          {days.map((day) => {
-            const isToday = isSameDay(day, today);
-            return (
-              <div
-                key={day.toISOString()}
-                className={`ui-inset-compact border-t-2 border-b border-l border-border-subtle first:border-l-0 ${
-                  isToday ? 'border-t-brand' : 'border-t-transparent'
-                }`}
-              >
-                <p
-                  className={`text-xs ${isToday ? 'font-bold text-text' : 'text-text-strong'}`}
-                >
-                  {isToday ? 'Today' : weekdayShort(day)}
-                </p>
-                <p className="text-sm font-bold text-text">{day.getDate()}</p>
-              </div>
-            );
-          })}
-        </div>
-
         {inWeek.length === 0 ? (
           <div className="px-4 py-10 text-center">
             <p className="text-lg font-bold text-text">
@@ -210,60 +304,25 @@ export function BookingsWeek({
             </p>
           </div>
         ) : (
-          <>
-            <div id="bookings-week-grid" className="grid booking-grid grid-cols-7">
-            {days.map((day, index) => {
-              const dayBookings = bookingsByDay[index];
-              const visibleDayBookings = expanded
-                ? dayBookings
-                : dayBookings.slice(0, COLLAPSED_BOOKINGS_PER_DAY);
-              return (
-                <div
-                  key={day.toISOString()}
-                  className="ui-inset-compact space-y-2 border-l border-border-subtle first:border-l-0"
-                >
-                  {dayBookings.length === 0 ? (
-                    /* Carries the card's own box — 1px border plus the compact
-                       inset — so the label sits on the line a card's first line
-                       of text would occupy, rather than above every neighbour. */
-                    <p className="ui-inset-compact border border-transparent text-center text-xs text-text-tertiary">
-                      No bookings
-                    </p>
-                  ) : (
-                    visibleDayBookings.map((booking) => (
-                      <BookingCard
-                        key={booking.id}
-                        booking={booking}
-                        suburb={data.location.suburb}
-                        state={data.location.state}
-                        location={data.location}
-                        calendarBookings={calendarBookings}
-                      />
-                    ))
-                  )}
-                </div>
-              );
-            })}
-            </div>
-            {hiddenBookingCount > 0 && (
-              <button
-                type="button"
-                aria-expanded={expanded}
-                aria-controls="bookings-week-grid"
-                onClick={() => setExpanded((value) => !value)}
-                className="ui-link ui-link--flush flex w-full items-center justify-center gap-1 border-t border-border-subtle px-4 py-3 text-sm font-medium"
-              >
-                {expanded
-                  ? 'Show less'
-                  : `${hiddenBookingCount} more ${plural(hiddenBookingCount, 'booking', 'bookings')}`}
-                {expanded ? (
-                  <ChevronUp className="h-5 w-5" />
-                ) : (
-                  <ChevronDown className="h-5 w-5" />
-                )}
-              </button>
+          <WeekScheduleGrid
+            days={days}
+            today={today}
+            bookingsByDay={bookingsByDay}
+            gridId="bookings-week-grid"
+            expanded={expanded}
+            onToggleExpanded={() => setExpanded((value) => !value)}
+            hiddenBookingCount={hiddenBookingCount}
+            emptyDayLabel="No bookings"
+            renderCard={(booking) => (
+              <BookingCard
+                booking={booking}
+                suburb={data.location.suburb}
+                state={data.location.state}
+                location={data.location}
+                calendarBookings={calendarBookings}
+              />
             )}
-          </>
+          />
         )}
       </Card>
     </section>

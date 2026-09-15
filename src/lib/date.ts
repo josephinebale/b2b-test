@@ -1,4 +1,13 @@
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS_LONG = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 
 const MONTHS = [
   'January',
@@ -46,12 +55,26 @@ export function weekdayShort(date: Date): string {
   return WEEKDAYS[date.getDay()];
 }
 
+export function weekdayLong(date: Date): string {
+  return WEEKDAYS_LONG[date.getDay()];
+}
+
 export function formatTime(date: Date): string {
   const hours = date.getHours();
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const suffix = hours < 12 ? 'am' : 'pm';
   const twelveHour = hours % 12 === 0 ? 12 : hours % 12;
   return `${twelveHour}:${minutes}${suffix}`;
+}
+
+/** Clock time without :00, so a shift reads “10pm to 7am”. */
+export function formatShiftClock(date: Date): string {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const suffix = hours < 12 ? 'am' : 'pm';
+  const twelveHour = hours % 12 === 0 ? 12 : hours % 12;
+  if (minutes === 0) return `${twelveHour}${suffix}`;
+  return `${twelveHour}:${String(minutes).padStart(2, '0')}${suffix}`;
 }
 
 export function formatWeekRange(start: Date, end: Date): string {

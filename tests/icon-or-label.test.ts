@@ -27,7 +27,7 @@ test('Messages sits in location section navigation with an inline badge like Boo
     navigation,
     /label: 'Messages',[\s\S]*?path: '\/messages',[\s\S]*?nodeTypes: \['location'\],[\s\S]*?placement: 'main'/,
   );
-  assert.match(header, /NODE_NAV_ITEMS\.filter/);
+  assert.match(header, /visibleMainNavItems\(nodeType, grouping\)/);
   assert.match(header, /<span>\{visibleLabel\}<\/span>/);
   assert.match(header, /item\.label === 'Bookings'\s*\? bookingsBadge/);
   assert.match(header, /item\.label === 'Messages'\s*\? unreadMessages/);
@@ -164,8 +164,8 @@ test('icon size is paired to button size so the inset stays even', () => {
   const workers = source('../src/pages/Workers.tsx');
   const messages = source('../src/pages/Messages.tsx');
 
-  assert.match(week, /<ChevronLeft className="h-4 w-4" \/>/);
-  assert.match(week, /<ChevronRight className="h-4 w-4" \/>/);
+  assert.match(week, /<ChevronLeft className="h-5 w-5" \/>/);
+  assert.match(week, /<ChevronRight className="h-5 w-5" \/>/);
   assert.match(messages, /<MoreHorizontal className="h-4 w-4" \/>/);
 
   // The repeated worker-row actions take the same 32px control as the week arrows.
@@ -205,8 +205,24 @@ test('location worker rows keep actions on the avatar line, aligned right', () =
   assert.equal(row.match(/size="small"/g)?.length, 2);
 });
 
-test('grouping dashboard worker rows remain oversight without row actions', () => {
+test('grouping dashboard worker rows carry labelled actions beneath the detail lines', () => {
   const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
+  const row = panel.slice(
+    panel.indexOf('<div key={worker.id}'),
+    panel.indexOf('</div>\n            );'),
+  );
 
-  assert.doesNotMatch(panel, /IconButton|MessageSquare|Calendar|ui-target-row__action/);
+  assert.match(row, /flex items-center gap-3/);
+  assert.match(row, /text-xs text-text-tertiary/);
+  assert.match(row, /mt-3 flex flex-wrap items-center gap-2/);
+  assert.doesNotMatch(row, /IconButton/);
+  assert.equal(row.match(/size="small"/g)?.length, 2);
+  assert.equal(row.match(/variant="secondary"/g)?.length, 2);
+  assert.match(row, /<MessageSquare className="h-4 w-4" aria-hidden \/>/);
+  assert.match(row, />\s*Message\s*</);
+  assert.match(row, /<Calendar className="h-4 w-4" aria-hidden \/>/);
+  assert.match(row, />\s*Book\s*</);
+  assert.match(panel, /dashboardWorkerPrimaryLocation/);
+  assert.match(panel, /onSelectLocation\?\.\(primaryLocationId, '\/messages'\)/);
+  assert.match(panel, /onSelectLocation\?\.\(\s*primaryLocationId,\s*'\/request-booking',/);
 });

@@ -125,6 +125,171 @@ test('the five rail-content surfaces share column width, alignment, and the 16px
   assert.doesNotMatch(messages, /ui-rail-stack/);
 });
 
+test('the grouping Overview leads with a full-width unfilled shifts calendar', () => {
+  const dashboard = source('../src/pages/Dashboard.tsx');
+  const attention = source('../src/pages/dashboard/BookingsNeedingAttention.tsx');
+  const workers = source('../src/pages/dashboard/WorkersPanel.tsx');
+  const houses = source('../src/pages/dashboard/HousesAndCentresPanel.tsx');
+  const layout = dashboard.slice(
+    dashboard.indexOf('<div className="layout-content-aside">'),
+    dashboard.indexOf('</div>\n        </>'),
+  );
+
+  assert.match(dashboard, /groupingOverviewHeading\(grouping\.name\)/);
+  assert.match(dashboard, /layout-content-aside/);
+  assert.match(dashboard, /flex min-w-0 flex-col gap-8/);
+  assert.match(houses, /flex flex-col gap-8/);
+  assert.doesNotMatch(
+    dashboard.slice(
+      dashboard.indexOf('<div className="layout-content-aside">'),
+      dashboard.indexOf('</div>\n        </>'),
+    ),
+    /width-main-column/,
+  );
+  assert.match(dashboard, /<BookingsNeedingAttention/);
+  assert.match(attention, />Unfilled shifts:</);
+  assert.match(attention, /<SectionHeadingRow/);
+  assert.match(attention, /flex items-center gap-2/);
+  assert.match(attention, /WeekScheduleGrid/);
+  assert.match(attention, /attentionCardSendLine/);
+  assert.match(attention, /formatTime\(booking\.start\)/);
+  assert.match(attention, /booking\.locationName/);
+  assert.match(
+    attention,
+    /supportingLine="Times are displayed in the local time of the booking\."/,
+  );
+  assert.match(
+    attention,
+    /Times are displayed in the local time of the booking\./,
+  );
+  assert.doesNotMatch(attention, /<Clock /);
+  assert.match(attention, /<Tag tone="neutral">\{inWeek\.length\}<\/Tag>/);
+  assert.match(attention, /Nothing waiting/);
+  assert.match(attention, /emptyDayClassName="text-center"/);
+  assert.doesNotMatch(attention, /bookingParticipantSummary/);
+  assert.match(attention, /tone=\{bookingWeekCardTone\(booking\)\}/);
+  assert.doesNotMatch(attention, /attentionCardTone/);
+  assert.match(attention, /attention-grid-status-pill--pending/);
+  assert.match(attention, /attention-grid-status-pill--attention/);
+  assert.match(
+    attention,
+    /flex w-full items-center justify-center rounded px-1\.5 py-1/,
+  );
+  assert.doesNotMatch(attention, /<Tag tone="pending"/);
+  assert.doesNotMatch(attention, /<StatusPill/);
+  assert.match(source('../src/lib/pageContent.ts'), /cancelledBy/);
+  assert.doesNotMatch(attention, /Confirmed shifts are not shown here/);
+  assert.doesNotMatch(attention, /stretchColumns=\{false\}/);
+  assert.match(attention, /GROUPING_ATTENTION_GRID_LOCATION_THRESHOLD/);
+
+  const week = source('../src/pages/dashboard/BookingsWeek.tsx');
+  assert.match(week, /bookingWeekCardTone\(booking\)/);
+  assert.match(week, /attentionCardSendLine\(booking\)/);
+
+  const bookings = source('../src/pages/Bookings.tsx');
+  assert.match(bookings, /tone=\{bookingWeekCardTone\(booking\)\}/);
+  assert.match(workers, /Recently booked workers/);
+  assert.match(workers, /<SectionHeadingRow/);
+  assert.match(workers, /View all/);
+  assert.doesNotMatch(workers, /View more workers/);
+  assert.doesNotMatch(workers, /View workers/);
+  assert.doesNotMatch(workers, /See all workers/);
+  assert.doesNotMatch(
+    workers,
+    /Everyone who&apos;s had a shift in the region in the last eight weeks\./,
+  );
+  assert.match(
+    workers,
+    /export const GROUPING_OVERVIEW_WORKER_EXCEPTION_TAGS_VISIBLE = false/,
+  );
+  assert.match(workers, /dashboardWorkerEvidenceLine/);
+  assert.match(workers, /dashboardWorkerPrimaryLocation/);
+  assert.match(workers, /flex items-center gap-3/);
+  assert.match(workers, /min-w-0 flex-1/);
+  assert.match(workers, /mt-1 text-xs text-text-tertiary/);
+  assert.match(workers, /mt-2 flex flex-wrap gap-2/);
+  assert.match(workers, /<Tag[\s\S]*tone="pending"/);
+  assert.doesNotMatch(workers, /lines\.join/);
+  assert.match(workers, /mt-3 flex flex-wrap items-center gap-2/);
+  assert.match(workers, /variant="secondary"/);
+  assert.match(workers, /MessageSquare/);
+  assert.match(workers, /Calendar/);
+  assert.match(workers, />\s*Message\s*</);
+  assert.match(workers, />\s*Book\s*</);
+  assert.doesNotMatch(workers, /IconButton/);
+  assert.match(
+    workers,
+    /GROUPING_OVERVIEW_WORKER_EXCEPTION_TAGS_VISIBLE \? \([\s\S]*<WorkerExceptionTags/,
+  );
+  assert.match(workers, /WorkerExceptionTags/);
+  assert.match(workers, /onSelectLocation\?\.\(primaryLocationId, '\/messages'\)/);
+  assert.match(workers, /onSelectLocation\?\.\(\s*primaryLocationId,\s*'\/request-booking',/);
+  assert.match(workers, /className="ui-inset-card"/);
+  assert.match(workers, /groupingDashboardWorkers/);
+  assert.match(workers, /workers\.slice\(0, WORKERS_PREVIEW\)/);
+  assert.match(dashboard, /HousesAndCentresPanel/);
+  assert.match(dashboard, /<aside>[\s\S]*<WorkersPanel/);
+  assert.match(
+    layout,
+    /<BookingsNeedingAttention[\s\S]*<HousesAndCentresPanel/,
+  );
+  assert.doesNotMatch(
+    layout.slice(0, layout.indexOf('<aside>')),
+    /WorkersPanel/,
+  );
+  assert.doesNotMatch(dashboard, />Tasks</);
+  assert.doesNotMatch(dashboard, /<Badge/);
+  assert.match(houses, /waitingRequestsForLocation/);
+  assert.match(houses, /futureCancelledBookings/);
+  assert.match(houses, /dashboardHouseRowPendingLinks/);
+  assert.doesNotMatch(houses, /dashboardAsidePendingLinks/);
+  assert.match(houses, /mt-2 flex flex-wrap gap-x-3 gap-y-1/);
+  assert.doesNotMatch(houses, /font-medium text-text-strong/);
+  assert.match(houses, /\{item\.count\} \{item\.label\}/);
+  assert.match(houses, /groupingPlaceBasedLabel/);
+  assert.match(houses, /title=\{groupingPlaceBasedLabel\(housesAndCentres\)\}/);
+  assert.match(houses, /title="Clients"/);
+  assert.match(houses, /<SectionHeadingRow/);
+  assert.match(houses, /GroupingLocationSortControl/);
+  assert.match(houses, /groupingHousesAndCentresCountLine\(grouping\)/);
+  assert.match(houses, /groupingClientsCountLine\(grouping\)/);
+  assert.doesNotMatch(houses, /groupingDirectChildrenCountLine/);
+  assert.match(
+    source('../src/pages/dashboard/SectionHeadingRow.tsx'),
+    /Sort by/,
+  );
+  const sectionHeadingRow = source('../src/pages/dashboard/SectionHeadingRow.tsx');
+  assert.match(sectionHeadingRow, /relative block w-full max-w-xs min-w-0/);
+  assert.match(sectionHeadingRow, />Soonest shift</);
+  assert.match(sectionHeadingRow, />Most outstanding tasks</);
+  assert.match(sectionHeadingRow, />Name A to Z</);
+  assert.match(
+    sectionHeadingRow,
+    /ariaLabel = 'Sort houses and centres'/,
+  );
+  assert.match(sectionHeadingRow, /aria-label=\{ariaLabel\}/);
+  assert.match(
+    sectionHeadingRow,
+    /h-9 w-full appearance-none rounded-sm border border-border bg-surface px-2 pr-8 text-sm font-normal text-text/,
+  );
+  assert.match(sectionHeadingRow, /ChevronDown/);
+  assert.match(sectionHeadingRow, /h-4 w-4/);
+  assert.doesNotMatch(houses, /Sort by: Soonest shift/);
+  assert.doesNotMatch(houses, /SortSelect/);
+  assert.match(houses, /sortDashboardAsideLocations/);
+  assert.match(houses, /housesSortOption/);
+  assert.match(houses, /clientsSortOption/);
+  assert.match(houses, /useState<DashboardAsideSort>\('soonest-shift'\)/);
+  assert.match(houses, /showSort=\{housesAndCentres\.length >= 2\}/);
+  assert.match(houses, /showSort=\{clients\.length >= 2\}/);
+  assert.match(houses, /sortAriaLabel="Sort clients"/);
+  assert.doesNotMatch(houses, /showLocationSort/);
+  assert.doesNotMatch(houses, /flex justify-end/);
+  assert.match(houses, /groupingDashboardChildren/);
+  assert.match(houses, /See all/);
+  assert.doesNotMatch(houses, /pendingWorkParts\(/);
+});
+
 test('booking detail sections use one 24px gap without a redundant divider', () => {
   const request = source('../src/pages/BookingRequest.tsx');
   const supportDetails = request.slice(

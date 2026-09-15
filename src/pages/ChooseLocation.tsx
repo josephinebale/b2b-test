@@ -1,5 +1,5 @@
 import { ChevronRight } from 'lucide-react';
-import { serviceTypeLabel, type Location } from '../data/locations';
+import { locationTypeSuburbLine, type Location } from '../data/locations';
 import { AppFooter } from '../components/AppFooter';
 import { LocationMarker } from '../components/LocationMarker';
 import { Logo } from '../components/Logo';
@@ -41,7 +41,7 @@ export function ChooseLocation({
             <span className="min-w-0 flex-1">
               <EntityLink as="span" className="block">{location.name}</EntityLink>
               <span className="block text-sm text-text-secondary">
-                {serviceTypeLabel(location.serviceType, location.sector)} · {location.suburb}, {location.state}
+                {locationTypeSuburbLine(location, { includeState: true })}
               </span>
             </span>
               <ChevronRight className="h-5 w-5 shrink-0 text-text-tertiary" />

@@ -150,10 +150,15 @@ test('addressed jobs match what the current flags leave reachable', async () => 
   const { JOBS_TO_BE_DONE } = await import('../src/data/jobsToBeDone.ts');
   const placeholder = source('../src/components/LandingPlaceholder.tsx');
   const search = source('../src/components/HeaderSearch.tsx');
+  const workersPanel = source('../src/pages/dashboard/WorkersPanel.tsx');
   const project = source('../PROJECT.md');
 
   assert.match(placeholder, /export const LANDING_CONTENT_ENABLED = false/);
   assert.match(search, /export const HEADER_SEARCH_VISIBLE = false/);
+  assert.match(
+    workersPanel,
+    /export const GROUPING_OVERVIEW_WORKER_EXCEPTION_TAGS_VISIBLE = false/,
+  );
   assert.ok(
     JOBS_TO_BE_DONE.every((job) => typeof job.previousResolvesAt === 'string'),
   );

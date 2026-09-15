@@ -1,13 +1,14 @@
 import { Fragment, useEffect, useRef } from 'react';
 import { Bell, ChevronDown } from 'lucide-react';
 import type { Grouping, Location } from '../data/locations';
+import { groupingChildListTabLabel } from '../data/locations';
 import {
-  NODE_NAV_ITEMS,
   NOTIFICATIONS_NODE_ITEM,
   PERSONAL_MENU_ITEMS,
   ROUTES,
   nodeLandingPath,
   treeSectionLabel,
+  visibleMainNavItems,
   type Persona,
 } from '../lib/informationArchitecture';
 import { BOOKING_DETAIL_ROUTE } from '../lib/pageContent';
@@ -72,11 +73,7 @@ export function AppHeader({
     LANDING_CONTENT_ENABLED ? unreadNotifications : 0,
   );
   const accountName = accountAccessibleName(persona.name);
-  const visibleNavItems = NODE_NAV_ITEMS.filter(
-    (item) =>
-      item.placement === 'main' &&
-      item.nodeTypes.some((itemNodeType) => itemNodeType === nodeType),
-  );
+  const visibleNavItems = visibleMainNavItems(nodeType, grouping);
   const navPath = nodeType === 'location' && path === '/' ? '/bookings' : path;
 
   return (
@@ -88,11 +85,13 @@ export function AppHeader({
         >
           <div className="flex min-w-0 flex-1 items-center gap-6">
             <a
-              href={href(nodeLandingPath(nodeType))}
+              href={href(nodeLandingPath(nodeType, grouping))}
               aria-label={
                 nodeType === 'location'
                   ? 'Hireup for Providers bookings'
-                  : `Hireup for Providers ${treeSectionLabel(grouping, nodeType).toLowerCase()}`
+                  : nodeType === 'organisation'
+                    ? `Hireup for Providers ${treeSectionLabel(grouping, nodeType).toLowerCase()}`
+                    : 'Hireup for Providers dashboard'
               }
               className="shrink-0 rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
@@ -218,9 +217,11 @@ export function AppHeader({
           <nav className="flex h-full w-max items-stretch" aria-label="Main">
             {visibleNavItems.map((item) => {
               const visibleLabel =
-                item.path === '/supportables'
+                item.path === '/supportables' && nodeType === 'organisation'
                   ? treeSectionLabel(grouping, nodeType)
-                  : item.path === ROUTES.manageLocation &&
+                  : item.path === '/supportables' && nodeType === 'grouping'
+                    ? groupingChildListTabLabel(grouping)
+                    : item.path === ROUTES.manageLocation &&
                       location?.serviceType === 'home-community'
                     ? `${location.name} settings`
                     : item.label;

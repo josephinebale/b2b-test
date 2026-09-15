@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Calendar, MessageSquare } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import {
+  GROUPING_WORKERS_CONTENT_ENABLED,
   LANDING_CONTENT_ENABLED,
   LandingPlaceholder,
 } from '../components/LandingPlaceholder';
@@ -18,6 +19,7 @@ import {
   type LocationData,
   type WorkerAssessments,
 } from '../data/locations';
+import { GroupingWorkersTable } from './GroupingWorkersTable';
 import { EMPTY_STATES, workerProfilePath } from '../lib/pageContent';
 import { href } from '../lib/router';
 
@@ -162,7 +164,20 @@ export function Workers({
 }) {
   const [query, setQuery] = useState('');
 
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="width-main-column">
+        {LANDING_CONTENT_ENABLED || GROUPING_WORKERS_CONTENT_ENABLED ? (
+          <>
+            <PageHeading title="Workers" />
+            <GroupingWorkersTable grouping={grouping} />
+          </>
+        ) : (
+          <LandingPlaceholder />
+        )}
+      </div>
+    );
+  }
 
   const client = data.location.serviceType === 'home-community';
   const tiers = locationWorkerTiers(data.location.id, grouping.id);

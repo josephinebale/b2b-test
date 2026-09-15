@@ -57,14 +57,30 @@ test('every icon renders at the size its control calls for', () => {
 
         if (className.includes(SMALL_ICON)) {
           const before = source.slice(0, usage.index);
-          const opening = before.lastIndexOf('<IconButton');
-          if (opening !== -1 && /size="small"/.test(before.slice(opening))) {
+          const iconButtonOpening = before.lastIndexOf('<IconButton');
+          if (
+            iconButtonOpening !== -1 &&
+            /size="small"/.test(before.slice(iconButtonOpening))
+          ) {
+            continue;
+          }
+          const buttonOpening = before.lastIndexOf('<Button');
+          if (
+            buttonOpening !== -1 &&
+            /size="small"/.test(before.slice(buttonOpening))
+          ) {
             continue;
           }
           const chunk = before.slice(-600);
+          const after = source.slice(
+            (usage.index ?? 0) + usage[0].length,
+            (usage.index ?? 0) + usage[0].length + 300,
+          );
           const besideLabel =
             />([^<]*[A-Za-z][^<]*)<\/span>\s*$/.test(chunk) ||
-            />\s*[A-Za-z][^<]*\s*$/.test(chunk);
+            />\s*[A-Za-z][^<]*\s*$/.test(chunk) ||
+            /\/?>\s*<span[^>]*>[^<]*[A-Za-z]/.test(after) ||
+            /\/?>\s*\{[^;\n]{0,120}[A-Za-z]/.test(after);
           const inInlineFlex = /className="[^"]*\binline-flex\b[^"]*"/.test(
             chunk,
           );

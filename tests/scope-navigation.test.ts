@@ -32,7 +32,7 @@ test('both node types use the header second tier', () => {
   const app = source('../src/App.tsx');
   const header = source('../src/components/AppHeader.tsx');
 
-  assert.match(header, /NODE_NAV_ITEMS\.filter/);
+  assert.match(header, /visibleMainNavItems\(nodeType, grouping\)/);
   assert.match(header, /visibleNavItems\.length > 0/);
   assert.match(header, /app-header-nav-row/);
   assert.doesNotMatch(app, /<SectionNavigation|import \{ SectionNavigation \}/);

@@ -7,7 +7,7 @@ import { Card } from '../components/ui/Card';
 import { EntityLink } from '../components/ui/EntityLink';
 import {
   VISIBLE_ORGANISATIONS,
-  personasForOrganisation,
+  visiblePersonasForOrganisation,
   type PersonaId,
 } from '../lib/informationArchitecture';
 import {
@@ -55,7 +55,7 @@ export function SessionLanding({
                     <p className="px-3 pb-1 pt-2 text-xs font-bold text-text-secondary">
                       {organisation}
                     </p>
-                    {personasForOrganisation(organisation).map((persona) => (
+                    {visiblePersonasForOrganisation(organisation).map((persona) => (
                       <button
                         key={persona.id}
                         type="button"

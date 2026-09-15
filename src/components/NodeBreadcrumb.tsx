@@ -8,7 +8,7 @@ import {
   pendingCountsForGrouping,
   pendingCountsForLocation,
   rootGroupingsForOrganisation,
-  serviceTypeLabel,
+  locationTypeSuburbLine,
   type Grouping,
   type Location,
 } from '../data/locations';
@@ -288,11 +288,7 @@ function BreadcrumbMenu({
                   )}
                   {item.location && (
                     <span className="mt-1 block text-xs text-text-secondary">
-                      {serviceTypeLabel(
-                        item.location.serviceType,
-                        item.location.sector,
-                      )}{' '}
-                      · {item.location.suburb}
+                      {locationTypeSuburbLine(item.location)}
                     </span>
                   )}
                   {pendingWork.length > 0 && (
