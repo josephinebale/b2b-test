@@ -243,7 +243,7 @@ export function InformationArchitecture() {
 
           <div className="max-w-content">
             <h2 className="text-sm font-bold text-text">Assumptions</h2>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-text-secondary">
+            <ul className="mt-2 list-disc space-y-1 pl-6 text-sm text-text-secondary">
               <li>
                 Organisation is a hard boundary
               </li>

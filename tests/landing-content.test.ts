@@ -33,6 +33,10 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
   assert.doesNotMatch(placeholder, /nothing here|No .*yet|empty/i);
   assert.doesNotMatch(placeholder, /lucide-react|illustration/);
   assert.match(placeholder, /<Card className="p-6">/);
+  assert.match(
+    project,
+    /in-progress card keeps \*\*24px\*\* \(`.p-6` \/ `--space-5`\)/,
+  );
   assert.equal((placeholder.match(/<p /g) ?? []).length, 1);
 
   for (const [name, page] of [

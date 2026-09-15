@@ -21,18 +21,18 @@ Some delegated measurements were made while the Cursor browser was zoomed to abo
 
 ## Finding count
 
-- Type scale: **1 open** (T1 resolved; T2 recorded)
-- Spacing: **2 open** (S1 and S4 resolved; S2 and S3 recorded)
-- Control heights: **4**
+- Type scale: **0 open** (T1 and T2 resolved)
+- Spacing: **0 open** (S1–S4 resolved)
+- Control heights: **3 open** (C1 resolved as content-sized; C2–C4 recorded)
 - Alignment: **2 open** (A1–A3 resolved; A6 closed; A4 and A5 recorded, not acted on)
 - Product question: **1 open** (A7) — resolve with the grouping Workers screen
 - Colour: **0**
 - Duplication: **3**
-- Borders and radii: **2**
+- Borders and radii: **0 open** (B1 and B2 resolved)
 - Within-context control consistency: **1** (I1)
 - Documentation contradictions: **8** (counted separately)
 
-**Total visual/system findings: 21.** Product question A7 is counted separately.
+**Total visual/system findings: 15.** Product question A7 is counted separately.
 
 ## 1. Type scale
 
@@ -71,15 +71,13 @@ Reason: the type line is compact entity metadata, which is 12/400/16 tertiary ev
 
 Places: every direct house, centre, and client row on grouping Overview and `/supportables`.
 
-### T2 — Location initials introduce a 12/12 tuple outside the type scale
+### T2 — Location initials introduce a 12/12 tuple outside the type scale — **resolved**
 
-Computed value: **12px / 700 / 12px**, location foreground rgb(33, 107, 45).
+Computed value remains **12px / 700 / 12px**, location foreground rgb(33, 107, 45).
+
+Documented 16 Sep 2026 as the same packed-glyph exception as the badge: the marker is a **fixed 28/36px** rounded square (`h-7` / `h-9`) with flex-centred initials, not a type line. `leading-none` keeps unused 16px leading out of that box. It is **not** a circle sized to the glyph.
 
 Places: location-marker initials on the Information architecture tree and any rendered compact/full `LocationMarker`.
-
-Rest of product: 12px text uses **16px line-height**. The badge also uses 12px line-height, but that is separately documented as intentional in `PROJECT.md:366`.
-
-Why flagged: the marker uses a literal `line-height: 1` result without a matching documented exception.
 
 ## 2. Spacing
 
@@ -99,23 +97,17 @@ Rest of product/documented value: **24px (`--space-5`)** between `PageHeading` a
 
 Impact: this is the broadest spacing drift because it moves the first block on most full pages. A heading with no description and a 36px action already shrank from 36px to 32px tonight (A2); combining that −4px with this +4px gap lands those pages at net zero. Title-only headings with no action never took that 4px shrink, so they move down 4px only.
 
-### S2 — Information architecture assumption-list indentation uses an unnamed 20px step
+### S2 — Information architecture assumption-list indentation uses an unnamed 20px step — **resolved**
 
-Computed value: **padding-left: 20px** on the assumptions list.
+Was **padding-left: 20px** (`pl-5`). Converged 16 Sep 2026 on **`--space-5` (24px / `pl-6`)**. The scale has no 20px step; 24px is the hanging indent that gives a disc room beside 14px type. 16px (`pl-4`) crowds the marker.
 
 Place: Information architecture, Assumptions.
 
-Rest of product: named spacing jumps from **16px (`--space-4`)** to **24px (`--space-5`)**. `PROJECT.md:380` says to use named steps only.
+### S3 — The shared in-progress card uses a 24px prose inset — **resolved**
 
-### S3 — The shared in-progress card uses a 24px prose inset
-
-Computed value: **24px on all sides**; card size measured at 1032×70px on grouping Workers.
+Computed value remains **24px on all sides** (`.p-6` / `--space-5`). Documented 16 Sep 2026 as **intentional for placeholder cards**, not as a prose-card inset. These cards disappear when `LANDING_CONTENT_ENABLED` comes on, so the extra air has a short shelf life by design.
 
 Places: grouping Workers; grouping-only Overview; location Bookings and all status routes; Messages; location Workers; every hidden settings scope.
-
-Rest of product/documented value: a card holding prose uses **16px (`.ui-inset-card`)**; 24px is reserved for larger standalone settings sections (`PROJECT.md:402`).
-
-Uncertainty: the extra air may be intended for placeholders, but no exception says so.
 
 ### S4 — The same direct-location row changes vertical inset between its two views — **resolved**
 
@@ -154,13 +146,11 @@ Other interactive elements measured:
 
 Structural navigation, text links, whole-row targets, multiline fields, and linked cards are content-sized rather than fixed-height Buttons. They are still recorded because the audit brief asks for every interactive height.
 
-### C1 — Week-grid expander is a 45px button
+### C1 — Week-grid expander is a 45px button — **resolved**
 
-Computed value: **45px** (44.9006px in the zoomed pass).
+Computed value remains **45px**. Checked 16 Sep 2026: this is **content-sized**, not a fixed-height control. Markup is a full-width `.ui-link.ui-link--flush` with `py-3` (12px), `text-sm` (20px line), and a 1px top border — 12 + 20 + 12 + 1 = 45. C4 already excludes whole-row targets and content-sized elements from the 32/36/40 rule. Documented in `PROJECT.md`; not resized.
 
 Places: “2 more bookings” on Northern Sydney Overview; the same expander in a location week when a day exceeds the collapsed cap.
-
-Rest of product: fixed controls use 32, 36, or 40px. No 45px control exception is documented; `PROJECT.md:410` documents only its inset focus ring.
 
 ### C2 — Pre-session action-card controls are 54px
 
@@ -388,28 +378,22 @@ Documented duplicates not flagged:
 
 ## 7. Borders and radii
 
-### B1 — Border and outline widths have no width tokens
+### B1 — Border and outline widths have no width tokens — **resolved**
 
-Computed values and places:
+Computed values unchanged 16 Sep 2026; they now come from tokens:
 
-- **1px:** cards, controls, header/footer separators, list dividers, fields.
-- **2px:** focus outlines and header-badge separation ring.
-- **3px:** active second-tier underline.
-- **4px:** active rail marker when gated rails are enabled.
+- **1px `--border-width`:** cards, controls, header/footer separators, list dividers, fields.
+- **2px `--border-width-focus`:** focus outlines and header-badge separation ring.
+- **3px `--border-width-nav`:** active second-tier underline.
+- **4px `--border-width-rail`:** active rail marker (`.ui-rail-item`).
 
-Rest of product: 1px is the overwhelming border standard. There is no border-width token, so this is a system-token gap rather than a visible mismatch.
+The 3px navigation underline and 4px rail marker remain intentional. This was a token gap, not a visual mismatch.
 
-The 3px navigation underline and 4px rail marker are intentional (`PROJECT.md:355`, `PROJECT.md:417`). The 1px/2px literals are consistent but fail the brief’s “drawn from tokens” criterion.
+### B2 — Full-circle radius is a literal 9999px — **resolved**
 
-### B2 — Full-circle radius is a literal 9999px
-
-Computed value: **9999px** on avatars, badges, and the pinned-question trigger; **16777216px** on request-booking Summary step markers (`rounded-full` in Tailwind v4). Same intent, two literals.
+Converged 16 Sep 2026 on **`--radius-full: 9999px`**. Avatars, badges, and the pinned-question trigger use the token in CSS. Request-booking Summary (and Messages) `rounded-full` uses the same token through `@theme`, so it stops computing as Tailwind v4’s 16777216px. Same circle; one value.
 
 Places: avatars; badges; circular status/step markers; pinned-question trigger when annotations are visible.
-
-Rest of product: controls use **4px (`--radius-sm`)** and surfaces use **8px (`--radius-lg`)**.
-
-The badge shape is documented (`PROJECT.md:366`), and circles clearly require a full radius, but there is no full-radius token and the remaining circular uses are not documented exceptions.
 
 Not findings:
 
@@ -657,16 +641,16 @@ Do not fix in this pass.
 1. ~~**Resolve the SectionHeadingRow alignment rule and implementation (A1/DC1).**~~ Done: rule in `PROJECT.md`, `LineAlignedControl` in code, A1/A2/A3 recomputed to 0px delta.
 2. ~~**Replace the shared 20px PageHeading gap with the documented 24px step, or change the rule (S1).**~~ Done: `mb-5` (20px) → `mb-6` (24px / `--space-5`).
 3. ~~**Unify the direct-location row contract (T1/S4/D1).**~~ Typography, inset and icon now match Overview. Remaining D1 difference is interaction (Overview linked name vs `/supportables` whole-row button), intended until `/supportables` rows gain waiting links.
-4. **Decide and document the in-progress-card inset (S3).** The placeholder is currently the most common rendered body because the landing flag is off, so its unexplained 24px treatment appears across many routes.
-5. **Bring the week-grid expander into the control-height system or document it (C1).** It is the only visible standalone button at 45px and appears inside the product’s most prominent calendar.
+4. ~~**Decide and document the in-progress-card inset (S3).**~~ Done: 24px stays; documented as placeholder air, not a prose-card inset.
+5. ~~**Bring the week-grid expander into the control-height system or document it (C1).**~~ Done: content-sized full-width link (45px from padding + type + hairline); documented as outside the 32/36/40 rule. Not resized.
 
 ## Drift versus intention: unresolved
 
 - **Variable-height row/card controls:** 54px pre-session cards, 60px persona rows, 68–69px supportable rows, and multiline booking/worker cards are likely intentionally content-sized. The brief says to flag every interactive height outside 32/36/40, but applying fixed heights to these surfaces would be harmful.
 - **Native 16px radio/checkboxes and 126px textarea:** these should not use the single-line field heights. The documentation needs a narrower definition of “control height.”
 - **Request worker rows:** A3 closed — centres match; 16px / 12px padding documented. Remaining question is A4 (36px avatar on a 20px line), not a 4px divider gap.
-- **Full-circle 9999px radius:** almost certainly intentional, but only the badge is explicitly documented and there is no radius token.
-- **In-progress 24px inset:** may be intentional breathing room for a placeholder, but the only documented 24px card exception is for larger settings sections.
+- **Full-circle 9999px radius:** resolved — `--radius-full` token; `rounded-full` uses it.
+- **In-progress 24px inset:** resolved — documented as placeholder air.
 - **Hidden content:** no honest computed audit can be made of bodies that are not in the rendered DOM. Their route placeholders were audited; the hidden implementations were considered only for duplication and documentation contradictions.
 
 ## Pre-existing test failure (not this work)

@@ -353,7 +353,7 @@ export function Bookings({
                 key={item.id}
                 type="button"
                 onClick={() => navigate(bookingsViewPath(item.id))}
-                className={`flex w-full items-center gap-2 border-l-4 px-3 py-2 text-left text-sm font-bold ${
+                className={`ui-rail-item flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-bold ${
                   active
                     ? 'border-text bg-info-surface text-text'
                     : 'border-transparent text-text-strong hover:bg-surface-selected'

@@ -74,7 +74,7 @@ test('the account stays at 28px while the breadcrumb uses text only', () => {
 
   assert.match(
     css,
-    /\.header-menu-trigger \{[\s\S]*?border: 1px solid var\(--color-border\);[\s\S]*?background: var\(--color-surface\);/,
+    /\.header-menu-trigger \{[\s\S]*?border: var\(--border-width\) solid var\(--color-border\);[\s\S]*?background: var\(--color-surface\);/,
   );
   assert.match(css, /--avatar-sm: 1\.75rem;/);
   assert.match(header, /<Avatar name=\{persona\.name\} size="sm" \/>/);
@@ -137,7 +137,7 @@ test('section labels carry weight, and the active one is bold with a 3px underli
   assert.match(navigation, /main-nav-link--active font-bold text-text/);
   assert.match(navigation, /font-medium text-text-strong/);
   assert.match(css, /\.main-nav-link--active\s*\{\s*border-bottom-color: var\(--color-text\);/);
-  assert.match(css, /\.main-nav-link \{[\s\S]*?border-bottom: 3px solid transparent;/);
+  assert.match(css, /\.main-nav-link \{[\s\S]*?border-bottom: var\(--border-width-nav\) solid transparent;/);
   /* The hover fill keeps the 150ms ease the product uses for row and card
      colour changes (there is no motion token to point at), but the underline
      is left out of it: it arrives with the label's step to 700, and font
@@ -197,12 +197,12 @@ test('one hairline closes the header at both node types', () => {
 
   assert.match(
     css,
-    /\.app-header \{[^}]*border-bottom: 1px solid var\(--color-border-subtle\);/,
+    /\.app-header \{[^}]*border-bottom: var\(--border-width\) solid var\(--color-border-subtle\);/,
   );
   assert.doesNotMatch(css, /\.app-header \{[^}]*box-shadow/);
   assert.match(
     css,
-    /\.app-header-identity:not\(:last-child\) \{\s*border-bottom: 1px solid var\(--color-border-subtle\);/,
+    /\.app-header-identity:not\(:last-child\) \{\s*border-bottom: var\(--border-width\) solid var\(--color-border-subtle\);/,
   );
 });
 
@@ -480,7 +480,7 @@ test('every section link fills its row so one underline serves it', () => {
   assert.match(navigation, /main-nav-link h-full shrink-0 text-sm/);
   assert.match(
     css,
-    /\.main-nav-link \{[\s\S]*?align-items: center;[\s\S]*?border-bottom: 3px solid transparent;/,
+    /\.main-nav-link \{[\s\S]*?align-items: center;[\s\S]*?border-bottom: var\(--border-width-nav\) solid transparent;/,
   );
 });
 

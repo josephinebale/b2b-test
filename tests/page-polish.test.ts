@@ -78,7 +78,7 @@ test('settings and bookings share one definite active rail treatment', () => {
   const settings = source('../src/pages/Settings.tsx');
   const bookings = source('../src/pages/Bookings.tsx');
   const treatment =
-    /flex w-full items-center gap-2 border-l-4 px-3 py-2 text-left text-sm font-bold/;
+    /ui-rail-item flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-bold/;
 
   for (const [name, rail] of [['settings', settings], ['bookings', bookings]] as const) {
     /* Labels carry weight at rest, and the active row takes a 4px marker over a
@@ -301,4 +301,30 @@ test('booking detail sections use one 24px gap without a redundant divider', () 
 
   assert.match(supportDetails, /className="mt-6"/);
   assert.doesNotMatch(supportDetails, /border-t|pt-5/);
+});
+
+/* The expander is a full-width text link with 12px padding, not a 32/36/40
+   control. 45px is content-sized: 1px rule + 12 + 20 + 12. */
+test('the week-grid expander is a content-sized row, not a fixed-height button', () => {
+  const week = source('../src/pages/dashboard/BookingsWeek.tsx');
+  const css = source('../src/index.css');
+  const project = source('../PROJECT.md');
+  const expander = week.slice(
+    week.indexOf('hiddenBookingCount > 0'),
+    week.indexOf('{expanded ? ('),
+  );
+
+  assert.match(
+    expander,
+    /className="ui-link ui-link--flush flex w-full items-center justify-center gap-1 border-t border-border-subtle px-4 py-3 text-sm font-medium"/,
+  );
+  assert.doesNotMatch(expander, /\bh-(8|9|10)\b/);
+  assert.match(
+    css,
+    /\.ui-link--flush:focus-visible \{\s*outline-offset: calc\(-1 \* var\(--border-width-focus\)\);/,
+  );
+  assert.match(
+    project,
+    /week-grid expander is content-sized, not a 32\/36\/40 control/,
+  );
 });

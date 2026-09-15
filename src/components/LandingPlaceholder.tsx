@@ -7,6 +7,8 @@ export const LANDING_CONTENT_ENABLED = false;
 export const GROUPING_WORKERS_CONTENT_ENABLED = false;
 
 export function LandingPlaceholder() {
+  /* 24px is intentional air for this placeholder. It is not a prose card.
+     The extra inset disappears with the card when LANDING_CONTENT_ENABLED is on. */
   return (
     <Card className="p-6">
       <p className="max-w-content text-sm text-text-strong">

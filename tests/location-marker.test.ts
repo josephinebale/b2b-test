@@ -71,6 +71,24 @@ test('the marker renders one colour rather than a per-location tone', () => {
   assert.match(marker, /text-location-foreground/);
 });
 
+/* 12/12 is the same packed line as the badge: the square is 28/36px and flex
+   centres the initials, so unused 16px leading is not a type line. */
+test('marker initials pack to the glyph the way badge digits do', () => {
+  const marker = readFileSync(
+    new URL('../src/components/LocationMarker.tsx', import.meta.url),
+    'utf8',
+  );
+  const project = readFileSync(new URL('../PROJECT.md', import.meta.url), 'utf8');
+
+  assert.match(marker, /text-xs leading-none font-bold/);
+  assert.match(marker, /h-7 w-7 rounded-lg/);
+  assert.match(marker, /h-9 w-9 rounded-lg/);
+  assert.match(
+    project,
+    /Location marker:[\s\S]*?leading-none[\s\S]*?same packed 12\/12 box as the badge/,
+  );
+});
+
 test('a home-and-community marker uses the person’s initials, not the suburb or a bracket', () => {
   const home = LOCATIONS.find((location) => location.serviceType === 'home-community');
   assert.ok(home);

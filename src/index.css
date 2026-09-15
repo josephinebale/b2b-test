@@ -50,6 +50,11 @@
 
   --radius-sm: var(--radius-control);
   --radius-lg: var(--radius-surface);
+  --radius-full: 9999px;
+
+  --border-width: 1px;
+  --border-width-2: 2px;
+  --border-width-4: 4px;
 
   --container-page: 90rem;
   --container-content: 43.75rem;
@@ -69,6 +74,12 @@
 
   --radius-control: 0.25rem;
   --radius-surface: 0.5rem;
+  --radius-full: 9999px;
+
+  --border-width: 1px;
+  --border-width-focus: 2px;
+  --border-width-nav: 3px;
+  --border-width-rail: 4px;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -126,7 +137,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  border: 1px solid transparent;
+  border: var(--border-width) solid transparent;
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   line-height: var(--text-sm--line-height);
@@ -139,8 +150,8 @@ body {
 .ui-link:focus-visible,
 .header-menu-trigger:focus-visible,
 .main-nav-link:focus-visible {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
+  outline: var(--border-width-focus) solid var(--color-brand);
+  outline-offset: var(--border-width-focus);
 }
 
 .ui-button:disabled {
@@ -195,7 +206,7 @@ body {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
@@ -218,7 +229,7 @@ body {
 
 .ui-select {
   appearance: none;
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   padding: 0 var(--space-2);
@@ -237,13 +248,13 @@ body {
   width: 1.75rem;
   height: 1.75rem;
   border-color: var(--color-border);
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   background: var(--color-neutral-surface);
 }
 
 .ui-card {
   overflow: hidden;
-  border: 1px solid var(--color-border-subtle);
+  border: var(--border-width) solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
 }
@@ -265,7 +276,7 @@ body {
 }
 
 .ui-card--divided > * + * {
-  border-top: 1px solid var(--color-border-subtle);
+  border-top: var(--border-width) solid var(--color-border-subtle);
 }
 
 /* A row fill runs the card's full width, so the card clipped it to keep the
@@ -278,13 +289,13 @@ body {
 }
 
 .ui-card--divided > :first-child {
-  border-start-start-radius: calc(var(--radius-lg) - 1px);
-  border-start-end-radius: calc(var(--radius-lg) - 1px);
+  border-start-start-radius: calc(var(--radius-lg) - var(--border-width));
+  border-start-end-radius: calc(var(--radius-lg) - var(--border-width));
 }
 
 .ui-card--divided > :last-child {
-  border-end-start-radius: calc(var(--radius-lg) - 1px);
-  border-end-end-radius: calc(var(--radius-lg) - 1px);
+  border-end-start-radius: calc(var(--radius-lg) - var(--border-width));
+  border-end-end-radius: calc(var(--radius-lg) - var(--border-width));
 }
 
 .ui-card--success {
@@ -382,7 +393,7 @@ summary.ui-link:hover > span {
 /* The week grid's expand control spans the card and sits on its bottom edge, so
    its focus ring has to sit inside the border rather than outside it. */
 .ui-link--flush:focus-visible {
-  outline-offset: -2px;
+  outline-offset: calc(-1 * var(--border-width-focus));
 }
 
 /* The conversation list opts out: its name selects a conversation in the pane
@@ -472,8 +483,8 @@ a.ui-entity-link--plain:hover {
 }
 
 .ui-linked-surface:focus-visible {
-  outline: 2px solid var(--color-brand);
-  outline-offset: 2px;
+  outline: var(--border-width-focus) solid var(--color-brand);
+  outline-offset: var(--border-width-focus);
 }
 
 .ui-target-row--active,
@@ -520,8 +531,8 @@ a.ui-entity-link--plain:hover {
 
 .ui-target-row:has(.ui-target-row__link:focus-visible) {
   z-index: 1;
-  outline: 2px solid var(--color-brand);
-  outline-offset: -2px;
+  outline: var(--border-width-focus) solid var(--color-brand);
+  outline-offset: calc(-1 * var(--border-width-focus));
 }
 
 .ui-target-row__action {
@@ -558,7 +569,7 @@ a.ui-entity-link--plain:hover {
 /* Rows keep their two lines tight, so the ring sits closer than the default 2px. */
 .ui-target-row__action:focus-visible,
 .ui-target-row__action :focus-visible {
-  outline-offset: 1px;
+  outline-offset: var(--border-width);
 }
 
 .ui-badge {
@@ -567,7 +578,7 @@ a.ui-entity-link--plain:hover {
   height: 1.125rem;
   align-items: center;
   justify-content: center;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   /* 6px so two digits are not squeezed against the pill. Tabular figures give
      every digit a 7.73px advance, so one digit reads as a soft pill too. */
   padding-inline: calc(var(--space-1) * 1.5);
@@ -592,7 +603,7 @@ a.ui-entity-link--plain:hover {
   position: absolute;
   top: calc(-1 * var(--space-1));
   right: calc(-1 * var(--space-1));
-  box-shadow: 0 0 0 2px var(--color-surface);
+  box-shadow: 0 0 0 var(--border-width-focus) var(--color-surface);
 }
 
 /* A label, not a control: filled and borderless, so it never reads as a button,
@@ -648,7 +659,7 @@ a.ui-entity-link--plain:hover {
 
 .avatar {
   flex: 0 0 auto;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
 }
 
 .avatar--sm {
@@ -683,6 +694,11 @@ a.ui-entity-link--plain:hover {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+}
+
+.ui-rail-item {
+  border-left-style: solid;
+  border-left-width: var(--border-width-rail);
 }
 
 .layout-master-detail {
@@ -762,11 +778,11 @@ a.ui-entity-link--plain:hover {
 .app-header {
   overflow: visible;
   background: var(--color-surface);
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
 }
 
 .app-header-identity:not(:last-child) {
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: var(--border-width) solid var(--color-border-subtle);
 }
 
 .app-header-row {
@@ -787,7 +803,7 @@ a.ui-entity-link--plain:hover {
   align-items: center;
   gap: var(--space-3);
   padding: 0 var(--space-2);
-  border: 1px solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
@@ -839,8 +855,8 @@ a.ui-entity-link--plain:hover {
   align-items: center;
   gap: var(--space-2);
   padding-inline: var(--space-3);
-  border-bottom: 3px solid transparent;
-  padding-top: 3px;
+  border-bottom: var(--border-width-nav) solid transparent;
+  padding-top: var(--border-width-nav);
   /* The hover fill fades on the same 150ms ease as the row and card surfaces.
      The underline is deliberately left out: it arrives with the label's step to
      700, and font weight cannot be timed to match, so easing only one of the

@@ -99,7 +99,7 @@ test('every icon-only button carries an outline at rest', () => {
 
   assert.match(
     css,
-    /\.ui-icon-button \{[\s\S]*?border: 1px solid var\(--color-border\);[\s\S]*?background: var\(--color-surface\);/,
+    /\.ui-icon-button \{[\s\S]*?border: var\(--border-width\) solid var\(--color-border\);[\s\S]*?background: var\(--color-surface\);/,
   );
   assert.doesNotMatch(css, /ui-icon-button--bordered|ui-icon-button--subtle/);
   assert.doesNotMatch(iconButton, /bordered/);

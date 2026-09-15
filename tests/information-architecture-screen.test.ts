@@ -137,7 +137,7 @@ test('the IA screen matches other pre-session screens and uses product chevrons'
   /* One page title carries the page. Section titles take the card-title step,
      so nothing competes with it. */
   assert.match(page, /<h2 className="text-sm font-bold text-text">\s*Assumptions\s*<\/h2>/);
-  assert.match(page, /<ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-text-secondary">/);
+  assert.match(page, /<ul className="mt-2 list-disc space-y-1 pl-6 text-sm text-text-secondary">/);
   assert.doesNotMatch(page, /text-lg font-bold/);
   assert.match(page, /text-md font-bold text-text/);
   /* Filter cards are titled on the other list screens, and every inset comes
