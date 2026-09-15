@@ -24,14 +24,15 @@ Some delegated measurements were made while the Cursor browser was zoomed to abo
 - Type scale: **2**
 - Spacing: **3**
 - Control heights: **4**
-- Alignment: **3 open** (A1–A3 resolved; A4, A5 and A6 recorded, not acted on)
+- Alignment: **2 open** (A1–A3 resolved; A6 closed; A4 and A5 recorded, not acted on)
+- Product question: **1 open** (A7) — resolve with the grouping Workers screen
 - Colour: **0**
 - Duplication: **3**
 - Borders and radii: **2**
 - Within-context control consistency: **1** (I1)
 - Documentation contradictions: **8** (counted separately)
 
-**Total visual/system findings: 21.**
+**Total visual/system findings: 21.** Product question A7 is counted separately.
 
 ## 1. Type scale
 
@@ -289,7 +290,7 @@ A 36px `md` avatar centred on a 20px (`text-sm`) name line has now caused two se
 
 The avatar-to-line-height ratio on these rows is worth revisiting. The alternative to asymmetric padding is a **smaller avatar** on this row type, which reduces the overflow at source. Do not act on it in this pass.
 
-Places: request-booking step 3 `workerRow` only. Other 36px avatar rows stay `items-center` against a two-line block and were not in this change. Grouping Overview worker rows (A6) ask the same ratio question on a stacked row.
+Places: request-booking step 3 `workerRow` only. Other 36px avatar rows stay `items-center` against a two-line block and were not in this change. Grouping Overview worker rows stay stacked; A6 closed the density question on those rows rather than the avatar-to-line ratio.
 
 ### A5 — Summary step-marker tick and numeral share a box but not a glyph — **open, do not act**
 
@@ -307,19 +308,27 @@ The two variants differ in glyph, not box: a 20px tick in a 24px circle versus 1
 
 Do not fix in this pass.
 
-### A6 — Overview worker rows trade density for labelled actions — **open, do not act**
+### A6 — Overview worker rows trade density for labelled actions — **closed**
 
-Place: grouping Overview **Recently booked workers** aside. Each row stacks name, last-worked evidence, and a **Message** / **Book** text-button row, so it runs roughly twice the height of a single-line row with inline actions.
+Place: grouping Overview **Recently booked workers** aside. Density is not the problem.
 
-An earlier prototype fitted avatar, name, and two 32px icon actions on one line, and showed **ten** workers where the current aside shows **six**.
+Measured 16 Sep 2026 at Northern Sydney (6 of 87) and Far West (6 of 119), 1440×900. Current stacked rows (avatar, last-worked line, labelled Message / Book) are **117px**; the card is **702px**. A compact preview — avatar, name and two 32px icon actions on one line, last-worked kept beneath — is **85px**, fitting **8** rows in that 702px instead of 6. Five current rows sit fully above the fold; all six compact rows do.
 
-This is a live tension, not drift. The 320px aside width is the constraint: Message and Book as text buttons need roughly 150px, which leaves too little for a name beside an avatar, so inline actions would have to be icon-only. Text labels were chosen deliberately on 15 September and are documented; icon-only actions are documented as the **location** Workers treatment.
+Six of 87 versus eight of 87 does not change what the block answers. Do not pursue the compact variant.
 
-The evidence line is not part of the trade and stays. This block is ordered by most recent shift for recall, so the last-worked line is why the row exists. The earlier prototype ranked by volume and needed no equivalent.
+Supersedes the earlier open note that this was a live density-versus-labels tension to resolve after scale seeding.
 
-Do not build either variant now. Resolve after the scale seeding pass. Then measure, at a region with a realistic eight-week worker population: row height and total aside height for both treatments, how many rows fit above the fold, and what proportion of the window six versus ten rows represents.
+### A7 — Recency stops discriminating at grouping scale — **open, resolve with grouping Workers**
 
-Relates to A4: whether a 36px avatar on a 20px name line is the right ratio for stacked rows generally.
+Place: grouping Overview **Recently booked workers**, ordered by most recent shift, capped at six.
+
+Nothing in the top six is older than yesterday. Neither is rank 7. The first “2 days ago” is rank **21** at Northern Sydney and rank **30** at Far West, so the six-row cap cuts arbitrarily inside a band of 20 to 30 equally recent workers. Which six appear is effectively arbitrary.
+
+This is a question about **what the block is for at a grouping**, not how it is rendered. Candidates, none chosen: workers available for the shifts currently unfilled at this node; workers spanning multiple houses in the region; volume at this node. All discriminate where recency does not.
+
+Recency still works at a **location**, where 10 to 18 workers make “last worked today” a real filter.
+
+Resolve in the same pass as the grouping Workers screen.
 
 ## 5. Colour
 
@@ -593,6 +602,8 @@ No equivalent-control mismatch in the known-here / worked-elsewhere list. Nearby
 | Workers aside | View all | 20px | 0 | 14px / 400 | 0 | 0 |
 
 Week controls match each other (32px, same border and radius). Sort matches that 32px heading-row rule. **View all** is a `.ui-link` (documented), not a 32px control.
+
+**Superseded:** the sort select is now **40px** (`--control-height-field`, 0/40/0/12), the same as every other dropdown in the product, and carries the standard 20px chevron. Matching the 32px week controls in the row above made it read as a different kind of control to the identical filters on Bookings and Jobs to be done. Its heading row is unchanged at 48px. See **Alignment traps** in `PROJECT.md`.
 
 **Weight, not a mismatch:** View all is correct as a text link and reads lighter than Today / Sort beside the other headings. Neighbour worker-row **Message** / **Book** are 32px, same as the week controls, and match each other (0/12 padding, 1px border, 4px radius, 14px / 500).
 
