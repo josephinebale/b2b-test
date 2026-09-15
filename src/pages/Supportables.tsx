@@ -1,5 +1,4 @@
 import { ChevronRight } from 'lucide-react';
-import { LocationMarker } from '../components/LocationMarker';
 import { LANDING_CONTENT_ENABLED } from '../components/LandingPlaceholder';
 import { PageHeading } from '../components/PageHeading';
 import { PinnedQuestion } from '../components/PinnedQuestion';
@@ -22,6 +21,7 @@ import {
   groupingDirectLocationListLabel,
   pendingWorkParts,
 } from '../lib/pageContent';
+import { DirectChildLocationListIcon } from './dashboard/HousesAndCentresPanel';
 
 function GroupingLocationRow({
   location,
@@ -37,7 +37,7 @@ function GroupingLocationRow({
       onClick={() => onSelectLocation?.(location.id, '/bookings')}
       className="ui-inset-row flex w-full items-center gap-3 text-left hover:bg-surface-subtle"
     >
-      <LocationMarker location={location} />
+      <DirectChildLocationListIcon location={location} />
       <span className="min-w-0 flex-1">
         <EntityLink as="span" className="block">
           {location.name}

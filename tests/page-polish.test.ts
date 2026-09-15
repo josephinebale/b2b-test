@@ -247,6 +247,10 @@ test('the grouping Overview leads with a full-width unfilled shifts calendar', (
   assert.doesNotMatch(houses, /font-medium text-text-strong/);
   assert.match(houses, /\{item\.count\} \{item\.label\}/);
   assert.match(houses, /groupingDirectLocationListLabel/);
+  assert.match(houses, /DirectChildLocationListIcon location=\{location\}/);
+  assert.match(houses, /Building2/);
+  assert.match(houses, /User/);
+  assert.match(houses, /DIRECT_CHILD_LOCATION_LIST_ICON_CLASS/);
   assert.match(houses, /directChildLocationTypeLine\(location\)/);
   assert.doesNotMatch(houses, /locationTypeSuburbLine\(location\)/);
   assert.match(

@@ -1,9 +1,4 @@
-import {
-  findLocation,
-  locationTypeSuburbLine,
-  serviceTypeLabel,
-  type Location,
-} from '../data/locations.ts';
+import { findLocation, locationTypeSuburbLine, type Location } from '../data/locations.ts';
 import {
   addDays,
   formatShiftClock,
@@ -80,25 +75,25 @@ export function groupingDirectLocationListLabel(
   return `${capitalize(parts[0])}, ${parts[1]} and ${parts[2]}`;
 }
 
-/**
- * Type line on a merged direct-child location list. House and centre rows are
- * unchanged; client rows carry a "Client," prefix so the person/place distinction
- * survives without a separate section.
- */
+/** Type line on a merged direct-child location list row. */
 export function directChildLocationTypeLine(
   location: Pick<Location, 'serviceType' | 'sector' | 'suburb' | 'state'>,
 ): string {
-  if (location.serviceType !== 'home-community') {
-    return locationTypeSuburbLine(location);
-  }
-
-  const type = serviceTypeLabel(location.serviceType, location.sector);
-  const typeLabel =
-    location.sector === 'aged care'
-      ? type
-      : `${type.charAt(0).toLowerCase()}${type.slice(1)}`;
-  return `Client, ${typeLabel}, ${location.suburb}`;
+  return locationTypeSuburbLine(location);
 }
+
+export type DirectChildLocationListIcon = 'building' | 'user';
+
+/** Place versus person icon on a merged direct-child location list row. */
+export function directChildLocationListIcon(
+  location: Pick<Location, 'serviceType'>,
+): DirectChildLocationListIcon {
+  return location.serviceType === 'home-community' ? 'user' : 'building';
+}
+
+/** Row-scale lucide glyph — matches the text-xs type line (16px / h-4 w-4). */
+export const DIRECT_CHILD_LOCATION_LIST_ICON_CLASS =
+  'h-4 w-4 shrink-0 text-text-strong';
 
 /** Child-list page title when more than one section renders — suffix matches the tab label, lowercase. */
 export function groupingChildListPageHeading(

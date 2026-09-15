@@ -45,7 +45,7 @@ test('every list row uses the row step, so their content shares one left edge', 
   const housesPanel = read('../src/pages/dashboard/HousesAndCentresPanel.tsx');
   assert.match(
     housesPanel,
-    /className="ui-inset-card"/,
+    /className="ui-inset-card flex items-center gap-3"/,
     'Overview location rows should use the card inset',
   );
   assert.match(

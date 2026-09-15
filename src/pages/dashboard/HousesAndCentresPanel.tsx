@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Building2, User } from 'lucide-react';
 import {
   childGroupingSectionTitle,
   groupingContentsSummary,
@@ -16,6 +17,8 @@ import { EntityLink } from '../../components/ui/EntityLink';
 import {
   dashboardHouseRowPendingLinks,
   dashboardAsideWaitingCount,
+  DIRECT_CHILD_LOCATION_LIST_ICON_CLASS,
+  directChildLocationListIcon,
   directChildLocationTypeLine,
   groupingDirectLocationListLabel,
   type DashboardAsideSort,
@@ -29,6 +32,16 @@ import {
 } from './SectionHeadingRow';
 
 const CHILDREN_PREVIEW = 12;
+
+export function DirectChildLocationListIcon({
+  location,
+}: {
+  location: Pick<Location, 'serviceType'>;
+}) {
+  const Icon = directChildLocationListIcon(location) === 'user' ? User : Building2;
+
+  return <Icon className={DIRECT_CHILD_LOCATION_LIST_ICON_CLASS} aria-hidden />;
+}
 
 function LocationRow({
   location,
@@ -46,36 +59,39 @@ function LocationRow({
   });
 
   return (
-    <div className="ui-inset-card">
-      <EntityLink
-        href={href('/bookings')}
-        onClick={(event) => {
-          event.preventDefault();
-          onSelectLocation?.(location.id, '/bookings');
-        }}
-      >
-        {location.name}
-      </EntityLink>
-      <p className="mt-1 text-xs text-text-tertiary">
-        {directChildLocationTypeLine(location)}
-      </p>
-      {pendingLinks.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-          {pendingLinks.map((item) => (
-            <a
-              key={`${item.path}-${item.label}`}
-              href={href(item.path)}
-              className="ui-link text-xs"
-              onClick={(event) => {
-                event.preventDefault();
-                onSelectLocation?.(location.id, item.path);
-              }}
-            >
-              {item.count} {item.label}
-            </a>
-          ))}
-        </div>
-      )}
+    <div className="ui-inset-card flex items-center gap-3">
+      <DirectChildLocationListIcon location={location} />
+      <div className="min-w-0 flex-1">
+        <EntityLink
+          href={href('/bookings')}
+          onClick={(event) => {
+            event.preventDefault();
+            onSelectLocation?.(location.id, '/bookings');
+          }}
+        >
+          {location.name}
+        </EntityLink>
+        <p className="mt-1 text-xs text-text-tertiary">
+          {directChildLocationTypeLine(location)}
+        </p>
+        {pendingLinks.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+            {pendingLinks.map((item) => (
+              <a
+                key={`${item.path}-${item.label}`}
+                href={href(item.path)}
+                className="ui-link text-xs"
+                onClick={(event) => {
+                  event.preventDefault();
+                  onSelectLocation?.(location.id, item.path);
+                }}
+              >
+                {item.count} {item.label}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

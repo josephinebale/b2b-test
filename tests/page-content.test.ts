@@ -28,6 +28,8 @@ import {
   dashboardHouseRowPendingLinks,
   dashboardAsideWaitingCount,
   groupingChildListPageHeading,
+  DIRECT_CHILD_LOCATION_LIST_ICON_CLASS,
+  directChildLocationListIcon,
   directChildLocationTypeLine,
   groupingDirectLocationListLabel,
   groupingPlaceBasedLabel,
@@ -142,20 +144,24 @@ test('the direct location list label follows every direct child service type', (
   );
 });
 
-test('the merged direct-child list prefixes client rows only', () => {
+test('the merged direct-child list uses place and person icons with type lines', () => {
   const maya = getLocationData('forestville-home').location;
   const allambie = getLocationData('allambie-heights-day-program').location;
   const deeWhy = getLocationData('dee-why-1').location;
 
+  assert.equal(directChildLocationListIcon(maya), 'user');
+  assert.equal(directChildLocationListIcon(allambie), 'building');
+  assert.equal(directChildLocationListIcon(deeWhy), 'building');
   assert.equal(
     directChildLocationTypeLine(maya),
-    'Client, home and community, Forestville',
+    'Home and community, Forestville',
   );
   assert.equal(
     directChildLocationTypeLine(allambie),
     'Centre / day program, Allambie Heights',
   );
   assert.equal(directChildLocationTypeLine(deeWhy), 'SIL house, Dee Why');
+  assert.match(DIRECT_CHILD_LOCATION_LIST_ICON_CLASS, /h-4 w-4/);
 });
 
 test('the place-based label follows direct location service types', () => {

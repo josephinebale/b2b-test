@@ -353,7 +353,9 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
     supportables,
     /groupingDirectLocationListLabel\(housesAndCentres, clients\)/,
   );
+  assert.match(supportables, /DirectChildLocationListIcon location=\{location\}/);
   assert.match(supportables, /directChildLocationTypeLine\(location\)/);
+  assert.doesNotMatch(supportables, /LocationMarker/);
   assert.doesNotMatch(supportables, /title="Clients"/);
   assert.doesNotMatch(supportables, /groupingPlaceBasedLabel\(housesAndCentres\)/);
   assert.match(supportables, /questionId="grouping-locations"/);
@@ -619,7 +621,9 @@ test('a grouping row states only the waiting work a location actually has', () =
   );
   assert.match(supportables, /\{pendingWork\.length > 0 && \(/);
   assert.match(supportables, /\{pendingWork\.join\(' · '\)\}/);
+  assert.match(supportables, /DirectChildLocationListIcon location=\{location\}/);
   assert.match(supportables, /directChildLocationTypeLine\(location\)/);
+  assert.doesNotMatch(supportables, /LocationMarker/);
   assert.doesNotMatch(supportables, /counts\.requests|counts\.approvals|counts\.messages/);
 });
 

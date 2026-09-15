@@ -106,6 +106,8 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
   );
   assert.match(supportables, /onSelectLocation\?\.\(location\.id, '\/bookings'\)/);
   assert.match(supportables, /\{location\.name\}/);
+  assert.match(supportables, /DirectChildLocationListIcon location=\{location\}/);
+  assert.doesNotMatch(supportables, /LocationMarker/);
   assert.match(supportables, /directChildLocationTypeLine\(location\)/);
 
   assert.match(
