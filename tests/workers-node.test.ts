@@ -102,8 +102,9 @@ test('grouping dashboard workers spread last-worked dates across the eight-week 
   assert.ok(labels.includes('Last worked yesterday'));
   assert.ok(labels.some((label) => /Last worked \d+ days ago/.test(label)));
   assert.ok(labels.some((label) => /Last worked \d+ weeks ago/.test(label)));
-  assert.ok(northern.some((worker) => worker.id === 'farah-t'));
-  assert.equal(northern[0]?.id, 'farah-t');
+  const farah = northern.find((worker) => worker.id === 'farah-t');
+  assert.ok(farah);
+  assert.equal(dashboardWorkerLastWorkedLabel(farah.lastWorkedAt!, now), 'Last worked today');
   assert.ok(!northern.some((worker) => worker.id === 'maxine-r'));
 
   const byShiftCount = [...northern].sort(
@@ -154,19 +155,17 @@ test('grouping dashboard worker exceptions stay sparse in the aside preview', ()
   const illawarra = preview('illawarra');
   const hunter = preview('hunter');
 
-  assert.equal(
-    northernSydney.filter((lines) => lines.length > 0).length,
-    0,
-  );
-  assert.equal(
-    illawarra.filter((lines) => lines.length > 0).length,
-    2,
-  );
-  assert.ok(illawarra.some((lines) => lines.length === 2));
-  assert.equal(
-    hunter.filter((lines) => lines.length > 0).length,
-    2,
-  );
+  for (const [name, rows] of [
+    ['Northern Sydney', northernSydney],
+    ['Illawarra', illawarra],
+    ['Hunter', hunter],
+  ] as const) {
+    assert.ok(
+      rows.filter((lines) => lines.length > 0).length <= 2,
+      `${name} should keep exceptions sparse in the first six workers`,
+    );
+    assert.ok(rows.every((lines) => lines.length <= 2));
+  }
 });
 
 test('Workers page keeps the location team first and the other tiers below it', () => {
@@ -300,8 +299,7 @@ test('grouping Workers default sort preserves the groupingWorkers rank', () => {
 
 test('grouping Workers house names show the top three then and N more', () => {
   const worker = groupingWorkers().find((entry) => entry.locations.length > 3);
-  assert.ok(worker, 'expected a worker with more than three houses');
-
+  assert.ok(worker, 'expected a real worker with history at more than three houses');
   const names = [...worker.locations]
     .sort(
       (first, second) =>

@@ -155,7 +155,7 @@ type WorkerSeed = {
   id: string;
   name: string;
   organisation: Organisation;
-  sites: Set<number>;
+  sites: Set<string>;
   core: boolean;
   planConfirmed: boolean;
   supportPlanReviewDueAt: Date | null;
@@ -196,7 +196,7 @@ export function locationTypeSuburbLine(
   return `${type}, ${location.suburb}`;
 }
 
-export const LOCATIONS: Location[] = [
+const LEGACY_LOCATIONS: Location[] = [
   {
     id: 'allambie-heights-day-program',
     name: 'Allambie Heights Day Program',
@@ -565,6 +565,141 @@ export const LOCATIONS: Location[] = [
   },
 ];
 
+type SilRegionSeed = {
+  id: string;
+  name: string;
+  existingLocationIds: string[];
+  newHouseSuburbs: string[];
+};
+
+const SIL_REGION_SEEDS: SilRegionSeed[] = [
+  {
+    id: 'northern-sydney',
+    name: 'Northern Sydney',
+    existingLocationIds: ['dee-why-1', 'galston-1', 'hornsby', 'north-ryde-1', 'wahroonga'],
+    newHouseSuburbs: ['Avalon Beach', 'Mosman'],
+  },
+  {
+    id: 'cpa-western-sydney',
+    name: 'Western Sydney',
+    existingLocationIds: ['harris-park-1', 'blacktown-1'],
+    newHouseSuburbs: ['Seven Hills', 'Toongabbie'],
+  },
+  {
+    id: 'hunter',
+    name: 'Hunter',
+    existingLocationIds: ['newcastle-1', 'maitland-1'],
+    newHouseSuburbs: ['Charlestown', 'Cessnock', 'Raymond Terrace'],
+  },
+  {
+    id: 'illawarra',
+    name: 'Illawarra',
+    existingLocationIds: ['wollongong-1', 'shellharbour-1'],
+    newHouseSuburbs: ['Dapto', 'Kiama', 'Corrimal'],
+  },
+  {
+    id: 'northern-beaches',
+    name: 'Northern Beaches',
+    existingLocationIds: ['manly-1'],
+    newHouseSuburbs: ['Narrabeen', 'Mona Vale', 'Brookvale', 'Freshwater', 'Collaroy'],
+  },
+  {
+    id: 'lower-north-shore',
+    name: 'Lower North Shore',
+    existingLocationIds: ['gladesville-1', 'lane-cove-1'],
+    newHouseSuburbs: ['Chatswood', 'Artarmon', 'Willoughby', 'Northbridge'],
+  },
+  {
+    id: 'central-coast',
+    name: 'Central Coast',
+    existingLocationIds: [],
+    newHouseSuburbs: ['Gosford', 'Wyoming', 'Erina', 'Woy Woy', 'Tuggerah', 'Bateau Bay'],
+  },
+  {
+    id: 'nepean',
+    name: 'Nepean',
+    existingLocationIds: [],
+    newHouseSuburbs: ['Penrith', 'Kingswood', 'St Marys', 'Emu Plains', 'Glenmore Park', 'Cambridge Park', 'Werrington'],
+  },
+  {
+    id: 'south-western-sydney',
+    name: 'South Western Sydney',
+    existingLocationIds: [],
+    newHouseSuburbs: ['Liverpool', 'Casula', 'Campbelltown', 'Ingleburn', 'Fairfield', 'Cabramatta', 'Narellan'],
+  },
+  {
+    id: 'new-england',
+    name: 'New England',
+    existingLocationIds: [],
+    newHouseSuburbs: ['Tamworth', 'Armidale', 'Gunnedah', 'Inverell', 'Moree', 'Narrabri', 'Glen Innes', 'Tenterfield'],
+  },
+  {
+    id: 'mid-north-coast',
+    name: 'Mid North Coast',
+    existingLocationIds: [],
+    newHouseSuburbs: ['Port Macquarie', 'Taree', 'Forster', 'Kempsey', 'Wauchope', 'Coffs Harbour', 'Sawtell', 'Nambucca Heads', 'Macksville'],
+  },
+  {
+    id: 'southern-nsw',
+    name: 'Southern NSW',
+    existingLocationIds: [],
+    newHouseSuburbs: ['Goulburn', 'Queanbeyan', 'Yass', 'Batemans Bay', 'Moruya', 'Bega', 'Cooma', 'Young', 'Cowra', 'Parkes'],
+  },
+  {
+    id: 'far-west',
+    name: 'Far West',
+    existingLocationIds: [],
+    newHouseSuburbs: ['Dubbo', 'Orange', 'Bathurst', 'Broken Hill', 'Mudgee', 'Forbes', 'Narromine', 'Wellington', 'Bourke', 'Cobar', 'Condobolin'],
+  },
+];
+
+function generatedLocation(id: string, name: string, suburb: string, serviceType: ServiceType): Location {
+  const participantNames =
+    serviceType === 'centre'
+      ? [`${name} client A`, `${name} client B`, `${name} client C`, `${name} client D`]
+      : [`${suburb} resident A`, `${suburb} resident B`, `${suburb} resident C`];
+  return {
+    id,
+    name,
+    suburb,
+    state: 'NSW',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    serviceType,
+    participants: people(id, participantNames),
+  };
+}
+
+const GENERATED_SIL_LOCATIONS = SIL_REGION_SEEDS.flatMap((region) =>
+  region.newHouseSuburbs.map((suburb, index) => {
+    const id = `${slugName(suburb)}-${index + 1}`;
+    return generatedLocation(id, `${suburb} ${index + 1}`, suburb, 'sil');
+  }),
+);
+
+const LIFESTYLES_CENTRE_SUBURBS = [
+  'Frenchs Forest',
+  'Chatswood',
+  'Ryde',
+  'Parramatta',
+  'Penrith',
+  'Liverpool',
+  'Campbelltown',
+  'Newcastle',
+  'Wollongong',
+];
+
+const GENERATED_LIFESTYLES_LOCATIONS = LIFESTYLES_CENTRE_SUBURBS.map((suburb) => {
+  const id = `${slugName(suburb)}-lifestyles-centre`;
+  return generatedLocation(id, `${suburb} Lifestyles Centre`, suburb, 'centre');
+});
+
+export const LOCATIONS: Location[] = [
+  ...LEGACY_LOCATIONS,
+  ...GENERATED_SIL_LOCATIONS,
+  ...GENERATED_LIFESTYLES_LOCATIONS,
+];
+
 export const GROUPING: Grouping = {
   id: 'northern-sydney',
   name: 'Northern Sydney',
@@ -578,16 +713,15 @@ export const GROUPING: Grouping = {
     'hornsby',
     'north-ryde-1',
     'wahroonga',
+    'avalon-beach-1',
+    'mosman-2',
   ],
 };
 
 /**
- * Two peer groupings drawn by different service lines. They share Dee Why 1 and
- * North Ryde 1, because a house really does have two parents, but three houses
- * on each side belong to one grouping only — otherwise standing at the caseload
- * looks exactly like standing in the region. Extra SIL regions and Careforce
- * caseloads sit beside those two so a crumb with siblings is the usual case,
- * not an exception.
+ * Sourced constraint: exactly three houses use a two-site manager model.
+ * The seed has no manager-to-house assignment, so this is recorded here only;
+ * grouping overlap represents service-line membership, not manager coverage.
  */
 export const GROUPINGS: Grouping[] = [
   GROUPING,
@@ -597,7 +731,7 @@ export const GROUPINGS: Grouping[] = [
     kind: 'region',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
-    locationIds: ['harris-park-1', 'blacktown-1'],
+    locationIds: ['harris-park-1', 'blacktown-1', 'seven-hills-1', 'toongabbie-2'],
   },
   {
     id: 'hunter',
@@ -605,7 +739,7 @@ export const GROUPINGS: Grouping[] = [
     kind: 'region',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
-    locationIds: ['newcastle-1', 'maitland-1'],
+    locationIds: ['newcastle-1', 'maitland-1', 'charlestown-1', 'cessnock-2', 'raymond-terrace-3'],
   },
   {
     id: 'illawarra',
@@ -613,8 +747,23 @@ export const GROUPINGS: Grouping[] = [
     kind: 'region',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
-    locationIds: ['wollongong-1', 'shellharbour-1'],
+    locationIds: ['wollongong-1', 'shellharbour-1', 'dapto-1', 'kiama-2', 'corrimal-3'],
   },
+  ...SIL_REGION_SEEDS.slice(4).map((region) => ({
+    id: region.id,
+    name: region.name,
+    kind: 'region' as const,
+    organisation: 'Cerebral Palsy Alliance' as const,
+    sector: 'disability' as const,
+    locationIds: [
+      ...region.existingLocationIds,
+      ...region.newHouseSuburbs.map((suburb, index) => `${slugName(suburb)}-${index + 1}`),
+    ],
+  })),
+  /**
+   * 12 Lifestyles centres is an assumed operating scale for research; confirm
+   * the number and regional split with participants.
+   */
   {
     id: 'northern-lifestyles',
     name: 'Northern Lifestyles',
@@ -626,6 +775,11 @@ export const GROUPINGS: Grouping[] = [
       'brookvale-day-program',
       'forestville-home',
       'chatswood-home',
+      'frenchs-forest-lifestyles-centre',
+      'chatswood-lifestyles-centre',
+      'ryde-lifestyles-centre',
+      'parramatta-lifestyles-centre',
+      'penrith-lifestyles-centre',
     ],
   },
   {
@@ -634,8 +788,19 @@ export const GROUPINGS: Grouping[] = [
     kind: 'lifestyles',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
-    locationIds: ['pennant-hills-day-program', 'ruby-chen-home'],
+    locationIds: [
+      'pennant-hills-day-program',
+      'ruby-chen-home',
+      'liverpool-lifestyles-centre',
+      'campbelltown-lifestyles-centre',
+      'newcastle-lifestyles-centre',
+      'wollongong-lifestyles-centre',
+    ],
   },
+  /**
+   * 9 Careforce caseloads is an assumed operating scale for research; confirm
+   * caseload count and boundaries with participants.
+   */
   {
     id: 'careforce-area',
     name: 'Careforce area',
@@ -649,6 +814,10 @@ export const GROUPINGS: Grouping[] = [
       'careforce-western-caseload',
       'careforce-hunter-caseload',
       'careforce-illawarra-caseload',
+      'careforce-coastal-caseload',
+      'careforce-metropolitan-caseload',
+      'careforce-regional-caseload',
+      'careforce-west-caseload',
     ],
   },
   {
@@ -664,6 +833,8 @@ export const GROUPINGS: Grouping[] = [
       'lane-cove-1',
       'manly-1',
       'north-ryde-1',
+      'avalon-beach-1',
+      'mosman-2',
     ],
   },
   {
@@ -679,6 +850,8 @@ export const GROUPINGS: Grouping[] = [
       'chatswood-home',
       'north-ryde-1',
       'wahroonga',
+      'chatswood-1',
+      'artarmon-2',
     ],
   },
   {
@@ -687,7 +860,16 @@ export const GROUPINGS: Grouping[] = [
     kind: 'caseload',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
-    locationIds: ['harris-park-1', 'blacktown-1', 'gladesville-1'],
+    locationIds: [
+      'harris-park-1',
+      'blacktown-1',
+      'gladesville-1',
+      'seven-hills-1',
+      'toongabbie-2',
+      'penrith-1',
+      'kingswood-2',
+      'st-marys-3',
+    ],
   },
   {
     id: 'careforce-hunter-caseload',
@@ -695,7 +877,16 @@ export const GROUPINGS: Grouping[] = [
     kind: 'caseload',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
-    locationIds: ['newcastle-1', 'maitland-1', 'manly-1'],
+    locationIds: [
+      'newcastle-1',
+      'maitland-1',
+      'manly-1',
+      'charlestown-1',
+      'cessnock-2',
+      'raymond-terrace-3',
+      'gosford-1',
+      'wyoming-2',
+    ],
   },
   {
     id: 'careforce-illawarra-caseload',
@@ -703,7 +894,84 @@ export const GROUPINGS: Grouping[] = [
     kind: 'caseload',
     organisation: 'Cerebral Palsy Alliance',
     sector: 'disability',
-    locationIds: ['wollongong-1', 'shellharbour-1', 'forestville-home'],
+    locationIds: [
+      'wollongong-1',
+      'shellharbour-1',
+      'forestville-home',
+      'dapto-1',
+      'kiama-2',
+      'corrimal-3',
+      'batemans-bay-4',
+      'moruya-5',
+    ],
+  },
+  {
+    id: 'careforce-coastal-caseload',
+    name: 'Careforce Coastal caseload',
+    kind: 'caseload',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: [
+      'narrabeen-1',
+      'mona-vale-2',
+      'brookvale-3',
+      'freshwater-4',
+      'collaroy-5',
+      'gosford-1',
+      'erina-3',
+      'woy-woy-4',
+    ],
+  },
+  {
+    id: 'careforce-metropolitan-caseload',
+    name: 'Careforce Metropolitan caseload',
+    kind: 'caseload',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: [
+      'lane-cove-1',
+      'chatswood-1',
+      'artarmon-2',
+      'willoughby-3',
+      'northbridge-4',
+      'liverpool-1',
+      'casula-2',
+      'fairfield-5',
+    ],
+  },
+  {
+    id: 'careforce-regional-caseload',
+    name: 'Careforce Regional caseload',
+    kind: 'caseload',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: [
+      'tamworth-1',
+      'armidale-2',
+      'gunnedah-3',
+      'inverell-4',
+      'port-macquarie-1',
+      'taree-2',
+      'forster-3',
+      'kempsey-4',
+    ],
+  },
+  {
+    id: 'careforce-west-caseload',
+    name: 'Careforce West caseload',
+    kind: 'caseload',
+    organisation: 'Cerebral Palsy Alliance',
+    sector: 'disability',
+    locationIds: [
+      'dubbo-1',
+      'orange-2',
+      'bathurst-3',
+      'broken-hill-4',
+      'mudgee-5',
+      'forbes-6',
+      'narromine-7',
+      'wellington-8',
+    ],
   },
   {
     id: 'northcott-sil-services',
@@ -771,6 +1039,15 @@ export const GROUPINGS: Grouping[] = [
       'cpa-western-sydney',
       'hunter',
       'illawarra',
+      'northern-beaches',
+      'lower-north-shore',
+      'central-coast',
+      'nepean',
+      'south-western-sydney',
+      'new-england',
+      'mid-north-coast',
+      'southern-nsw',
+      'far-west',
     ],
   },
   {
@@ -992,8 +1269,17 @@ function slugName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function countAt(seeds: WorkerSeed[], locationIndex: number): number {
-  return seeds.filter((worker) => worker.sites.has(locationIndex)).length;
+function stableHash(value: string): number {
+  let hash = 2166136261;
+  for (const character of value) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function countAt(seeds: WorkerSeed[], locationId: string): number {
+  return seeds.filter((worker) => worker.sites.has(locationId)).length;
 }
 
 /** One identity per provider. History overlaps locations but never organisations. */
@@ -1009,7 +1295,7 @@ function buildWorkerSeeds(): WorkerSeed[] {
           id: slugName(name),
           name,
           organisation: organisation as Organisation,
-          sites: new Set<number>(),
+          sites: new Set<string>(),
           core: false,
           planConfirmed,
           supportPlanReviewDueAt: planConfirmed
@@ -1027,86 +1313,167 @@ function buildWorkerSeeds(): WorkerSeed[] {
       }),
   );
 
-  for (const organisation of Object.keys(WORKER_POOL) as Organisation[]) {
-    const locationIndexes = LOCATIONS.flatMap((location, index) =>
-      location.organisation === organisation ? [index] : [],
+  for (const organisation of ['Northcott', 'Life Without Barriers'] as Organisation[]) {
+    const providerLocations = LOCATIONS.filter(
+      (location) => location.organisation === organisation,
     );
     const providerSeeds = seeds.filter(
       (worker) => worker.organisation === organisation,
     );
 
     /* Keep a few narrow histories for breadth comparisons. */
-    const singleSiteCount = Math.min(2, locationIndexes.length);
+    const singleSiteCount = Math.min(2, providerLocations.length);
     for (let index = 0; index < singleSiteCount; index += 1) {
-      providerSeeds[index].sites.add(locationIndexes[index]);
+      providerSeeds[index].sites.add(providerLocations[index].id);
       providerSeeds[index].core = true;
     }
 
     let next = singleSiteCount;
-    if (locationIndexes.length > 1 && providerSeeds[next]) {
-      providerSeeds[next].sites.add(locationIndexes[0]);
-      providerSeeds[next].sites.add(locationIndexes[locationIndexes.length - 1]);
+    if (providerLocations.length > 1 && providerSeeds[next]) {
+      providerSeeds[next].sites.add(providerLocations[0].id);
+      providerSeeds[next].sites.add(providerLocations[providerLocations.length - 1].id);
       providerSeeds[next].core = true;
       next += 1;
     }
 
     /* Two people carry history across this provider, never across providers. */
     for (const worker of providerSeeds.slice(next, next + 2)) {
-      for (const locationIndex of locationIndexes) {
-        worker.sites.add(locationIndex);
+      for (const location of providerLocations) {
+        worker.sites.add(location.id);
       }
     }
     next += 2;
 
     const fill = providerSeeds.slice(next);
-    for (const locationIndex of locationIndexes) {
-      const fixedCount = countAt(providerSeeds, locationIndex);
+    for (const location of providerLocations) {
+      const legacyLocationIndex = LOCATIONS.indexOf(location);
+      const fixedCount = countAt(providerSeeds, location.id);
       const target = Math.min(
-        WORKERS_PER_LOCATION[locationIndex],
+        WORKERS_PER_LOCATION[legacyLocationIndex],
         providerSeeds.length - 4,
         fixedCount + fill.length,
       );
-      const offset = locationIndexes.indexOf(locationIndex) % fill.length;
+      const offset = providerLocations.indexOf(location) % fill.length;
       const rotatedFill = [...fill.slice(offset), ...fill.slice(0, offset)];
-      while (countAt(providerSeeds, locationIndex) < target) {
+      while (countAt(providerSeeds, location.id) < target) {
         const candidate = rotatedFill.find(
-          (worker) => !worker.sites.has(locationIndex),
+          (worker) => !worker.sites.has(location.id),
         );
         if (!candidate) break;
-        candidate.sites.add(locationIndex);
+        candidate.sites.add(location.id);
       }
     }
   }
 
-  /* Two-house regions can otherwise share one roster, which leaves the
-     first house with nobody in the middle worker tier. */
-  for (const grouping of GROUPINGS) {
-    const indexes = grouping.locationIds
-      .map((id) => LOCATIONS.findIndex((location) => location.id === id))
-      .filter((index) => index >= 0);
-    if (indexes.length < 2) continue;
+  const cpaNamedSeeds = seeds.filter(
+    (worker) => worker.organisation === 'Cerebral Palsy Alliance',
+  );
+  const generatedNames = [
+    'Aaliyah', 'Amelia', 'Aria', 'Ava', 'Chloe', 'Evie', 'Grace', 'Harper',
+    'Isla', 'Layla', 'Leo', 'Liam', 'Mason', 'Mia', 'Noah', 'Oliver',
+    'Ruby', 'Sienna', 'Sophie', 'Theo', 'Willow', 'Xavier',
+  ];
+  let generatedNameIndex = 0;
+  const generatedInitials = (index: number): string => {
+    const first = String.fromCharCode(65 + (index % 26));
+    const cycle = Math.floor(index / 26);
+    return cycle === 0
+      ? first
+      : `${String.fromCharCode(64 + cycle)}${first}`;
+  };
+  const nextGeneratedWorkerName = (): string => {
+    const index = generatedNameIndex;
+    generatedNameIndex += 1;
+    return `${generatedNames[index % generatedNames.length]} ${generatedInitials(
+      Math.floor(index / generatedNames.length),
+    )}`;
+  };
+  const makeGeneratedWorker = (
+    id: string,
+    name: string,
+    locationIds: string[],
+  ): WorkerSeed => {
+    const index = seedIndex;
+    seedIndex += 1;
+    const status = seededAssessmentStatus(index);
+    return {
+      id,
+      name,
+      organisation: 'Cerebral Palsy Alliance',
+      sites: new Set(locationIds),
+      core: false,
+      planConfirmed: index % 3 !== 0,
+      supportPlanReviewDueAt:
+        index % 3 !== 0 ? null : addDays(startOfDay(new Date()), -(1 + (index % 14))),
+      assessments: workerAssessments(status.medication, status.driving, index),
+    };
+  };
 
-    for (const locationIndex of indexes) {
-      const hasSiblingOnlyWorker = seeds.some(
-        (worker) =>
-          !worker.sites.has(locationIndex) &&
-          indexes.some(
-            (otherIndex) =>
-              otherIndex !== locationIndex && worker.sites.has(otherIndex),
-          ),
-      );
-      if (hasSiblingOnlyWorker) continue;
-      if (countAt(seeds, locationIndex) <= 1) continue;
+  /**
+   * 20% cross-house overlap is assumed and needs participant checking.
+   * Shared workers are explicitly active at a second house, never a whole region.
+   */
+  SIL_REGION_SEEDS.forEach((region, regionIndex) => {
+    const locationIds = [
+      ...region.existingLocationIds,
+      ...region.newHouseSuburbs.map((suburb, index) => `${slugName(suburb)}-${index + 1}`),
+    ];
+    const totalMemberships = locationIds.length * 13;
+    const sharedCount = Math.round(totalMemberships / 6);
+    const distinctCount = totalMemberships - sharedCount;
+    const regionalSeeds: WorkerSeed[] = [];
 
-      const shared = seeds.find(
-        (worker) =>
-          worker.sites.has(locationIndex) &&
-          indexes.some(
-            (otherIndex) =>
-              otherIndex !== locationIndex && worker.sites.has(otherIndex),
-          ),
+    for (let workerIndex = 0; workerIndex < distinctCount; workerIndex += 1) {
+      const named = regionIndex === 0 ? cpaNamedSeeds[workerIndex] : undefined;
+      const generatedName = nextGeneratedWorkerName();
+      const worker =
+        named ??
+        makeGeneratedWorker(
+          `cpa-${region.id}-worker-${String(workerIndex + 1).padStart(3, '0')}`,
+          generatedName,
+          [],
+        );
+      worker.sites.clear();
+      regionalSeeds.push(worker);
+    }
+
+    regionalSeeds.slice(0, sharedCount).forEach((worker, workerIndex) => {
+      worker.sites.add(locationIds[workerIndex % locationIds.length]);
+      worker.sites.add(
+        locationIds[(workerIndex + Math.ceil(locationIds.length / 2)) % locationIds.length],
       );
-      shared?.sites.delete(locationIndex);
+    });
+    regionalSeeds.slice(sharedCount).forEach((worker) => {
+      const locationId = [...locationIds].sort(
+        (a, b) => countAt(regionalSeeds, a) - countAt(regionalSeeds, b),
+      )[0];
+      worker.sites.add(locationId);
+    });
+    /* Eleni supplies one real many-house history for the uncapped Workers
+       table and namedLocationList(..., 3). Keep this separate from the assumed
+       cohort whose workers are active at exactly a second house. */
+    if (regionIndex === 0 && regionalSeeds[0]) {
+      regionalSeeds[0].sites.clear();
+      locationIds.slice(0, 5).forEach((locationId) => {
+        regionalSeeds[0].sites.add(locationId);
+      });
+    }
+    seeds.push(...regionalSeeds.filter((worker) => !seeds.includes(worker)));
+  });
+
+  for (const location of LOCATIONS.filter(
+    (item) =>
+      item.organisation === 'Cerebral Palsy Alliance' && item.serviceType !== 'sil',
+  )) {
+    for (let workerIndex = 0; workerIndex < 12; workerIndex += 1) {
+      const name = nextGeneratedWorkerName();
+      seeds.push(
+        makeGeneratedWorker(
+          `cpa-${location.id}-worker-${String(workerIndex + 1).padStart(2, '0')}`,
+          name,
+          [location.id],
+        ),
+      );
     }
   }
 
@@ -1115,8 +1482,8 @@ function buildWorkerSeeds(): WorkerSeed[] {
 
 const WORKER_SEEDS = buildWorkerSeeds();
 
-function rosterFor(locationIndex: number): WorkerSeed[] {
-  return WORKER_SEEDS.filter((worker) => worker.sites.has(locationIndex));
+function rosterFor(locationId: string): WorkerSeed[] {
+  return WORKER_SEEDS.filter((worker) => worker.sites.has(locationId));
 }
 
 const DAYTIME_SHIFTS: Record<number, { hour: number; minutes: number; hours: number }[]> = {
@@ -1143,7 +1510,16 @@ const DAYTIME_SHIFTS: Record<number, { hour: number; minutes: number; hours: num
  * than a wall of identical columns. The busiest day is three day shifts plus the
  * overnight, which still fits the dashboard grid without an expander.
  */
-function daytimeCountFor(locationIndex: number, random: () => number): number {
+function daytimeCountFor(
+  location: Location,
+  locationIndex: number,
+  offset: number,
+  random: () => number,
+): number {
+  if (location.organisation === 'Cerebral Palsy Alliance') {
+    if (location.serviceType === 'sil') return offset % 4 === 0 ? 1 : 2;
+    return offset % 3 === 0 ? 3 : 2;
+  }
   const base = DAYTIME_COUNTS[locationIndex];
   const roll = random();
   if (roll < 0.2) return Math.max(1, base - 1);
@@ -1205,6 +1581,53 @@ const APPROVALS_WAITING = LOCATIONS.map(
       : APPROVAL_PATTERN[index % APPROVAL_PATTERN.length],
 );
 
+const CPA_HIGH_PRESSURE_LOCATIONS = new Set([
+  'allambie-heights-day-program',
+  'dee-why-1',
+  'hornsby',
+  'north-ryde-1',
+  'wahroonga',
+  'avalon-beach-1',
+  'harris-park-1',
+  'newcastle-1',
+  'wollongong-1',
+  'manly-1',
+  'gladesville-1',
+  'gosford-1',
+  'penrith-1',
+  'liverpool-1',
+  'tamworth-1',
+  'port-macquarie-1',
+  'goulburn-1',
+  'dubbo-1',
+]);
+
+function requestPressureFor(location: Location, locationIndex: number) {
+  if (location.organisation !== 'Cerebral Palsy Alliance') {
+    return REQUEST_PRESSURE[locationIndex] ?? REQUEST_PRESSURE[0];
+  }
+  if (!CPA_HIGH_PRESSURE_LOCATIONS.has(location.id)) {
+    return { thisWeek: 0, nextWeek: 0, unansweredHours: [] };
+  }
+  return { thisWeek: 3, nextWeek: 2, unansweredHours: [72, 36, 18, 8, 3] };
+}
+
+function unreadMessagesFor(location: Location, locationIndex: number): number {
+  if (location.organisation !== 'Cerebral Palsy Alliance') {
+    return UNREAD_MESSAGES[locationIndex] ?? 0;
+  }
+  if (location.id === 'galston-1') return 0;
+  return CPA_HIGH_PRESSURE_LOCATIONS.has(location.id) ? 2 + (stableHash(location.id) % 5) : 0;
+}
+
+function approvalsWaitingFor(location: Location, locationIndex: number): number {
+  if (location.organisation !== 'Cerebral Palsy Alliance') {
+    return APPROVALS_WAITING[locationIndex] ?? 0;
+  }
+  if (location.id === 'galston-1') return 0;
+  return CPA_HIGH_PRESSURE_LOCATIONS.has(location.id) ? 2 + (stableHash(location.id) % 4) : 0;
+}
+
 function markRequestedInWeek(
   bookings: Booking[],
   weekStart: Date,
@@ -1245,8 +1668,13 @@ function markRequestedInWeek(
   }
 }
 
-function assignRequested(bookings: Booking[], locationIndex: number, now: Date): void {
-  const pressure = REQUEST_PRESSURE[locationIndex] ?? REQUEST_PRESSURE[0];
+function assignRequested(
+  bookings: Booking[],
+  location: Location,
+  locationIndex: number,
+  now: Date,
+): void {
+  const pressure = requestPressureFor(location, locationIndex);
   const thisWeekStart = startOfWeek(startOfDay(now));
   const hourIndex = { n: 0 };
   markRequestedInWeek(
@@ -1355,15 +1783,22 @@ function buildBookings(
   locationIndex: number,
   roster: WorkerSeed[],
 ): Booking[] {
-  const random = seededRandom(4801 + locationIndex * 977);
+  const random = seededRandom(
+    location.organisation === 'Cerebral Palsy Alliance'
+      ? 4801 + stableHash(location.id)
+      : 4801 + locationIndex * 977,
+  );
   const today = startOfDay(new Date());
   const now = new Date();
   const bookings: Booking[] = [];
   const anchor = roster.find((worker) => worker.core);
 
-  for (let offset = -14; offset <= 27; offset += 1) {
+  const firstOffset =
+    location.organisation === 'Cerebral Palsy Alliance' ? -56 : -14;
+  for (let offset = firstOffset; offset <= 27; offset += 1) {
     if (
       location.serviceType === 'home-community' &&
+      location.organisation !== 'Cerebral Palsy Alliance' &&
       offset !== 0 &&
       random() < 0.4
     ) {
@@ -1371,7 +1806,9 @@ function buildBookings(
     }
 
     const day = addDays(today, offset);
-    const daytime = DAYTIME_SHIFTS[daytimeCountFor(locationIndex, random)];
+    const daytime = DAYTIME_SHIFTS[
+      daytimeCountFor(location, locationIndex, offset, random)
+    ];
     const bookingRoster =
       offset >= 0 && anchor
         ? roster.filter((worker) => worker.id !== anchor.id)
@@ -1436,7 +1873,7 @@ function buildBookings(
     }
   }
 
-  assignRequested(bookings, locationIndex, now);
+  assignRequested(bookings, location, locationIndex, now);
   assignRequestOutreach(bookings, location, roster, now);
   assignCancellation(bookings, location, now);
   return bookings.sort((a, b) => a.start.getTime() - b.start.getTime());
@@ -1458,7 +1895,7 @@ function invoicesForLocation(
 }
 
 function buildLocationData(location: Location, locationIndex: number): LocationData {
-  const roster = rosterFor(locationIndex);
+  const roster = rosterFor(location.id);
   const bookings = buildBookings(location, locationIndex, roster);
   const today = startOfDay(new Date());
 
@@ -1488,9 +1925,9 @@ function buildLocationData(location: Location, locationIndex: number): LocationD
     workers,
     bookings,
     requestsToAccept: bookings.filter((b) => b.status === 'requested' && b.start >= today).length,
-    bookingsToApprove: endedRecently.slice(0, APPROVALS_WAITING[locationIndex] ?? 0).length,
+    bookingsToApprove: endedRecently.slice(0, approvalsWaitingFor(location, locationIndex)).length,
     plansToReview: workers.filter((worker) => !worker.planConfirmed).length,
-    unreadMessages: UNREAD_MESSAGES[locationIndex] ?? 0,
+    unreadMessages: unreadMessagesFor(location, locationIndex),
     invoices: invoicesForLocation(location, locationIndex),
   };
 }
@@ -1762,10 +2199,23 @@ function applyDashboardRecencyStamps(now = new Date()): void {
   const today = startOfDay(now);
   const windowStart = addDays(today, -GROUPING_DASHBOARD_WORKER_WEEKS * 7);
   const outsideOffset = -(GROUPING_DASHBOARD_WORKER_WEEKS * 7 + 5);
+  const silRegionIds = new Set(
+    findGrouping('cpa-sil')?.groupingIds ?? [],
+  );
 
   for (const grouping of GROUPINGS) {
     const locationIds = descendantLocationIds(grouping);
     if (locationIds.length === 0) continue;
+
+    if (silRegionIds.has(grouping.id)) {
+      const regionalWorkers = WORKER_SEEDS.filter((worker) =>
+        locationIds.some((locationId) => worker.sites.has(locationId)),
+      );
+      [0, -1, -3, -7, -14, -21, -35, -49].forEach((dayOffset, index) => {
+        const worker = regionalWorkers[index];
+        if (worker) stampWorkerRecency(worker.id, locationIds, dayOffset, now);
+      });
+    }
 
     for (const workerId of GROUPING_DASHBOARD_OUTSIDE_WINDOW[grouping.id] ?? []) {
       for (const locationId of locationIds) {

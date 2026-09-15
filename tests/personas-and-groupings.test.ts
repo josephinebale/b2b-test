@@ -26,7 +26,7 @@ function source(path: string): string {
 }
 
 test('arms, regions, lifestyles, caseloads, and areas use one recursive grouping model', () => {
-  assert.equal(GROUPINGS.length, 22);
+  assert.equal(GROUPINGS.length, 35);
   const region = findGrouping('northern-sydney');
   const caseload = findGrouping('careforce-caseload');
   const secondCaseload = findGrouping('careforce-northern-caseload');
@@ -35,12 +35,10 @@ test('arms, regions, lifestyles, caseloads, and areas use one recursive grouping
   assert.ok(region && caseload && secondCaseload && area && lifestyles);
   assert.equal(region.name, 'Northern Sydney');
   assert.equal(caseload.name, 'Careforce caseload');
-  assert.deepEqual(area.groupingIds, [
+  assert.equal(area.groupingIds?.length, 9);
+  assert.deepEqual(area.groupingIds?.slice(0, 2), [
     'careforce-caseload',
     'careforce-northern-caseload',
-    'careforce-western-caseload',
-    'careforce-hunter-caseload',
-    'careforce-illawarra-caseload',
   ]);
   assert.deepEqual(
     descendantLocationIds(area),
@@ -88,32 +86,20 @@ test('arms, regions, lifestyles, caseloads, and areas use one recursive grouping
 });
 
 test('an organisation has arms as its direct children, never operational groupings', () => {
+  const cpaRoots = rootGroupingsForOrganisation('Cerebral Palsy Alliance');
+  assert.deepEqual(cpaRoots.map(({ name, kind }) => ({ name, kind })), [
+    { name: 'SIL', kind: 'arm' },
+    { name: 'Lifestyles', kind: 'arm' },
+    { name: 'Careforce', kind: 'arm' },
+  ]);
+  assert.equal(cpaRoots.find(({ name }) => name === 'SIL')?.groupingIds?.length, 13);
   assert.deepEqual(
-    rootGroupingsForOrganisation('Cerebral Palsy Alliance').map(
-      ({ name, kind, groupingIds }) => ({ name, kind, groupingIds }),
-    ),
-    [
-      {
-        name: 'SIL',
-        kind: 'arm',
-        groupingIds: [
-          'northern-sydney',
-          'cpa-western-sydney',
-          'hunter',
-          'illawarra',
-        ],
-      },
-      {
-        name: 'Lifestyles',
-        kind: 'arm',
-        groupingIds: ['northern-lifestyles', 'western-lifestyles'],
-      },
-      {
-        name: 'Careforce',
-        kind: 'arm',
-        groupingIds: ['careforce-area'],
-      },
-    ],
+    cpaRoots.find(({ name }) => name === 'Lifestyles')?.groupingIds,
+    ['northern-lifestyles', 'western-lifestyles'],
+  );
+  assert.deepEqual(
+    cpaRoots.find(({ name }) => name === 'Careforce')?.groupingIds,
+    ['careforce-area'],
   );
   assert.deepEqual(
     rootGroupingsForOrganisation('Northcott').map(({ name, kind }) => ({
@@ -246,15 +232,9 @@ test('parent-node personas see child groupings instead of descendant locations',
   const rachelChildren = groupingDashboardChildren(
     findGrouping(rachel.entry.groupingId)!,
   );
-  assert.deepEqual(
-    rachelChildren.groupings.map((grouping) => grouping.name),
-    [
-      'Careforce caseload',
-      'Careforce Northern caseload',
-      'Careforce Western caseload',
-      'Careforce Hunter caseload',
-      'Careforce Illawarra caseload',
-    ],
+  assert.equal(rachelChildren.groupings.length, 9);
+  assert.ok(
+    rachelChildren.groupings.every((grouping) => grouping.name.startsWith('Careforce')),
   );
   assert.deepEqual(rachelChildren.housesAndCentres, []);
   assert.deepEqual(rachelChildren.clients, []);

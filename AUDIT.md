@@ -337,6 +337,14 @@ The repo has never contained `::-webkit-scrollbar`, `scrollbar-width`, `scrollba
 
 Do not add overlay scrollbar CSS to compensate. Verify appearance in a standalone browser rather than the embedded one.
 
+## Section heading gaps — closed non-finding
+
+Section heading gaps on a region Overview are **consistent**.
+
+Measured 15 Sep 2026 on Far West. Line-box to the container beneath is about **12px** on all three sections (`SectionHeadingRow` `mb-3`). The apparent difference is half-leading: **4.5px** under a **20px** supporting line versus **6.3px** under a **24px** title, plus a **0.9px** card border on two of the three. Total variance **2.6px**.
+
+Do not make `SectionHeadingRow` type-size aware to chase it.
+
 ## 6. Duplication
 
 ### D1 — Direct-location rows implement the same entity with different markup

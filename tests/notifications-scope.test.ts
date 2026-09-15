@@ -31,22 +31,11 @@ test('a persona notification boundary is their configured entry node', () => {
   const region = findGrouping(regionManager.entry.groupingId);
   assert.ok(caseload && region);
   assert.deepEqual([houseManager.entry.locationId], ['dee-why-1']);
-  assert.deepEqual(descendantLocationIds(caseload), [
-    'dee-why-1',
-    'forestville-home',
-    'gladesville-1',
-    'lane-cove-1',
-    'manly-1',
-    'north-ryde-1',
-  ]);
-  assert.deepEqual(descendantLocationIds(region), [
-    'allambie-heights-day-program',
-    'dee-why-1',
-    'galston-1',
-    'hornsby',
-    'north-ryde-1',
-    'wahroonga',
-  ]);
+  assert.deepEqual(descendantLocationIds(caseload), caseload.locationIds);
+  assert.deepEqual(descendantLocationIds(region), region.locationIds);
+  assert.ok(caseload.locationIds.includes('dee-why-1'));
+  assert.ok(region.locationIds.includes('allambie-heights-day-program'));
+  assert.ok(region.locationIds.includes('galston-1'));
 });
 
 test('App derives notifications from the entry node and renders them at groupings', () => {

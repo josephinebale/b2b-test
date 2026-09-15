@@ -204,13 +204,7 @@ test('a crumb menu contains siblings from its parent and no descendants', () => 
 
   assert.deepEqual(
     childGroupings(area).map(({ id }) => id),
-    [
-      'careforce-caseload',
-      'careforce-northern-caseload',
-      'careforce-western-caseload',
-      'careforce-hunter-caseload',
-      'careforce-illawarra-caseload',
-    ],
+    area.groupingIds,
     'Rachel sees the other caseloads, not locations below any caseload',
   );
   assert.ok(

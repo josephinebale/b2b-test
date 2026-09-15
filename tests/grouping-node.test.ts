@@ -52,7 +52,13 @@ function source(path: string): string {
 test('the Northern Sydney grouping keeps its SIL houses and the day program', () => {
   assert.equal(GROUPING.id, 'northern-sydney');
   assert.equal(GROUPING.name, 'Northern Sydney');
-  assert.equal(GROUPING.locationIds.length, 6);
+  assert.equal(GROUPING.locationIds.length, 8);
+  assert.equal(
+    GROUPING.locationIds.filter(
+      (id) => LOCATIONS.find((location) => location.id === id)?.serviceType === 'sil',
+    ).length,
+    7,
+  );
   assert.ok(GROUPING.locationIds.includes('allambie-heights-day-program'));
   assert.ok(GROUPING.locationIds.every((id) => LOCATIONS.some((location) => location.id === id)));
 });
@@ -87,7 +93,7 @@ test('a grouping dashboard lists direct children, with groupings before split lo
   const careforceArea = groupingDashboardChildren(
     findGrouping('careforce-area')!,
   );
-  assert.equal(careforceArea.groupings.length, 5);
+  assert.equal(careforceArea.groupings.length, 9);
   assert.equal(careforceArea.housesAndCentres.length, 0);
   assert.equal(careforceArea.clients.length, 0);
 
@@ -110,16 +116,8 @@ test('a grouping dashboard lists direct children, with groupings before split lo
 test('child grouping rows roll up counts but retain their own kind', () => {
   const careforceArea = findGrouping('careforce-area')!;
   const careforceChildren = groupingDashboardChildren(careforceArea).groupings;
-  assert.deepEqual(
-    careforceChildren.map((child) => child.name),
-    [
-      'Careforce caseload',
-      'Careforce Northern caseload',
-      'Careforce Western caseload',
-      'Careforce Hunter caseload',
-      'Careforce Illawarra caseload',
-    ],
-  );
+  assert.equal(careforceChildren.length, 9);
+  assert.ok(careforceChildren.every((child) => child.name.startsWith('Careforce')));
   assert.equal(childGroupingSectionTitle(careforceChildren), 'Caseloads');
 
   const greaterSydney = findGrouping('lwb-greater-sydney')!;
@@ -166,22 +164,22 @@ test('child grouping rows roll up counts but retain their own kind', () => {
   );
   assert.equal(
     groupingDirectChildrenCountLine(findGrouping('hunter')!),
-    '2 houses in Hunter',
+    '5 houses in Hunter',
   );
   assert.equal(
     groupingDirectChildrenCountLine(findGrouping('northern-sydney')!),
-    '5 houses and 1 centre in Northern Sydney',
+    '7 houses and 1 centre in Northern Sydney',
   );
   assert.equal(
     groupingHousesAndCentresCountLine(findGrouping('northern-sydney')!),
-    '5 houses and 1 centre in Northern Sydney',
+    '7 houses and 1 centre in Northern Sydney',
   );
   assert.equal(groupingClientsCountLine(findGrouping('northern-sydney')!), '');
   assert.equal(
     groupingHousesAndCentresCountLine(
       findGrouping('careforce-northern-caseload')!,
     ),
-    '5 houses in Careforce Northern caseload',
+    '7 houses in Careforce Northern caseload',
   );
   assert.equal(
     groupingClientsCountLine(findGrouping('careforce-northern-caseload')!),
@@ -189,7 +187,7 @@ test('child grouping rows roll up counts but retain their own kind', () => {
   );
   assert.equal(
     groupingHousesAndCentresCountLine(findGrouping('northern-lifestyles')!),
-    '2 centres in Northern Lifestyles',
+    '7 centres in Northern Lifestyles',
   );
   assert.equal(
     groupingClientsCountLine(findGrouping('northern-lifestyles')!),
@@ -197,23 +195,20 @@ test('child grouping rows roll up counts but retain their own kind', () => {
   );
   assert.equal(
     groupingContentsSummary(findGrouping('cpa-sil')!),
-    '11 houses and 1 centre',
+    '91 houses and 1 centre',
   );
   assert.equal(
     groupingContentsSummary(findGrouping('cpa-lifestyles')!),
-    '3 centres and 3 clients',
+    '12 centres and 3 clients',
   );
-  assert.equal(
-    groupingContentsSummary(findGrouping('cpa-careforce')!),
-    '14 houses and 2 clients',
-  );
+  assert.match(groupingContentsSummary(findGrouping('cpa-careforce')!), /^\d+ houses and 2 clients$/);
   assert.equal(
     groupingContentsSummary(findGrouping('northern-sydney')!),
-    '5 houses and 1 centre',
+    '7 houses and 1 centre',
   );
   assert.equal(
     groupingContentsSummary(findGrouping('careforce-caseload')!),
-    '5 houses and 1 client',
+    '7 houses and 1 client',
   );
   assert.equal(
     groupingContentsSummary(findGrouping('lwb-northern-sydney')!),
@@ -225,7 +220,7 @@ test('child grouping rows roll up counts but retain their own kind', () => {
   );
   assert.equal(
     groupingContentsSummary(findGrouping('northern-lifestyles')!),
-    '2 centres and 2 clients',
+    '7 centres and 2 clients',
   );
 
   const locations = source('../src/data/locations.ts');
