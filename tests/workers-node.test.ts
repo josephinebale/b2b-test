@@ -184,7 +184,7 @@ test('Workers page keeps the location team first and the other tiers below it', 
   assert.doesNotMatch(workers, /Paying at|pay level/i);
 });
 
-test('grouping Workers page stays hidden behind landing flags', () => {
+test('grouping Workers page stays hidden behind GROUPING_WORKERS_CONTENT_ENABLED', () => {
   const workers = source('../src/pages/Workers.tsx');
   const panel = source('../src/pages/dashboard/WorkersPanel.tsx');
   const dashboard = source('../src/pages/Dashboard.tsx');
@@ -194,7 +194,7 @@ test('grouping Workers page stays hidden behind landing flags', () => {
   );
 
   assert.match(groupingWorkersBranch, /GROUPING_WORKERS_CONTENT_ENABLED/);
-  assert.match(
+  assert.doesNotMatch(
     groupingWorkersBranch,
     /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED/,
   );
@@ -205,7 +205,7 @@ test('grouping Workers page stays hidden behind landing flags', () => {
   );
   assert.match(
     groupingWorkersBranch,
-    /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
+    /GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
   );
   assert.doesNotMatch(groupingWorkersBranch, /Search workers|nearbyWorkers|MessageSquare/);
   assert.doesNotMatch(groupingWorkersBranch, /workerProfilePath/);

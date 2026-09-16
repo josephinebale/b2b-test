@@ -368,7 +368,15 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
   assert.match(dashboard, /questionId="grouping-usage"/);
   assert.match(
     source('../src/pages/Workers.tsx'),
-    /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
+    /GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
+  );
+  assert.doesNotMatch(
+    source('../src/pages/Workers.tsx'),
+    /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED/,
+  );
+  assert.match(
+    source('../src/pages/GroupingWorkers.tsx'),
+    /GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
   );
   assert.match(
     source('../src/pages/Workers.tsx'),

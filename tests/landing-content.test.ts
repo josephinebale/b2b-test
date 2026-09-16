@@ -9,9 +9,9 @@ function source(path: string): string {
 test('landing bodies sit behind one off flag so the real screens cannot rot', () => {
   const placeholder = source('../src/components/LandingPlaceholder.tsx');
   const dashboard = source('../src/pages/Dashboard.tsx');
-  const groupingWorkers = source('../src/pages/Workers.tsx');
-  const bookings = source('../src/pages/Bookings.tsx');
+  const groupingWorkersPage = source('../src/pages/GroupingWorkers.tsx');
   const workers = source('../src/pages/Workers.tsx');
+  const bookings = source('../src/pages/Bookings.tsx');
   const messages = source('../src/pages/Messages.tsx');
   const settings = source('../src/pages/Settings.tsx');
   const supportables = source('../src/pages/Supportables.tsx');
@@ -21,7 +21,7 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
 
   assert.match(
     placeholder,
-    /export const LANDING_CONTENT_ENABLED = false/,
+    /export const LANDING_CONTENT_ENABLED = true/,
   );
   assert.match(
     placeholder,
@@ -51,19 +51,37 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
     assert.match(
       page,
       /LANDING_CONTENT_ENABLED \?[\s\S]*?<PageHeading[\s\S]*?: \(\s*<LandingPlaceholder/,
-      `${name} shows only the placeholder while the flag is off`,
+      `${name} keeps the landing gate in source`,
     );
   }
 
-  assert.match(groupingWorkers, /GROUPING_WORKERS_CONTENT_ENABLED/);
-  assert.match(groupingWorkers, /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED/);
-  assert.match(groupingWorkers, /<LandingPlaceholder/);
-  assert.match(groupingWorkers, /<PageHeading/);
-  assert.match(groupingWorkers, /<GroupingWorkersTable grouping=\{grouping\}/);
+  const groupingWorkersBranch = workers.slice(
+    workers.indexOf('if (!data)'),
+    workers.indexOf('const client ='),
+  );
+
+  assert.match(groupingWorkersBranch, /GROUPING_WORKERS_CONTENT_ENABLED/);
+  assert.doesNotMatch(
+    groupingWorkersBranch,
+    /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED/,
+  );
+  assert.match(groupingWorkersBranch, /<LandingPlaceholder/);
+  assert.match(groupingWorkersBranch, /<GroupingWorkersTable grouping=\{grouping\}/);
   assert.match(
-    groupingWorkers,
-    /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?<PageHeading[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
-    'grouping Workers shows only the placeholder while both flags are off',
+    groupingWorkersBranch,
+    /GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?<PageHeading[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
+    'grouping Workers shows only the placeholder while GROUPING_WORKERS_CONTENT_ENABLED is off',
+  );
+
+  assert.match(groupingWorkersPage, /GROUPING_WORKERS_CONTENT_ENABLED/);
+  assert.doesNotMatch(
+    groupingWorkersPage,
+    /LANDING_CONTENT_ENABLED \|\| GROUPING_WORKERS_CONTENT_ENABLED/,
+  );
+  assert.match(
+    groupingWorkersPage,
+    /GROUPING_WORKERS_CONTENT_ENABLED \?[\s\S]*?<PageHeading[\s\S]*?\)\s*:\s*\(\s*<LandingPlaceholder/,
+    'unrouted GroupingWorkers page matches the same gate',
   );
 
   assert.doesNotMatch(dashboard, /groupingOverviewContentEnabled/);
@@ -141,8 +159,8 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
   assert.match(header, /item\.label === 'Messages'/);
 
   assert.match(project, /LANDING_CONTENT_ENABLED/);
-  assert.match(project, /temporary/);
-  assert.match(project, /navigation and information architecture/);
+  assert.match(project, /GROUPING_WORKERS_CONTENT_ENABLED/);
+  assert.match(project, /GroupingWorkers\.tsx/);
   assert.doesNotMatch(project, /GROUPING_OVERVIEW_CONTENT_GROUPING_IDS/);
 });
 

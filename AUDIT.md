@@ -367,6 +367,8 @@ Places:
 
 All perform title/support/control geometry, but use different wrappers and alignment. The Overview and location-week versions are visually the closest duplicates. The docs deliberately restrict `SectionHeadingRow` to Overview (`PROJECT.md:377`), but do not explain why the same geometry needs separate implementations.
 
+**Unrouted page duplicate:** `GroupingWorkers.tsx` repeats the grouping Workers gate and table from the `!data` branch of `Workers.tsx` but is not imported by `App.tsx` — routing uses `Workers` only. The two files were kept in sync when grouping Workers was split onto `GROUPING_WORKERS_CONTENT_ENABLED` alone; the duplicate page itself is still unresolved.
+
 Documented duplicates not flagged:
 
 - grouping versus location status pills;

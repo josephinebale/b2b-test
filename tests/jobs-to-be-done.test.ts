@@ -153,7 +153,7 @@ test('addressed jobs match what the current flags leave reachable', async () => 
   const workersPanel = source('../src/pages/dashboard/WorkersPanel.tsx');
   const project = source('../PROJECT.md');
 
-  assert.match(placeholder, /export const LANDING_CONTENT_ENABLED = false/);
+  assert.match(placeholder, /export const LANDING_CONTENT_ENABLED = true/);
   assert.match(search, /export const HEADER_SEARCH_VISIBLE = false/);
   assert.match(
     workersPanel,

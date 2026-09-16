@@ -167,7 +167,7 @@ export function Workers({
   if (!data) {
     return (
       <div className="width-main-column">
-        {LANDING_CONTENT_ENABLED || GROUPING_WORKERS_CONTENT_ENABLED ? (
+        {GROUPING_WORKERS_CONTENT_ENABLED ? (
           <>
             <PageHeading title="Workers" />
             <GroupingWorkersTable grouping={grouping} />
