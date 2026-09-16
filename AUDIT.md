@@ -740,11 +740,13 @@ Place: every Bookings status view results header (`Bookings.tsx`).
 
 `LineAlignedControl` is present on Bookings week and Workers actions, but with a description the 36px buttons visually align to the description line, not the 24px h1 first line. Title-only headings (Messages, settings) show 0px delta. Recomputes A2's “description stays 60px” case on location pages; not fixed here.
 
-### Scale — Workers tier 2 (Dubbo 1)
+### Scale — Workers tier 2 (Dubbo 1) — closed as seeding artefact
 
-Rendered **106 rows** in **Worked elsewhere in Far West**, uncapped and unpaginated. Tier 1: 13 rows; tier 3: 5 rows. Worker list row height **88px** (`offsetHeight` on first `li`).
+**Closed 16 Sep 2026.** The original finding measured **106 rows** in **Worked elsewhere in Far West** at Dubbo 1 — a house inside an invented **700 km** region (Dubbo, Broken Hill, Bourke, and the rest). That inflated tier 2 because the seed treated one region as rural NSW, not because the Workers tier model is wrong.
 
-Wollongong 1 (Illawarra region, smaller footprint): tier 1 **13**, tier 2 **41**, tier 3 **5** — same tiers, manageable length. Dubbo’s tier 2 reads as a wall (~12 viewport heights at 1440×900) rather than a discriminating middle band. Data is correct; presentation is the risk.
+The seed now matches CPA’s real footprint: Sydney metro, Central Coast, and Newcastle/Hunter, with compact sub-metro regions of roughly seven to eight houses. **Workers who know another house in the same grouping** remains a sound product suggestion when regions are geographically tight; the wall-of-rows problem was a data artefact, not a design flaw.
+
+Historical note (pre-correction): Wollongong 1 tier 2 was **41** rows; Dubbo 1 was **106**. Re-measure at a compact region after reseed if tier length needs revisiting.
 
 ### Scale — Bookings status total vs week schedule
 

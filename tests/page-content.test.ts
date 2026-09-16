@@ -55,8 +55,8 @@ test('grouping page headings carry the node name in sentence case', () => {
   const illawarra = findGrouping('illawarra');
   const northernSydney = findGrouping('northern-sydney');
   const careforceArea = findGrouping('careforce-area');
-  const hunter = findGrouping('hunter');
-  assert.ok(illawarra && northernSydney && careforceArea && hunter);
+  const newcastle = findGrouping('newcastle');
+  assert.ok(illawarra && northernSydney && careforceArea && newcastle);
 
   assert.equal(groupingOverviewHeading(illawarra.name), 'Illawarra overview');
   assert.equal(
@@ -67,7 +67,7 @@ test('grouping page headings carry the node name in sentence case', () => {
     groupingOverviewHeading(careforceArea.name),
     'Careforce area overview',
   );
-  assert.equal(groupingOverviewHeading(hunter.name), 'Hunter overview');
+  assert.equal(groupingOverviewHeading(newcastle.name), 'Newcastle overview');
 
   assert.equal(groupingWorkersHeading(illawarra.name), 'Illawarra workers');
   assert.equal(
@@ -78,7 +78,7 @@ test('grouping page headings carry the node name in sentence case', () => {
     groupingWorkersHeading(careforceArea.name),
     'Careforce area workers',
   );
-  assert.equal(groupingWorkersHeading(hunter.name), 'Hunter workers');
+  assert.equal(groupingWorkersHeading(newcastle.name), 'Newcastle workers');
 
   assert.equal(
     groupingChildListPageHeading('Northern Lifestyles', 'Centres and clients'),

@@ -139,17 +139,17 @@ test('grouping child-list tab labels follow direct children, never Supportables'
   const sil = findGrouping('cpa-sil');
   const careforce = findGrouping('cpa-careforce');
   const careforceArea = findGrouping('careforce-area');
-  const hunter = findGrouping('hunter');
+  const newcastle = findGrouping('newcastle');
   const northernLifestyles = findGrouping('northern-lifestyles');
   const northernSydney = findGrouping('northern-sydney');
   assert.ok(
-    sil && careforce && careforceArea && hunter && northernLifestyles && northernSydney,
+    sil && careforce && careforceArea && newcastle && northernLifestyles && northernSydney,
   );
 
   assert.equal(groupingChildListTabLabel(sil), 'Groupings');
   assert.equal(groupingChildListTabLabel(careforce), 'Groupings');
   assert.equal(groupingChildListTabLabel(careforceArea), 'Groupings');
-  assert.equal(groupingChildListTabLabel(hunter), 'Houses');
+  assert.equal(groupingChildListTabLabel(newcastle), 'Houses');
   assert.equal(groupingChildListTabLabel(northernLifestyles), 'Centres and clients');
   assert.equal(groupingChildListTabLabel(northernSydney), 'Houses and centres');
   assert.equal(
