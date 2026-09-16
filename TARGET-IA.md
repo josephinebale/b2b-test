@@ -1,6 +1,6 @@
 # Information architecture — live plus remaining target
 
-**STATUS: LIVE as of 15 September 2026, with remaining research items called out below.**
+**STATUS: LIVE as of 16 September 2026, with remaining research items called out below.**
 
 This file is the information architecture the prototype follows today, plus the agreed research items that are still unbuilt. Use it with **`PROJECT.md`**:
 
@@ -169,7 +169,7 @@ Do not treat these as live. Do not implement them unless a task names them.
 
 - **Jobs** has no node in the prototype. Dorothy describes creating a job for an ongoing shift (49:38) and says she has never posted one herself; Sufi opens the booking request when asked to show how she posts a job. The gap is real but the surface is not defined, and it should not sit in the tier until it is.
 - **Notification preferences content** under Your account (per manager, per type, frequency). Wanting fewer region-wide items lands here, not in a different Notifications scope.
-- **Search and marketplace reach on grouping Workers.** Built: grouping Workers is a read-only comparison table (`GroupingWorkersTable.tsx`) over all-time provider history (`groupingWorkers`), with no search and no marketplace rows. **Hidden for this round** — the route shows the in-progress card like location Workers. Flip `GROUPING_WORKERS_CONTENT_ENABLED` to `true` in `LandingPlaceholder.tsx` to restore the table in one line (or turn `LANDING_CONTENT_ENABLED` `true` for all landing bodies). The Overview **View all** heading link still routes to grouping Workers while both flags are off, so it currently lands on the in-progress card. Nearby search stays on location Workers and the request-booking fallback when those surfaces are visible.
+- **Search and marketplace reach on grouping Workers.** Built: grouping Workers is a read-only comparison table (`GroupingWorkersTable.tsx`) over all-time provider history (`groupingWorkers`), with no search and no marketplace rows. **Hidden for this round** — `GROUPING_WORKERS_CONTENT_ENABLED` is `false`, so `#/workers` at a grouping shows the in-progress card. Location Workers, Bookings, Messages, and settings are live (`LANDING_CONTENT_ENABLED` is `true`). Flip `GROUPING_WORKERS_CONTENT_ENABLED` to `true` in `LandingPlaceholder.tsx` to restore the table in one line without affecting location tabs. The Overview **View all** heading link routes to grouping Workers and currently lands on the in-progress card until that flag is on. Nearby search stays on location Workers and the request-booking fallback.
 - **Location Dashboard.** Live: removed. Bookings is the location landing page; most-booked ordering folded into Workers tier 1.
 - **Messages count rolling up** the grouping tree. Live: unread is the current location; Notifications is person-scoped instead.
 - **Acting on several locations in one pass.** Parked.

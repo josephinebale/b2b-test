@@ -1,6 +1,6 @@
 # Front-end visual consistency audit
 
-**Date:** 15 September 2026  
+**Date:** 15–16 September 2026  
 **Runtime audited:** `http://localhost:3021/`  
 **Method:** rendered DOM, computed styles, element geometry, and matched browser CSS declarations. Class names were not used as proof of rendered values. Source was consulted only for the requested duplication check and to locate documented rules/exceptions after browser measurements.
 
@@ -15,7 +15,9 @@ Audited at desktop widths from 1024px to 1745px:
 - Settings routes: Location settings, Organisation settings, Your account and their route scopes.
 - Shared chrome: both header tiers, breadcrumb and sibling dropdowns, account menu, Notifications, footer, moderator dock.
 
-`LANDING_CONTENT_ENABLED` is currently false. Grouping Workers, location Bookings/status views, Messages, location Workers, and all three settings scopes therefore render the same **This screen is in progress.** card. Their placeholder output was measured on every route; their hidden bodies have no computed values and are not presented here as browser-audited. `GROUPING_WORKERS_CONTENT_ENABLED` is also false, so the comparison table was not rendered. This limitation is documented in `PROJECT.md:469`.
+**Original pass (15 Sep):** `LANDING_CONTENT_ENABLED` was `false`. Location Bookings/status views, Messages, location Workers, and all three settings scopes rendered the in-progress card; only placeholder output was measured on those routes. **`GROUPING_WORKERS_CONTENT_ENABLED` remains `false`**, so the grouping Workers comparison table was not rendered in either pass.
+
+**Update (16 Sep):** `LANDING_CONTENT_ENABLED` is now `true`. Location surfaces were browser-audited in **§9**. Grouping Workers at a grouping or organisation still shows the in-progress card. Flag state is documented in `PROJECT.md`.
 
 Some delegated measurements were made while the Cursor browser was zoomed to about 110%, producing values such as 31.9957px, 35.9943px, 0.909091px, and 2.72727px. Rechecks in the active tab returned 32px, 36px, 1px, and 3px. Both are the same CSS values; this audit records the clean CSS-pixel value and notes the fractional observation where relevant.
 
@@ -578,24 +580,17 @@ Week controls match each other (32px, same border and radius). Sort matches that
 
 **Weight, not a mismatch:** View all is correct as a text link and reads lighter than Today / Sort beside the other headings. Neighbour worker-row **Message** / **Book** are 32px, same as the week controls, and match each other (0/12 padding, 1px border, 4px radius, 14px / 500).
 
-### Location Bookings heading — not live (`LANDING_CONTENT_ENABLED` is false)
+### Location Bookings heading — superseded by §9 (live 16 Sep)
 
-From source: **View by status** (`Button` secondary default) and **Request booking** (`Button` primary default) sit together in `PageHeading` actions — both 36px, 0/16 padding, 14px / 500, `--radius-sm`. Status-view links in the description are `.ui-link` (20px), a different job. No source mismatch of equivalent heading actions.
+Original pass from source only: **View by status** and **Request booking** in `PageHeading` actions — both 36px. **§9** records live measurements at Wollongong 1 and Dubbo 1.
 
-### Messages — not live (same flag)
+### Messages — superseded by §9 (live 16 Sep)
 
-From source + CSS, not computed this pass:
+**§9** confirms: **Archived** / **Mark all as read** both 32px with 0px `LineAlignedControl` delta from h1; search input and **Search** both 36px.
 
-- Heading: **Archived** and **Mark all as read** are both `size="small"` → 32px. Match.
-- Search row: input `h-9` → 36px, **Search** default `Button` → 36px, 1px `--color-border`, `--radius-sm`, 14px. This is the documented “field beside a button comes down to 36px”. Match.
-- Thread toolbar: **Book** `size="small"` 32px beside **More** `IconButton` `size="small"` 32px. Match.
-- Composer: textarea `min-height: var(--avatar-lg)` (44px) + **Send** default 36px. Multiline field beside a 36px button; not two equivalent controls.
+### Settings, each scope — superseded by §9 (live 16 Sep)
 
-### Settings, each scope — not live (same flag)
-
-From source. `Field` is `h-10` + `font-normal` → 40px / 400, 1px `--color-border`, `--radius-sm`. **Save** is default `Button` → 36px. That is stacked field vs button, documented.
-
-Within one section, buttons that share a job match: Documents **Upload** is `size="small"` on every row (32px). People **More** is default `IconButton` on every row (36px). Account **Choose file** is `size="small"` (32px) beside the avatar; **Save** in the same card is default 36px — different jobs (pick a file vs commit the section). Not flagged as equivalent.
+**§9** confirms: `Field` 40px / 400; **Save** 36px; section `h2` at 14px / 700 / 20px. Organisation fields read-only by design.
 
 ### Header — measured live on Overview
 

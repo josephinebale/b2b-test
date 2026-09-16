@@ -1,6 +1,6 @@
 # Location Manager prototype — current project
 
-**This file (`PROJECT.md`) describes the prototype as it works today (15 September 2026).** Give it to another agent as the current-behaviour handoff. Older copies attached in other chats are out of date — use this file from `/Users/josephine/Downloads/b2b-test/PROJECT.md` only.
+**This file (`PROJECT.md`) describes the prototype as it works today (16 September 2026).** Give it to another agent as the current-behaviour handoff. Older copies attached in other chats are out of date — use this file from `/Users/josephine/Downloads/b2b-test/PROJECT.md` only.
 
 **IA:** [`TARGET-IA.md`](TARGET-IA.md) is the live node tree plus remaining unbuilt research items. This file is how screens, routes, chrome and data work today. Do not restore an older target (location Dashboard or location-scoped Notifications) as if it were still the plan.
 
@@ -16,7 +16,7 @@ GitHub Pages serves **`main`**. If this file and the live site disagree, `main` 
 - **Language:** Say **location**, not house. A house, centre or day program stays place-based. A client is named as a person. Disability clients display **Home and community**; aged-care clients display **Support at Home**. Sector changes labels only, never screens or behaviour. Legacy `/manage-house` URLs still rewrite to `/manage-location`.
 - **Do not:** invent tokens, visual language, or dependencies. Prefer `src/components/ui`.
 - **Run:** `npm install` then `npm run dev`. Open http://localhost:3021/ (hash routes, e.g. `#/bookings`).
-- **Check:** `npm run lint` and `node --test tests/*.test.ts`. There are **369** source-file assertion tests — update them, do not delete them.
+- **Check:** `npm run lint` and `node --test tests/*.test.ts`. There are **383** source-file assertion tests — update them, do not delete them.
 - **Verify UI** from **Start a session** on a fresh run; a return visit with a remembered persona should skip it. Choose-location has a stripped header.
 - **Commit:** only if asked. Work on a `josephine-*` branch, never `main`. Never force-push.
 - **IA:** also read [`TARGET-IA.md`](TARGET-IA.md) for the live tree, node rules, and what is still target-only.
@@ -30,7 +30,7 @@ Stack: React 19 + TypeScript + Vite 6 + Tailwind 4. Runtime extras: `lucide-reac
 
 - Dev: `npm run dev` → http://localhost:3021/ (hash routes, e.g. `#/bookings`). The port is pinned in `package.json` to **3021**. If that port is busy, extra servers slide onto 3022, 3023, … and look like “nothing changed”. Keep **one** preview.
 - Typecheck: `npm run lint` (`tsc --noEmit`).
-- Tests: `node --test tests/*.test.ts` (there is no `npm test` script). Tests are mostly **source-file assertions**, not DOM tests. There are **369** of them. Removing a label or section will break them — update the assertion, do not delete it.
+- Tests: `node --test tests/*.test.ts` (there is no `npm test` script). Tests are mostly **source-file assertions**, not DOM tests. There are **383** of them. Removing a label or section will break them — update the assertion, do not delete it.
 
 `README.md` is a short how-to-run note. **This file is the source of truth for current behaviour.** [`TARGET-IA.md`](TARGET-IA.md) is the source of truth for the **live IA tree** and remaining unbuilt research items. If they disagree on how a screen works, this file wins; if they disagree on node rules, TARGET-IA.md wins after you check the code.
 
@@ -40,7 +40,9 @@ Work on a `josephine-*` branch. Do **not** commit to `main` as the working branc
 
 GitHub Pages deploys from **`main`** via `.github/workflows/deploy.yml`. `vite.config.ts` uses `base: './'` so the build works on a sub-path.
 
-To ship: commit on the `josephine-*` branch, merge into `main`, push `main`. Until that merge, local work is invisible on the live URL.
+To ship: commit on the `josephine-*` branch, merge into `main`, push `main`. Until that merge, local work is invisible on the live URL. Pushing `main` rebuilds the site; only changes under `src/` affect the JS bundle.
+
+**Git tags:** `demo-data-hand-authored` (`ad25dd4`) — last commit before the realistic-scale seed; hand-authored CPA data for legible demos. `pre-overview-redesign` (`a97816e`) — return point after scale seeding and token-gap closes. `checkpoint-10-sep-2026` (`93108b4`) — pre-experimental checkpoint.
 
 ## What it is for
 
@@ -113,7 +115,7 @@ Route: `#/information-architecture`. Like Jobs to be done, this is a stakeholder
 
 `NODE_NAV_ITEMS` in `src/lib/informationArchitecture.ts` is the shared source of truth for node destinations. The signed-in header navigation and this screen both read it through `visibleMainNavItems`, which applies the conditional second tier from `groupingHasDefinedOverview` (see Dashboard section below). `/supportables` is also reachable from the Overview direct-child block’s **See all N** when that list caps at twelve. A location’s sections are **Bookings**, **Workers**, **Messages**, and **Location settings**. Jobs and notification preferences are recorded in TARGET-IA.md under **Still target** only — neither has a node in the prototype. Notifications is a header utility at both node types. The visualisation does not restate those lists.
 
-All organisation cards that are visible are open by default, while their arm and grouping branches are collapsed so twenty-two grouping records and thirty-three locations do not become one unscannable page. Each organisation’s direct children are arms. Organisation and grouping summaries use the product `ChevronDown` on the right: down when collapsed, up when expanded, the same as the account menu. Rotation is scoped to that row’s own `details`, so a nested grouping does not inherit an ancestor’s open state. A grouping summary still shows its recursively derived location count. Opening it reveals its pages, nested grouping branches, and direct locations with service-type labels. Selecting a persona removes the other organisations completely, opens the arm path to that persona’s unchanged entry, and labels the exact grouping or location **Starting point**.
+All organisation cards that are visible are open by default, while their arm and grouping branches are collapsed so thirty-five grouping records and one hundred nineteen locations do not become one unscannable page. Each organisation’s direct children are arms. Organisation and grouping summaries use the product `ChevronDown` on the right: down when collapsed, up when expanded, the same as the account menu. Rotation is scoped to that row’s own `details`, so a nested grouping does not inherit an ancestor’s open state. A grouping summary still shows its recursively derived location count. Opening it reveals its pages, nested grouping branches, and direct locations with service-type labels. Selecting a persona removes the other organisations completely, opens the arm path to that persona’s unchanged entry, and labels the exact grouping or location **Starting point**.
 
 The list under the heading is titled **Assumptions** and uses a bullet list. Only the page title is large: **Assumptions** and **Filter tree** take the `text-sm font-bold` section-title step used by **Filter jobs** and **Filter results**, the assumption lines are `text-sm text-text-secondary` supporting copy, and organisation names in the tree take the `text-md font-bold` card-title step so the tree steps down organisation → arm → grouping → location rather than competing with the heading. Every inset in the tree comes from the shared scale: organisation cards and grouping bodies use `ui-inset-card`, grouping summaries and location rows use `ui-inset-row`. The lines are: organisation is a hard boundary; role does not hide anything, and everyone at a provider can access and edit anything in that provider’s tree, recorded as an MVP assumption that may change; a provider configures which node each role lands on so a person starts in the right place on first use; Organisation → Arm → Grouping → Location, an arm is a grouping whose children are always groupings, and no persona enters at an arm; and a node lists its children, not its descendants — counts roll up, rows do not. Section tags on each node come from `NODE_NAV_ITEMS` main items only, named with `treeSectionLabel` so the organisation child-list tab stays **Groupings**. Notifications is a header utility, so it is not drawn as a node section. Header search is not mentioned.
 
@@ -154,41 +156,25 @@ Unknown or removed settings section IDs still resolve to that scope’s first re
 
 ## Placeholder data
 
-`src/data/locations.ts`. Thirty-three placeholder locations across three providers. Each has an **organisation**, **sector**, **service type** (`sil`, `centre`, or `home-community`), and a list of **participants** (`id` and `name` only — no funding, balance, or dollar figure). The bookable entity is still the **location** in every case. A booking is always `locationId` plus `participantIds[]`; there is no `participantId` as the booking target. Sector changes labels only: a disability `home-community` location displays **Home and community**, while an aged-care `home-community` location displays **Support at Home**. It does not change screens, flows, data shape, or behaviour.
-
-- **Cerebral Palsy Alliance · disability (twenty):** fourteen SIL houses (Dee Why 1, Galston 1, Gladesville 1, Hornsby, Lane Cove 1, Manly 1, North Ryde 1, Wahroonga, Harris Park 1, Blacktown 1, Newcastle 1, Maitland 1, Wollongong 1, Shellharbour 1); three centres (Allambie Heights Day Program, Brookvale Day Program, and Pennant Hills Day Program); and three home-and-community clients (Maya Nguyen in Forestville, Noah Williams in Chatswood, and Ruby Chen in Carlingford).
-- **Northcott · disability (five):** two SIL houses (North Parramatta 1 and Westmead 1) plus three separately rostered home-and-community clients (Amelia Roberts, Lucas Brown, and Zara Khan). Those clients live at Northcott homes, represented by `providerSite: true`, but each remains its own bookable location.
-- **Life Without Barriers · aged care (eight):** Margaret Ellis, Robert Hughes, Susan Bennett, Alan Whitfield, Patricia Moore, John Kelly, Linda Cooper, and Michael Ward. Every location is home and community with one participant and `providerSite: false`; Life Without Barriers has no SIL houses, centres, or day programs.
+`src/data/locations.ts`. **One hundred nineteen** placeholder locations across three providers (**one hundred six** at Cerebral Palsy Alliance). Each has an **organisation**, **sector**, **service type** (`sil`, `centre`, or `home-community`), and a list of **participants** (`id` and `name` only — no funding, balance, or dollar figure). The bookable entity is still the **location** in every case. A booking is always `locationId` plus `participantIds[]`; there is no `participantId` as the booking target. Sector changes labels only: a disability `home-community` location displays **Home and community**, while an aged-care `home-community` location displays **Support at Home**. It does not change screens, flows, data shape, or behaviour.
 
 Suburbs only — no private street addresses.
 
-`GROUPINGS` contains twenty-two records: five arms and seventeen operational groupings. Arms carry no sector attribute; sector remains on personas, locations, and the operational grouping records as before.
+**Realistic-scale CPA seed** (`e644f44`, live on `main`). The earlier hand-authored fourteen-house CPA set is preserved at git tag **`demo-data-hand-authored`** (`ad25dd4`) for legible demos. On `main`:
 
-- **Cerebral Palsy Alliance arms:** SIL → Northern Sydney, Western Sydney, Hunter, and Illawarra; Lifestyles → Northern Lifestyles and Western Lifestyles; Careforce → Careforce area.
+- **Cerebral Palsy Alliance · disability (106 locations):** **thirteen SIL regions** under the SIL arm (Northern Sydney through Far West) totalling **ninety-one SIL houses** (per-region counts 7, 4, 5, 5, 6, 6, 6, 7, 7, 8, 9, 10, 11); **twelve Lifestyles centres** across two regions (assumed operating scale); **nine Careforce caseloads** with eight to twelve locations each (assumed operating scale); plus the original named houses, centres, and clients (Galston 1, Dee Why 1, Wollongong 1, Maya Nguyen, and the rest) still present for tests and demos. Bookings are generated from a fixed seed relative to today (CPA: fifty-six days in the past through twenty-seven days ahead); each location’s current ISO week holds **sixteen to twenty-four** shifts. Confirmed status views list all upcoming confirmed bookings in that forward window (~seventy-two per location), not just the current week.
+- **Northcott · disability (five):** two SIL houses (North Parramatta 1 and Westmead 1) plus three separately rostered home-and-community clients (Amelia Roberts, Lucas Brown, and Zara Khan). Those clients live at Northcott homes, represented by `providerSite: true`, but each remains its own bookable location.
+- **Life Without Barriers · aged care (eight):** Margaret Ellis, Robert Hughes, Susan Bennett, Alan Whitfield, Patricia Moore, John Kelly, Linda Cooper, and Michael Ward. Every location is home and community with one participant and `providerSite: false`; Life Without Barriers has no SIL houses, centres, or day programs.
+
+`GROUPINGS` contains **thirty-five** records: five arms and thirty operational groupings. Arms carry no sector attribute; sector remains on personas, locations, and the operational grouping records as before.
+
+- **Cerebral Palsy Alliance arms:** SIL → thirteen regions (Northern Sydney, Western Sydney, Hunter, Illawarra, Northern Beaches, Lower North Shore, Central Coast, Nepean, South Western Sydney, New England, Mid North Coast, Southern NSW, Far West); Lifestyles → Northern Lifestyles and Western Lifestyles; Careforce → Careforce area (nine caseload children).
 - **Northcott arm:** Disability services → Western Sydney SIL services and Western Sydney individual services.
-- **Life Without Barriers arm:** Aged care → Greater Sydney.
+- **Life Without Barriers arm:** Aged care → Greater Sydney (Northern Sydney and Western Sydney aged-care regions).
 
-Operational groupings:
+Named operational groupings from the hand-authored era (Northern Sydney, Illawarra, Careforce caseloads, and the rest) survive inside the scaled tree; see `tests/cpa-realistic-scale.test.ts` for identity checks. `GROUPING` in code still defaults to Northern Sydney for compatibility.
 
-- **Northern Sydney** — six direct locations: Allambie Heights Day Program, Dee Why 1, Galston 1, Hornsby, North Ryde 1, and Wahroonga.
-- **Western Sydney (Cerebral Palsy Alliance)** — Harris Park 1 and Blacktown 1.
-- **Hunter** — Newcastle 1 and Maitland 1.
-- **Illawarra** — Wollongong 1 and Shellharbour 1.
-- **Northern Lifestyles** — the two northern day programs plus Maya Nguyen and Noah Williams.
-- **Western Lifestyles** — Pennant Hills Day Program and Ruby Chen.
-- **Careforce caseload** — six direct locations: Dee Why 1, Maya Nguyen, Gladesville 1, Lane Cove 1, Manly 1, and North Ryde 1.
-- **Careforce Northern caseload** — six direct locations: Galston 1, Hornsby, Lane Cove 1, Noah Williams, North Ryde 1, and Wahroonga.
-- **Careforce Western caseload** — Harris Park 1, Blacktown 1, and Gladesville 1.
-- **Careforce Hunter caseload** — Newcastle 1, Maitland 1, and Manly 1.
-- **Careforce Illawarra caseload** — Wollongong 1, Shellharbour 1, and Maya Nguyen.
-- **Careforce area** — no direct locations; its children are the five Careforce caseloads.
-- **Western Sydney SIL services (Northcott)** — North Parramatta 1 and Westmead 1.
-- **Western Sydney individual services (Northcott)** — Amelia Roberts, Lucas Brown, and Zara Khan.
-- **Greater Sydney (Life Without Barriers)** — no direct locations; its children are the Northern Sydney and Western Sydney aged-care regions.
-- **Northern Sydney (Life Without Barriers)** — Margaret Ellis, Robert Hughes, Susan Bennett, and Alan Whitfield.
-- **Western Sydney (Life Without Barriers)** — Patricia Moore, John Kelly, Linda Cooper, and Michael Ward.
-
-`rootGroupingsForOrganisation` returns each organisation’s arms, inferred from the same parent-child records used everywhere else. `descendantLocationIds` resolves a grouping or arm’s unique locations through child groupings. It supplies the Overview attention calendar, grouping Workers, rolled-up child counts, Notifications scope, location-relative worker tiers, and fatigue. It does not supply Supportables rows. `groupingDashboardChildren` returns only the active node's direct child groupings and direct locations. `groupingAttentionBookings` collects requested and upcoming cancelled shifts across descendants for the calendar. `groupingDashboardWorkers` ranks workers by most recent completed shift, then shifts in the last eight weeks, for the Overview block. `groupingWorkers` supplies the all-time population for the Workers tab. `waitingDashboardChildren` remains for tests and data helpers but no longer drives a Tasks block on the page. `GROUPING` remains Northern Sydney for compatibility.
+`rootGroupingsForOrganisation` returns each organisation’s arms, inferred from the same parent-child records used everywhere else. `descendantLocationIds` resolves a grouping or arm’s unique locations through child groupings. It supplies the Overview attention calendar, grouping Workers, rolled-up child counts, Notifications scope, location-relative worker tiers, and fatigue. It does not supply Supportables rows. `groupingDashboardChildren` returns only the active node's direct child groupings and direct locations. `groupingAttentionBookings` collects requested and upcoming cancelled shifts across descendants for the calendar. `groupingDashboardWorkers` ranks workers by most recent completed shift, then shifts in the last eight weeks, for the Overview block. `groupingWorkers` supplies the all-time population for the Workers tab. `waitingDashboardChildren` remains for tests and data helpers but no longer drives a Tasks block on the page.
 
 Request pressure, approvals, messages, workers, and booking patterns differ by location. Grouping Supportables lists direct children: groupings first, then direct locations. A child grouping row carries its name, a count of what sits beneath it in Houses and centres / Clients language (houses, centres, clients, or a mixed line), and the summed waiting-work line; it carries no location marker, service type, or suburb. Selecting it enters that grouping’s landing: **Overview** where Overview is defined, and the **child list** where it is not. A direct location row retains its existing shape and enters its Bookings schedule with that grouping preserved in the breadcrumb. The moderator persona picker lists whatever `VISIBLE_ORGANISATIONS` currently shows, grouped under organisation headings, so the moderator can change organisation or entry point without putting an organisation-wide switcher in participant chrome.
 
