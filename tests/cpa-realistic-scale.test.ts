@@ -13,7 +13,7 @@ import {
 } from '../src/data/locations.ts';
 
 const cpa = 'Cerebral Palsy Alliance';
-const expectedSilCounts = [7, 4, 5, 5, 6, 6, 6, 7, 7, 8, 9, 10, 11];
+const expectedSilCounts = [7, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7];
 
 function cpaArm(id: string) {
   const arm = findGrouping(id);
@@ -31,8 +31,8 @@ test('CPA has the approved SIL, Lifestyles, and Careforce scale', () => {
   );
   assert.equal(silRegions.length, 13);
   assert.deepEqual(counts, expectedSilCounts);
-  assert.equal(counts.reduce((sum, count) => sum + count, 0), 91);
-  assert.ok(counts.includes(4) && counts.includes(11));
+  assert.equal(counts.reduce((sum, count) => sum + count, 0), 90);
+  assert.ok(counts.includes(6) && counts.includes(7));
 
   const lifestylesLocations = (cpaArm('cpa-lifestyles').groupingIds ?? [])
     .flatMap((id) => descendantLocationIds(findGrouping(id)!))
@@ -42,26 +42,26 @@ test('CPA has the approved SIL, Lifestyles, and Careforce scale', () => {
 
   const caseloads = (findGrouping('careforce-area')?.groupingIds ?? [])
     .map((id) => findGrouping(id)!);
-  assert.equal(caseloads.length, 9);
+  assert.equal(caseloads.length, 5);
   assert.ok(caseloads.every(({ locationIds }) => locationIds.length >= 8 && locationIds.length <= 12));
 });
 
 test('existing CPA identities and named memberships survive the scale-up', () => {
   assert.deepEqual(
-    ['northern-sydney', 'cpa-western-sydney', 'hunter', 'illawarra'].map((id) => {
+    ['northern-sydney', 'north-west-sydney', 'newcastle', 'illawarra'].map((id) => {
       const grouping = findGrouping(id)!;
       return [grouping.id, grouping.name];
     }),
     [
       ['northern-sydney', 'Northern Sydney'],
-      ['cpa-western-sydney', 'Western Sydney'],
-      ['hunter', 'Hunter'],
+      ['north-west-sydney', 'North West Sydney'],
+      ['newcastle', 'Newcastle'],
       ['illawarra', 'Illawarra'],
     ],
   );
   assert.ok(findGrouping('northern-sydney')?.locationIds.includes('galston-1'));
-  assert.ok(findGrouping('cpa-western-sydney')?.locationIds.includes('harris-park-1'));
-  assert.ok(findGrouping('hunter')?.locationIds.includes('newcastle-1'));
+  assert.ok(findGrouping('north-west-sydney')?.locationIds.includes('harris-park-1'));
+  assert.ok(findGrouping('newcastle')?.locationIds.includes('newcastle-1'));
   assert.ok(findGrouping('illawarra')?.locationIds.includes('wollongong-1'));
   assert.ok(findGrouping('northern-lifestyles')?.locationIds.includes('allambie-heights-day-program'));
   assert.ok(findGrouping('western-lifestyles')?.locationIds.includes('pennant-hills-day-program'));
@@ -70,9 +70,12 @@ test('existing CPA identities and named memberships survive the scale-up', () =>
 
   const source = readFileSync(new URL('../src/data/locations.ts', import.meta.url), 'utf8');
   assert.match(source, /12 Lifestyles centres is an assumed operating scale/);
-  assert.match(source, /9 Careforce caseloads is an assumed operating scale/);
+  assert.match(source, /Five Careforce caseloads sourced to one per Roster Coordinator in the research/);
   assert.match(source, /Sourced constraint: exactly three houses use a two-site manager model/);
-  assert.match(source, /20% cross-house overlap is assumed and needs participant checking/);
+  assert.match(
+    source,
+    /40% cross-house overlap sourced to "often work across houses, within a region"/,
+  );
 });
 
 test('CPA location rosters and current-week bookings fit the approved ranges', () => {
@@ -112,10 +115,12 @@ test('SIL regional workforces scale and overlap without becoming one shared rost
       }
     }
     const distinct = memberships.size;
-    const expected = (75 / 7) * houses.length;
-    assert.ok(Math.abs(distinct - expected) <= 5, `${region.id} has ${distinct} distinct workers`);
+    const totalMemberships = houses.length * 13;
+    const expected =
+      totalMemberships - Math.round((totalMemberships * 2) / 7);
+    assert.ok(Math.abs(distinct - expected) <= 2, `${region.id} has ${distinct} distinct workers`);
     const twoHouse = [...memberships.values()].filter((count) => count === 2).length;
-    assert.ok(twoHouse / distinct >= 0.15 && twoHouse / distinct <= 0.25, `${region.id} overlap`);
+    assert.ok(twoHouse / distinct >= 0.35 && twoHouse / distinct <= 0.45, `${region.id} overlap`);
     if (region.id === 'northern-sydney') {
       assert.ok([...memberships.values()].some((count) => count >= 5));
     } else {

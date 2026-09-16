@@ -26,7 +26,7 @@ function source(path: string): string {
 }
 
 test('arms, regions, lifestyles, caseloads, and areas use one recursive grouping model', () => {
-  assert.equal(GROUPINGS.length, 35);
+  assert.equal(GROUPINGS.length, 31);
   const region = findGrouping('northern-sydney');
   const caseload = findGrouping('careforce-caseload');
   const secondCaseload = findGrouping('careforce-northern-caseload');
@@ -35,7 +35,7 @@ test('arms, regions, lifestyles, caseloads, and areas use one recursive grouping
   assert.ok(region && caseload && secondCaseload && area && lifestyles);
   assert.equal(region.name, 'Northern Sydney');
   assert.equal(caseload.name, 'Careforce caseload');
-  assert.equal(area.groupingIds?.length, 9);
+  assert.equal(area.groupingIds?.length, 5);
   assert.deepEqual(area.groupingIds?.slice(0, 2), [
     'careforce-caseload',
     'careforce-northern-caseload',
@@ -232,7 +232,7 @@ test('parent-node personas see child groupings instead of descendant locations',
   const rachelChildren = groupingDashboardChildren(
     findGrouping(rachel.entry.groupingId)!,
   );
-  assert.equal(rachelChildren.groupings.length, 9);
+  assert.equal(rachelChildren.groupings.length, 5);
   assert.ok(
     rachelChildren.groupings.every((grouping) => grouping.name.startsWith('Careforce')),
   );

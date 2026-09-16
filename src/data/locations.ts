@@ -580,76 +580,83 @@ const SIL_REGION_SEEDS: SilRegionSeed[] = [
     newHouseSuburbs: ['Avalon Beach', 'Mosman'],
   },
   {
-    id: 'cpa-western-sydney',
-    name: 'Western Sydney',
-    existingLocationIds: ['harris-park-1', 'blacktown-1'],
-    newHouseSuburbs: ['Seven Hills', 'Toongabbie'],
-  },
-  {
-    id: 'hunter',
-    name: 'Hunter',
-    existingLocationIds: ['newcastle-1', 'maitland-1'],
-    newHouseSuburbs: ['Charlestown', 'Cessnock', 'Raymond Terrace'],
-  },
-  {
-    id: 'illawarra',
-    name: 'Illawarra',
-    existingLocationIds: ['wollongong-1', 'shellharbour-1'],
-    newHouseSuburbs: ['Dapto', 'Kiama', 'Corrimal'],
-  },
-  {
     id: 'northern-beaches',
     name: 'Northern Beaches',
-    existingLocationIds: ['manly-1'],
-    newHouseSuburbs: ['Narrabeen', 'Mona Vale', 'Brookvale', 'Freshwater', 'Collaroy'],
+    existingLocationIds: [],
+    newHouseSuburbs: [
+      'Narraweena',
+      'Frenchs Forest',
+      'Coolangatta',
+      'Elanora Heights',
+      'Oceana',
+      'Karalta',
+    ],
   },
   {
     id: 'lower-north-shore',
     name: 'Lower North Shore',
-    existingLocationIds: ['gladesville-1', 'lane-cove-1'],
+    existingLocationIds: ['gladesville-1', 'lane-cove-1', 'manly-1'],
     newHouseSuburbs: ['Chatswood', 'Artarmon', 'Willoughby', 'Northbridge'],
+  },
+  {
+    id: 'north-west-sydney',
+    name: 'North West Sydney',
+    existingLocationIds: ['harris-park-1', 'blacktown-1'],
+    newHouseSuburbs: ['Seven Hills', 'Toongabbie', 'Castle Hill', 'Baulkham Hills', 'Kellyville'],
+  },
+  {
+    id: 'south-western-sydney',
+    name: 'South West Sydney',
+    existingLocationIds: [],
+    newHouseSuburbs: ['Liverpool', 'Casula', 'Campbelltown', 'Ingleburn', 'Fairfield', 'Cabramatta', 'Narellan'],
+  },
+  {
+    id: 'newcastle',
+    name: 'Newcastle',
+    existingLocationIds: ['newcastle-1', 'maitland-1'],
+    newHouseSuburbs: ['Charlestown', 'Cessnock', 'Raymond Terrace', 'Warners Bay', 'Belmont'],
   },
   {
     id: 'central-coast',
     name: 'Central Coast',
     existingLocationIds: [],
-    newHouseSuburbs: ['Gosford', 'Wyoming', 'Erina', 'Woy Woy', 'Tuggerah', 'Bateau Bay'],
+    newHouseSuburbs: ['Gosford', 'Wyoming', 'Erina', 'Woy Woy', 'Tuggerah', 'Bateau Bay', 'Terrigal'],
   },
   {
-    id: 'nepean',
-    name: 'Nepean',
-    existingLocationIds: [],
-    newHouseSuburbs: ['Penrith', 'Kingswood', 'St Marys', 'Emu Plains', 'Glenmore Park', 'Cambridge Park', 'Werrington'],
+    id: 'illawarra',
+    name: 'Illawarra',
+    existingLocationIds: ['wollongong-1', 'shellharbour-1'],
+    newHouseSuburbs: ['Dapto', 'Kiama', 'Corrimal', 'Woonona', 'Figtree'],
   },
   {
-    id: 'south-western-sydney',
-    name: 'South Western Sydney',
+    id: 'inner-west',
+    name: 'Inner West',
     existingLocationIds: [],
-    newHouseSuburbs: ['Liverpool', 'Casula', 'Campbelltown', 'Ingleburn', 'Fairfield', 'Cabramatta', 'Narellan'],
+    newHouseSuburbs: ['Burwood', 'Ashfield', 'Strathfield', 'Drummoyne', 'Concord', 'Marrickville', 'Leichhardt'],
   },
   {
-    id: 'new-england',
-    name: 'New England',
+    id: 'hills-district',
+    name: 'Hills District',
     existingLocationIds: [],
-    newHouseSuburbs: ['Tamworth', 'Armidale', 'Gunnedah', 'Inverell', 'Moree', 'Narrabri', 'Glen Innes', 'Tenterfield'],
+    newHouseSuburbs: ['Parramatta', 'North Rocks', 'Carlingford', 'Epping', 'Eastwood', 'Cherrybrook', 'Dural'],
   },
   {
-    id: 'mid-north-coast',
-    name: 'Mid North Coast',
+    id: 'macarthur',
+    name: 'Macarthur',
     existingLocationIds: [],
-    newHouseSuburbs: ['Port Macquarie', 'Taree', 'Forster', 'Kempsey', 'Wauchope', 'Coffs Harbour', 'Sawtell', 'Nambucca Heads', 'Macksville'],
+    newHouseSuburbs: ['Camden', 'Leppington', 'Oran Park', 'Mount Annan', 'Bradbury', 'Rosemeadow', 'Appin'],
   },
   {
-    id: 'southern-nsw',
-    name: 'Southern NSW',
+    id: 'lake-macquarie',
+    name: 'Lake Macquarie',
     existingLocationIds: [],
-    newHouseSuburbs: ['Goulburn', 'Queanbeyan', 'Yass', 'Batemans Bay', 'Moruya', 'Bega', 'Cooma', 'Young', 'Cowra', 'Parkes'],
+    newHouseSuburbs: ['Speers Point', 'Toronto', 'Morisset', 'Swansea', 'Eleebana', 'Cardiff', 'Boolaroo'],
   },
   {
-    id: 'far-west',
-    name: 'Far West',
+    id: 'sutherland-shire',
+    name: 'Sutherland Shire',
     existingLocationIds: [],
-    newHouseSuburbs: ['Dubbo', 'Orange', 'Bathurst', 'Broken Hill', 'Mudgee', 'Forbes', 'Narromine', 'Wellington', 'Bourke', 'Cobar', 'Condobolin'],
+    newHouseSuburbs: ['Cronulla', 'Miranda', 'Sutherland', 'Caringbah', 'Engadine', 'Menai', 'Jannali'],
   },
 ];
 
@@ -725,30 +732,17 @@ export const GROUPING: Grouping = {
  */
 export const GROUPINGS: Grouping[] = [
   GROUPING,
-  {
-    id: 'cpa-western-sydney',
-    name: 'Western Sydney',
-    kind: 'region',
-    organisation: 'Cerebral Palsy Alliance',
-    sector: 'disability',
-    locationIds: ['harris-park-1', 'blacktown-1', 'seven-hills-1', 'toongabbie-2'],
-  },
-  {
-    id: 'hunter',
-    name: 'Hunter',
-    kind: 'region',
-    organisation: 'Cerebral Palsy Alliance',
-    sector: 'disability',
-    locationIds: ['newcastle-1', 'maitland-1', 'charlestown-1', 'cessnock-2', 'raymond-terrace-3'],
-  },
-  {
-    id: 'illawarra',
-    name: 'Illawarra',
-    kind: 'region',
-    organisation: 'Cerebral Palsy Alliance',
-    sector: 'disability',
-    locationIds: ['wollongong-1', 'shellharbour-1', 'dapto-1', 'kiama-2', 'corrimal-3'],
-  },
+  ...SIL_REGION_SEEDS.slice(1, 4).map((region) => ({
+    id: region.id,
+    name: region.name,
+    kind: 'region' as const,
+    organisation: 'Cerebral Palsy Alliance' as const,
+    sector: 'disability' as const,
+    locationIds: [
+      ...region.existingLocationIds,
+      ...region.newHouseSuburbs.map((suburb, index) => `${slugName(suburb)}-${index + 1}`),
+    ],
+  })),
   ...SIL_REGION_SEEDS.slice(4).map((region) => ({
     id: region.id,
     name: region.name,
@@ -798,8 +792,7 @@ export const GROUPINGS: Grouping[] = [
     ],
   },
   /**
-   * 9 Careforce caseloads is an assumed operating scale for research; confirm
-   * caseload count and boundaries with participants.
+   * Five Careforce caseloads sourced to one per Roster Coordinator in the research.
    */
   {
     id: 'careforce-area',
@@ -814,10 +807,6 @@ export const GROUPINGS: Grouping[] = [
       'careforce-western-caseload',
       'careforce-hunter-caseload',
       'careforce-illawarra-caseload',
-      'careforce-coastal-caseload',
-      'careforce-metropolitan-caseload',
-      'careforce-regional-caseload',
-      'careforce-west-caseload',
     ],
   },
   {
@@ -866,9 +855,9 @@ export const GROUPINGS: Grouping[] = [
       'gladesville-1',
       'seven-hills-1',
       'toongabbie-2',
-      'penrith-1',
-      'kingswood-2',
-      'st-marys-3',
+      'castle-hill-3',
+      'baulkham-hills-4',
+      'kellyville-5',
     ],
   },
   {
@@ -884,8 +873,8 @@ export const GROUPINGS: Grouping[] = [
       'charlestown-1',
       'cessnock-2',
       'raymond-terrace-3',
-      'gosford-1',
-      'wyoming-2',
+      'warners-bay-4',
+      'belmont-5',
     ],
   },
   {
@@ -901,76 +890,8 @@ export const GROUPINGS: Grouping[] = [
       'dapto-1',
       'kiama-2',
       'corrimal-3',
-      'batemans-bay-4',
-      'moruya-5',
-    ],
-  },
-  {
-    id: 'careforce-coastal-caseload',
-    name: 'Careforce Coastal caseload',
-    kind: 'caseload',
-    organisation: 'Cerebral Palsy Alliance',
-    sector: 'disability',
-    locationIds: [
-      'narrabeen-1',
-      'mona-vale-2',
-      'brookvale-3',
-      'freshwater-4',
-      'collaroy-5',
-      'gosford-1',
-      'erina-3',
-      'woy-woy-4',
-    ],
-  },
-  {
-    id: 'careforce-metropolitan-caseload',
-    name: 'Careforce Metropolitan caseload',
-    kind: 'caseload',
-    organisation: 'Cerebral Palsy Alliance',
-    sector: 'disability',
-    locationIds: [
-      'lane-cove-1',
-      'chatswood-1',
-      'artarmon-2',
-      'willoughby-3',
-      'northbridge-4',
-      'liverpool-1',
-      'casula-2',
-      'fairfield-5',
-    ],
-  },
-  {
-    id: 'careforce-regional-caseload',
-    name: 'Careforce Regional caseload',
-    kind: 'caseload',
-    organisation: 'Cerebral Palsy Alliance',
-    sector: 'disability',
-    locationIds: [
-      'tamworth-1',
-      'armidale-2',
-      'gunnedah-3',
-      'inverell-4',
-      'port-macquarie-1',
-      'taree-2',
-      'forster-3',
-      'kempsey-4',
-    ],
-  },
-  {
-    id: 'careforce-west-caseload',
-    name: 'Careforce West caseload',
-    kind: 'caseload',
-    organisation: 'Cerebral Palsy Alliance',
-    sector: 'disability',
-    locationIds: [
-      'dubbo-1',
-      'orange-2',
-      'bathurst-3',
-      'broken-hill-4',
-      'mudgee-5',
-      'forbes-6',
-      'narromine-7',
-      'wellington-8',
+      'woonona-4',
+      'figtree-5',
     ],
   },
   {
@@ -1036,18 +957,18 @@ export const GROUPINGS: Grouping[] = [
     locationIds: [],
     groupingIds: [
       'northern-sydney',
-      'cpa-western-sydney',
-      'hunter',
-      'illawarra',
       'northern-beaches',
       'lower-north-shore',
-      'central-coast',
-      'nepean',
+      'north-west-sydney',
       'south-western-sydney',
-      'new-england',
-      'mid-north-coast',
-      'southern-nsw',
-      'far-west',
+      'newcastle',
+      'central-coast',
+      'illawarra',
+      'inner-west',
+      'hills-district',
+      'macarthur',
+      'lake-macquarie',
+      'sutherland-shire',
     ],
   },
   {
@@ -1410,7 +1331,8 @@ function buildWorkerSeeds(): WorkerSeed[] {
   };
 
   /**
-   * 20% cross-house overlap is assumed and needs participant checking.
+   * 40% cross-house overlap sourced to "often work across houses, within a region";
+   * 40% is the interpretation of "often", not a measured figure.
    * Shared workers are explicitly active at a second house, never a whole region.
    */
   SIL_REGION_SEEDS.forEach((region, regionIndex) => {
@@ -1419,7 +1341,7 @@ function buildWorkerSeeds(): WorkerSeed[] {
       ...region.newHouseSuburbs.map((suburb, index) => `${slugName(suburb)}-${index + 1}`),
     ];
     const totalMemberships = locationIds.length * 13;
-    const sharedCount = Math.round(totalMemberships / 6);
+    const sharedCount = Math.round((totalMemberships * 2) / 7);
     const distinctCount = totalMemberships - sharedCount;
     const regionalSeeds: WorkerSeed[] = [];
 
@@ -1594,12 +1516,10 @@ const CPA_HIGH_PRESSURE_LOCATIONS = new Set([
   'manly-1',
   'gladesville-1',
   'gosford-1',
-  'penrith-1',
   'liverpool-1',
-  'tamworth-1',
-  'port-macquarie-1',
-  'goulburn-1',
-  'dubbo-1',
+  'narraweena-1',
+  'cronulla-1',
+  'parramatta-1',
 ]);
 
 function requestPressureFor(location: Location, locationIndex: number) {
@@ -2127,7 +2047,7 @@ const GROUPING_DASHBOARD_RECENCY: Record<string, DashboardRecencyStamp[]> = {
     { workerId: 'scarlett-o', dayOffset: -21 },
     { workerId: 'han-hendrick-p', dayOffset: -49 },
   ],
-  hunter: [
+  newcastle: [
     { workerId: 'kim-r', dayOffset: 0 },
     { workerId: 'luke-a', dayOffset: 0 },
     { workerId: 'pete-c', dayOffset: -1 },
@@ -2143,7 +2063,7 @@ const GROUPING_DASHBOARD_RECENCY: Record<string, DashboardRecencyStamp[]> = {
 const GROUPING_DASHBOARD_OUTSIDE_WINDOW: Record<string, string[]> = {
   'northern-sydney': ['maxine-r'],
   illawarra: ['luke-a'],
-  hunter: ['erica-o'],
+  newcastle: ['erica-o'],
 };
 
 let dashboardRecencyApplied = false;

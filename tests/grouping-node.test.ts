@@ -93,7 +93,7 @@ test('a grouping dashboard lists direct children, with groupings before split lo
   const careforceArea = groupingDashboardChildren(
     findGrouping('careforce-area')!,
   );
-  assert.equal(careforceArea.groupings.length, 9);
+  assert.equal(careforceArea.groupings.length, 5);
   assert.equal(careforceArea.housesAndCentres.length, 0);
   assert.equal(careforceArea.clients.length, 0);
 
@@ -116,7 +116,7 @@ test('a grouping dashboard lists direct children, with groupings before split lo
 test('child grouping rows roll up counts but retain their own kind', () => {
   const careforceArea = findGrouping('careforce-area')!;
   const careforceChildren = groupingDashboardChildren(careforceArea).groupings;
-  assert.equal(careforceChildren.length, 9);
+  assert.equal(careforceChildren.length, 5);
   assert.ok(careforceChildren.every((child) => child.name.startsWith('Careforce')));
   assert.equal(childGroupingSectionTitle(careforceChildren), 'Caseloads');
 
@@ -163,8 +163,8 @@ test('child grouping rows roll up counts but retain their own kind', () => {
     'The centres and clients in Northern Lifestyles',
   );
   assert.equal(
-    groupingDirectChildrenCountLine(findGrouping('hunter')!),
-    '5 houses in Hunter',
+    groupingDirectChildrenCountLine(findGrouping('newcastle')!),
+    '7 houses in Newcastle',
   );
   assert.equal(
     groupingDirectChildrenCountLine(findGrouping('northern-sydney')!),
@@ -195,7 +195,7 @@ test('child grouping rows roll up counts but retain their own kind', () => {
   );
   assert.equal(
     groupingContentsSummary(findGrouping('cpa-sil')!),
-    '91 houses and 1 centre',
+    '90 houses and 1 centre',
   );
   assert.equal(
     groupingContentsSummary(findGrouping('cpa-lifestyles')!),
@@ -728,7 +728,7 @@ test('regions that were previously gated still seed Overview content', () => {
   const weekStart = startOfWeek(today);
   const weekEnd = addDays(weekStart, 6);
 
-  for (const id of ['hunter', 'illawarra', 'cpa-western-sydney']) {
+  for (const id of ['newcastle', 'illawarra', 'north-west-sydney']) {
     const attention = groupingAttentionBookings(id);
     const inWeek = attention.filter(
       (booking) =>

@@ -153,12 +153,12 @@ test('grouping dashboard worker exceptions stay sparse in the aside preview', ()
 
   const northernSydney = preview('northern-sydney');
   const illawarra = preview('illawarra');
-  const hunter = preview('hunter');
+  const newcastle = preview('newcastle');
 
   for (const [name, rows] of [
     ['Northern Sydney', northernSydney],
     ['Illawarra', illawarra],
-    ['Hunter', hunter],
+    ['Newcastle', newcastle],
   ] as const) {
     assert.ok(
       rows.filter((lines) => lines.length > 0).length <= 2,

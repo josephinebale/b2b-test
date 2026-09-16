@@ -162,9 +162,11 @@ Unknown or removed settings section IDs still resolve to that scope’s first re
 
 Suburbs only — no private street addresses.
 
+**CPA SIL footprint (sourced).** Cerebral Palsy Alliance operates group homes across **Sydney metro, the Central Coast, and Newcastle/Hunter** only. A **region** is a geographically compact sub-metro cluster — roughly **eight houses** under one Regional Manager, none spanning more than about an hour’s drive. The seed holds **thirteen regions** and **ninety SIL houses** (Northern Beaches keeps six research-named sites; the other twelve regions hold seven each). Worker overlap within a region is **40%**, sourced to research describing workers who “often work across houses, within a region”; 40% is the interpretation of “often”, not a measured figure.
+
 `GROUPINGS` contains twenty-two records: five arms and seventeen operational groupings. Arms carry no sector attribute; sector remains on personas, locations, and the operational grouping records as before.
 
-- **Cerebral Palsy Alliance arms:** SIL → Northern Sydney, Western Sydney, Hunter, and Illawarra; Lifestyles → Northern Lifestyles and Western Lifestyles; Careforce → Careforce area.
+- **Cerebral Palsy Alliance arms:** SIL → thirteen regions (Northern Sydney, Northern Beaches, Lower North Shore, North West Sydney, South West Sydney, Newcastle, Central Coast, Illawarra, Inner West, Hills District, Macarthur, Lake Macquarie, Sutherland Shire); Lifestyles → Northern Lifestyles and Western Lifestyles; Careforce → Careforce area (**five** caseloads, one per Roster Coordinator in the research).
 - **Northcott arm:** Disability services → Western Sydney SIL services and Western Sydney individual services.
 - **Life Without Barriers arm:** Aged care → Greater Sydney.
 
