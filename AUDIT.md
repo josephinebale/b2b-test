@@ -655,6 +655,145 @@ Do not fix in this pass.
 - **In-progress 24px inset:** resolved — documented as placeholder air.
 - **Hidden content:** no honest computed audit can be made of bodies that are not in the rendered DOM. Their route placeholders were audited; the hidden implementations were considered only for duplication and documentation contradictions.
 
+## 9. Location surfaces pass (`LANDING_CONTENT_ENABLED` on)
+
+**Date:** 16 September 2026  
+**Runtime audited:** `http://localhost:3021/`  
+**Method:** rendered DOM, computed styles, element geometry. Class names were not used as proof of rendered values. Source was consulted for heading-component usage and the Bookings count discrepancy.  
+**Persona:** Marcus Lee  
+**Locations:** Wollongong 1 (Illawarra) and Dubbo 1 (Far West)  
+**Surfaces:** location Bookings (week schedule and Confirmed status view), Workers, Messages, Location settings, Organisation settings, Your account.
+
+This pass supersedes the scope limit in §Scope and limits that hid location bodies behind `LANDING_CONTENT_ENABLED`. Organisation settings and Your account are location-agnostic routes; they were measured once and apply at any breadcrumb context.
+
+Embedded-browser zoom was ~69% (`outerWidth / innerWidth`); font sizes and token-backed values are recorded as clean CSS pixels. Heights use `offsetHeight` after `scrollTo(0, 0)`.
+
+### Finding count (this pass only)
+
+- Type scale: **1 open** (L-T1)
+- Spacing: **0 open**
+- Control heights: **1 open** (L-C1)
+- Alignment: **3 open** (L-A1–L-A3)
+- Colour: **0**
+- Duplication: **0 new** (extends D3)
+- Borders and radii: **0**
+- Within-context control consistency: **0 open** (location surfaces measured)
+- Scale: **2 recorded** (Workers tier 2; Bookings status total)
+- Data / copy: **1 explained** (Bookings 72 vs 16–19)
+
+**Total new visual/system findings: 5.** Scale and data notes are recorded separately.
+
+### Heading implementations: `SectionHeadingRow` and `LineAlignedControl`
+
+| Surface | Page heading | Section / content headings | `SectionHeadingRow` | `LineAlignedControl` |
+|---|---|---|---|---|
+| Bookings — week schedule | `PageHeading` (`text-xl` h1) | `BookingsWeek` local `h2` (`text-md`) + `WeekScheduleControls` | No — D3 duplicate of Overview week row | Yes on **View by status** / **Request booking** only |
+| Bookings — status view | Plain `h1` (`text-xl`), no `PageHeading` | Local `h2` **Filter results** (`text-sm`); local `h2` **Confirmed** (`text-lg`) + `RequestBookingButton` | No | No |
+| Workers | `PageHeading` + description | Three local `h2` (`text-md`) per tier | No | Yes on **Request booking** only |
+| Messages | `PageHeading` (title only) | None — master-detail shell | No | Yes on **Archived** / **Mark all as read** |
+| Location settings | `PageHeading` (title only) | `SettingsCard` `h2` (`text-sm`) per section | No | No |
+| Organisation settings | `PageHeading` (title only) | `SettingsCard` `h2` (`text-sm`) per section | No | No |
+| Your account | `PageHeading` (title only) | `SettingsCard` `h2` (`text-sm`) | No | No |
+
+**None of these location surfaces use `SectionHeadingRow`.** Tonight's alignment work on `SectionHeadingRow` / `LineAlignedControl` therefore does not apply to section headings on Workers, Bookings week, or Bookings status. `PageHeading` actions that use `LineAlignedControl` inherit it; rolled-own rows do not.
+
+### L-T1 — Location section titles use three different tuples — **open**
+
+| Place | Computed tuple | Component |
+|---|---|---|
+| Bookings week heading | 16px / 700 / 24px | `BookingsWeek` `h2.text-md` |
+| Bookings status **Confirmed** heading | 20px / 700 / 28px | `Bookings.tsx` `h2.text-lg` |
+| Workers tier headings | 16px / 700 / 24px | `Workers.tsx` `h2.text-md` |
+| Settings section cards (location, organisation, account) | 14px / 700 / 20px | `SettingsCard` `h2.text-sm` |
+
+The product scale is respected in all cases, but location pages do not share one section-title treatment. Settings scopes agree with each other; Workers and Bookings week agree; Bookings status is a step larger.
+
+### L-C1 — Workers search is 36px; Bookings status filter select is 40px — **open**
+
+| Control | Height | Place |
+|---|---|---|
+| Workers **Search workers** input | 36px (`h-9`) | `#/workers` |
+| Bookings status **Support worker** select | 40px (`ui-select` / `--control-height-field`) | `#/bookings/confirmed` rail filter card |
+| Messages search input + **Search** button | 36px / 36px | `#/messages` (documented field-beside-button rule) |
+
+Workers standalone search matches the Messages compact row, not the Bookings filter dropdown. Not necessarily wrong — different layout regions — but the same “find a worker / conversation” job now has two field heights on adjacent tabs.
+
+### L-A1 — Bookings week heading row top-aligns 32px week controls — **open**
+
+Measured at Wollongong 1 and Dubbo 1 (identical geometry).
+
+Row: `BookingsWeek` `flex items-start justify-between`; `h2` centre and **Today** centre differ by **+4px** (32px control reads lower than the 24px title line). Same pre-fix A1 pattern on grouping Overview; this row did not inherit `LineAlignedControl`.
+
+Places: **Bookings for {week}** heading beside **Today** / week arrows on every location week schedule.
+
+### L-A2 — Bookings status **Confirmed** row top-aligns **Request booking** — **open**
+
+Measured at Wollongong 1.
+
+Row: `flex items-start justify-between`; **Confirmed** `h2` (`text-lg`, 28px box) and **Request booking** (36px) differ by **+4px** at control centre. No `LineAlignedControl`; no `PageHeading`.
+
+Place: every Bookings status view results header (`Bookings.tsx`).
+
+### L-A3 — `PageHeading` actions sit low when a description line is present — **open**
+
+| Page | `PageHeading` row height | h1 centre → action centre |
+|---|---|---|
+| Bookings week (waiting-work description) | 60px | **+21px** |
+| Workers (tier intro description) | 60px | **+21px** |
+| Messages (title only) | 32px | **0px** |
+| Location settings (title only) | 32px | **0px** |
+
+`LineAlignedControl` is present on Bookings week and Workers actions, but with a description the 36px buttons visually align to the description line, not the 24px h1 first line. Title-only headings (Messages, settings) show 0px delta. Recomputes A2's “description stays 60px” case on location pages; not fixed here.
+
+### Scale — Workers tier 2 (Dubbo 1)
+
+Rendered **106 rows** in **Worked elsewhere in Far West**, uncapped and unpaginated. Tier 1: 13 rows; tier 3: 5 rows. Worker list row height **88px** (`offsetHeight` on first `li`).
+
+Wollongong 1 (Illawarra region, smaller footprint): tier 1 **13**, tier 2 **41**, tier 3 **5** — same tiers, manageable length. Dubbo’s tier 2 reads as a wall (~12 viewport heights at 1440×900) rather than a discriminating middle band. Data is correct; presentation is the risk.
+
+### Scale — Bookings status total vs week schedule
+
+| Location | Week schedule tag (`BookingsWeek`) | Confirmed status copy |
+|---|---|---|
+| Wollongong 1 | **21** bookings in current week | **Showing 1 – 40 of 72** |
+| Dubbo 1 | **19** bookings in current week | **Showing 1 – 40 of 72** |
+
+The **40-card cap** renders correctly (40 cards in DOM; copy matches). **More conversations** on Messages shows **8** threads plus a load-more control at both locations (13 workers with threads in seed).
+
+### Bookings “72” vs expected “16–19” — explained, not a bug
+
+The **16–19** figure is the **current-week schedule** count (`inWeek.length` in `BookingsWeek`; CPA scale test expects **16–24** per location in the current ISO week). Dubbo 1 renders **19**; Wollongong 1 renders **21**.
+
+**Showing 1 – 40 of 72** is the **Confirmed status view**, a different surface. `bookingsForView('confirmed')` in `Bookings.tsx` returns every booking where `status === 'confirmed'` and `end >= today` — not scoped to the visible week. The seed builds CPA SIL bookings from **56 days in the past through 27 days ahead** (`buildBookings`, `offset` −56…+27), with up to three day shifts plus a sleepover per day. Forward confirmed shifts in that window sum to **72** per location (verified in Node against `getLocationData`). The status list is working as coded; the copy is honest about a multi-week forward backlog the week grid does not show.
+
+### Within-context control consistency (location surfaces)
+
+**Bookings status — filter card (Wollongong 1, live).** Support worker select **40px** / 14px / 400 / 1px border / 4px radius. **Apply filters** and **Reset** both **32px** small buttons — match each other. Date fields **40px**.
+
+**Bookings status — result cards.** **Duplicate**, **Edit**, **Report incident** all **32px** `size="small"` — match within the card action row.
+
+**Messages (Wollongong 1, live).** **Archived** and **Mark all as read** both **32px** — match; **0px** delta from h1 centre via `LineAlignedControl`. Search input and **Search** button both **36px**, **0px** delta — documented field-beside-button rule.
+
+**Settings (location, organisation, account — live).** Stacked `Field` inputs **40px** / 400. Section **Save** buttons **36px**. Account **Choose file** **32px** beside **Save** **36px** — different jobs (pick vs commit), same as original audit’s settings note. Organisation fields read-only by design (`CAN_EDIT_ORGANISATION_DETAILS`); all four **Save** buttons disabled. No half-built sections observed.
+
+**Workers (both locations).** Tier **Message** / **Book** icon actions not re-measured; prior grouping/location rules still apply (32px icon-only at location). Search and page actions measured under L-C1 / L-A3.
+
+### Colour, borders, radii
+
+No new undocumented colour drift. Token-backed text, borders (`1px` / `--color-border`), control radius (`4px` / `--radius-sm`), card radius (`8px` / `--radius-lg`), and rail marker (`4px` left / `--border-width-rail`) match the original audit on every surface checked. Settings cards: **24px** inset (`px-6 py-6`), consistent across scopes.
+
+### Duplication
+
+No new duplicate beyond **D3** (section-heading geometry). This pass confirms two more rolled-own implementations on location routes: `BookingsWeek` week heading (already listed) and `Bookings.tsx` status **Confirmed** heading (local `h2.text-lg` + `RequestBookingButton`, no `PageHeading`).
+
+### Intentional, confirmed on location surfaces
+
+1. Week schedule is the default Bookings view; status views use the rail layout (`PROJECT.md`).
+2. Messages master-detail shell and 8-then-load-more list (`visibleCount` default 8).
+3. Settings rail active item: **36px** row, **4px** left marker, **700** weight.
+4. Location Workers three-tier structure and 88px content-sized rows.
+5. Bookings status 40-card render cap (`slice(0, 40)`) with total in copy.
+
 ## Pre-existing test failure (not this work)
 
 `tests/workers-node.test.ts:106` — `assert.equal(northern[0]?.id, 'farah-t')` fails with actual `'brian-r'`. Same failure on an untouched checkout of `a00618a`. Cause is seeded-date drift in `groupingDashboardWorkers` ranking, not alignment. Do not fix it in this pass.
