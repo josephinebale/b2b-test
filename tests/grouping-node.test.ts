@@ -315,7 +315,8 @@ test('grouping content is split between Dashboard, Supportables, and Workers', (
   assert.match(supportables, /hasDirectLocations/);
   assert.match(supportables, /directLocations\.map/);
   assert.match(supportables, /pendingCountsForLocation/);
-  assert.match(supportables, /pendingCountsForGrouping\(grouping\)/);
+  assert.doesNotMatch(groupingRow, /pendingCountsForGrouping/);
+  assert.doesNotMatch(groupingRow, /pendingWorkParts/);
   assert.match(supportables, /groupingContentsSummary\(grouping\)/);
   assert.doesNotMatch(supportables, /groupingDashboardDescription/);
   assert.doesNotMatch(supportables, /organisationSupportablesDescription/);
@@ -606,11 +607,15 @@ test('the same request orders a waiting row and fills its activity line', () => 
   assert.match(line ?? '', /none accepted|declined/);
 });
 
-/* A quiet location read as quiet on its own page and as
-   "0 requests · 0 approvals · 0 unread messages" in the grouping list. Both
-   now drop a zero, so the row keeps its name and type and says nothing else. */
-test('a grouping row states only the waiting work a location actually has', () => {
+/* Supportables location rows still carry waiting work; grouping rows and
+   breadcrumb menus do not. */
+test('a supportables location row states only the waiting work it actually has', () => {
   const supportables = source('../src/pages/Supportables.tsx');
+  const breadcrumb = source('../src/components/NodeBreadcrumb.tsx');
+  const childGroupingRow = supportables.slice(
+    supportables.indexOf('function ChildGroupingRow'),
+    supportables.indexOf('function SectionHeading'),
+  );
 
   assert.deepEqual(
     pendingWorkParts({ requests: 0, approvals: 0, messages: 0 }),
@@ -628,6 +633,8 @@ test('a grouping row states only the waiting work a location actually has', () =
     '1 unread message',
   ]);
 
+  assert.doesNotMatch(childGroupingRow, /pendingWorkParts/);
+  assert.doesNotMatch(breadcrumb, /pendingWorkParts/);
   assert.match(
     supportables,
     /pendingWorkParts\(pendingCountsForLocation\(location\.id\)\)/,

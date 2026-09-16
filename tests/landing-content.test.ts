@@ -139,10 +139,7 @@ test('landing bodies sit behind one off flag so the real screens cannot rot', ()
     /className="ui-inset-card flex w-full items-center gap-3 text-left hover:bg-surface-subtle"/,
   );
 
-  assert.match(
-    breadcrumb,
-    /pendingWork\.length > 0 && \(\s*LANDING_CONTENT_ENABLED \?/,
-  );
+  assert.doesNotMatch(breadcrumb, /pendingWorkParts/);
   assert.match(breadcrumb, /groupingContentsSummary\(item\.grouping\)/);
   assert.match(breadcrumb, /locationTypeSuburbLine\(item\.location\)/);
 

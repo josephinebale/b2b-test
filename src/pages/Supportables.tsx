@@ -8,7 +8,6 @@ import {
   groupingChildListTabLabel,
   groupingContentsSummary,
   groupingDashboardChildren,
-  pendingCountsForGrouping,
   pendingCountsForLocation,
   rootGroupingsForOrganisation,
   type Grouping,
@@ -65,8 +64,6 @@ function ChildGroupingRow({
   grouping: Grouping;
   onSelectGrouping?: (groupingId: string) => void;
 }) {
-  const pendingWork = pendingWorkParts(pendingCountsForGrouping(grouping));
-
   return (
     <button
       type="button"
@@ -80,13 +77,6 @@ function ChildGroupingRow({
         <span className="mt-1 block text-sm text-text-secondary">
           {groupingContentsSummary(grouping)}
         </span>
-        {pendingWork.length > 0 && (
-          LANDING_CONTENT_ENABLED ? (
-          <span className="mt-1 block text-sm text-text-secondary">
-            {pendingWork.join(' · ')}
-          </span>
-          ) : null
-        )}
       </span>
       <ChevronRight className="h-5 w-5 shrink-0 text-text-tertiary" />
     </button>
