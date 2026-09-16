@@ -253,7 +253,7 @@ function StepOne({
                 onSelectLocation(event.target.value);
                 setDraft({ ...draft, selectedWorkerIds: [], selectedParticipantIds: [] });
               }}
-              className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              className="ui-select w-full"
             >
               {locations.map((location) => (
                 <option key={location.id} value={location.id}>

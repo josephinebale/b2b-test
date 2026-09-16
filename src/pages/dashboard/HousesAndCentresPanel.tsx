@@ -15,6 +15,7 @@ import {
 import { Card } from '../../components/ui/Card';
 import { EntityLink } from '../../components/ui/EntityLink';
 import {
+  dashboardAsideNextUnfilledShiftLine,
   dashboardHouseRowPendingLinks,
   dashboardAsideWaitingCount,
   DIRECT_CHILD_LOCATION_LIST_ICON_CLASS,
@@ -47,16 +48,23 @@ function LocationRow({
   location,
   extraBookings,
   onSelectLocation,
+  showNextUnfilledShift,
+  nextUnfilledShift,
 }: {
   location: Location;
   extraBookings: Booking[];
   onSelectLocation?: (locationId: string, path?: string) => void;
+  showNextUnfilledShift: boolean;
+  nextUnfilledShift: Date | null;
 }) {
   const counts = pendingCountsForLocation(location.id, extraBookings);
   const pendingLinks = dashboardHouseRowPendingLinks({
     approvals: counts.approvals,
     messages: counts.messages,
   });
+  const nextUnfilledShiftLine = showNextUnfilledShift
+    ? dashboardAsideNextUnfilledShiftLine(nextUnfilledShift)
+    : null;
 
   return (
     <div className="ui-inset-card flex items-center gap-3">
@@ -74,8 +82,13 @@ function LocationRow({
         <p className="mt-1 text-xs text-text-tertiary">
           {directChildLocationTypeLine(location)}
         </p>
-        {pendingLinks.length > 0 && (
+        {(pendingLinks.length > 0 || nextUnfilledShiftLine) && (
           <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+            {nextUnfilledShiftLine && (
+              <span className="text-xs text-text-tertiary">
+                {nextUnfilledShiftLine}
+              </span>
+            )}
             {pendingLinks.map((item) => (
               <a
                 key={`${item.path}-${item.label}`}
@@ -128,6 +141,7 @@ function LocationSection({
   showSort = false,
   sortOption,
   onSortChange,
+  sortMetrics,
 }: {
   title: string;
   countLine: string;
@@ -137,6 +151,7 @@ function LocationSection({
   showSort?: boolean;
   sortOption?: DashboardAsideSort;
   onSortChange?: (value: DashboardAsideSort) => void;
+  sortMetrics: Map<string, ReturnType<typeof locationSortMetrics>>;
 }) {
   const hasSort =
     showSort && sortOption !== undefined && onSortChange !== undefined;
@@ -162,6 +177,10 @@ function LocationSection({
             location={location}
             extraBookings={extraBookings}
             onSelectLocation={onSelectLocation}
+            showNextUnfilledShift={sortOption === 'soonest-shift'}
+            nextUnfilledShift={
+              sortMetrics.get(location.id)?.soonestAwaitingStart ?? null
+            }
           />
         ))}
       </Card>
@@ -264,6 +283,7 @@ export function HousesAndCentresPanel({
           showSort={directLocations.length >= 2}
           sortOption={sortOption}
           onSortChange={setSortOption}
+          sortMetrics={sortMetrics}
         />
       )}
 

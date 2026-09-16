@@ -251,6 +251,7 @@ test('the grouping Overview leads with a full-width unfilled shifts calendar', (
   assert.match(houses, /User/);
   assert.match(houses, /DIRECT_CHILD_LOCATION_LIST_ICON_CLASS/);
   assert.match(houses, /directChildLocationTypeLine\(location\)/);
+  assert.match(houses, /mt-1 text-xs text-text-tertiary/);
   assert.doesNotMatch(houses, /locationTypeSuburbLine\(location\)/);
   assert.match(
     houses,
@@ -267,20 +268,26 @@ test('the grouping Overview leads with a full-width unfilled shifts calendar', (
   );
   const sectionHeadingRow = source('../src/pages/dashboard/SectionHeadingRow.tsx');
   assert.match(sectionHeadingRow, /relative block w-full max-w-xs min-w-0/);
-  assert.match(sectionHeadingRow, />Soonest shift</);
+  assert.match(sectionHeadingRow, />Soonest unfilled shift</);
+  assert.doesNotMatch(sectionHeadingRow, />Soonest shift</);
   assert.match(sectionHeadingRow, />Most outstanding tasks</);
   assert.match(sectionHeadingRow, />Name A to Z</);
   assert.match(sectionHeadingRow, /ariaLabel = 'Sort locations'/);
   assert.match(sectionHeadingRow, /aria-label=\{ariaLabel\}/);
-  assert.match(
-    sectionHeadingRow,
-    /ui-select ui-select--small w-full/,
-  );
+  assert.match(sectionHeadingRow, /ui-select w-full/);
   assert.match(sectionHeadingRow, /ChevronDown/);
-  assert.match(sectionHeadingRow, /h-4 w-4/);
-  assert.doesNotMatch(houses, /Sort by: Soonest shift/);
+  assert.match(sectionHeadingRow, /h-5 w-5/);
+  assert.doesNotMatch(houses, /Sort by: Soonest unfilled shift/);
   assert.doesNotMatch(houses, /SortSelect/);
   assert.match(houses, /sortDashboardAsideLocations/);
+  assert.match(houses, /dashboardAsideNextUnfilledShiftLine/);
+  assert.match(houses, /showNextUnfilledShift=\{sortOption === 'soonest-shift'\}/);
+  assert.match(
+    houses,
+    /nextUnfilledShift=\{\s*sortMetrics\.get\(location\.id\)\?\.soonestAwaitingStart \?\? null\s*\}/,
+  );
+  assert.match(houses, /pendingLinks\.length > 0 \|\| nextUnfilledShiftLine/);
+  assert.match(houses, /\{nextUnfilledShiftLine\}/);
   assert.match(houses, /useState<DashboardAsideSort>\('soonest-shift'\)/);
   assert.match(houses, /showSort=\{directLocations\.length >= 2\}/);
   assert.doesNotMatch(houses, /housesSortOption/);

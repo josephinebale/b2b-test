@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 import {
   avatarToken,
@@ -11,6 +11,22 @@ import {
 
 function source(path: string): string {
   return readFileSync(new URL(path, import.meta.url), 'utf8');
+}
+
+function sourceFiles(directory: URL): URL[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const child = new URL(entry.name + (entry.isDirectory() ? '/' : ''), directory);
+    if (entry.isDirectory()) return sourceFiles(child);
+    return entry.name.endsWith('.tsx') ? [child] : [];
+  });
+}
+
+/** The class list on each `<select>` opening tag, before its first option. */
+function selectClassLists(text: string): string[] {
+  return [...text.matchAll(/<select\b/g)].map((match) => {
+    const head = text.slice(match.index ?? 0, (match.index ?? 0) + 900).split('<option')[0];
+    return head.match(/className="([^"]*)"/)?.[1] ?? '';
+  });
 }
 
 test('Button classes expose every supported variant and size', () => {
@@ -46,6 +62,81 @@ test('Tag exposes the tones the product labels use', () => {
   assert.match(css, /color-mix\([^)]*var\(--color-badge\)/);
   assert.match(css, /\.attention-grid-status-pill--pending \{/);
   assert.match(css, /\.attention-grid-status-pill--attention \{/);
+});
+
+/* Three heights, each named for the role it serves: a 40px field for entering
+   and reading data, a 36px standalone button, a 32px control in a dense list.
+   A dropdown is a field, so it takes the field height rather than the height of
+   whatever control happens to sit near it. */
+test('control heights come from three role tokens', () => {
+  const css = source('../src/index.css');
+
+  assert.match(css, /--control-height-field: 2\.5rem;/);
+  assert.match(css, /--control-height-default: 2\.25rem;/);
+  assert.match(css, /--control-height-small: 2rem;/);
+  assert.match(
+    css,
+    /\.ui-button--default \{\s*height: var\(--control-height-default\);/,
+  );
+  assert.match(
+    css,
+    /\.ui-icon-button--default \{\s*width: var\(--control-height-default\);\s*height: var\(--control-height-default\);/,
+  );
+  assert.match(css, /\.ui-button--small \{\s*height: var\(--control-height-small\);/);
+});
+
+test('every dropdown is the shared 40px field, so none can drift', () => {
+  const css = source('../src/index.css');
+
+  assert.match(css, /\.ui-select \{[\s\S]*?height: var\(--control-height-field\);/);
+  assert.match(css, /\.ui-select:focus-visible,/);
+  // A clear button needs room beside the chevron; nothing else may re-pad it.
+  assert.match(css, /\.ui-select--clearable \{\s*padding-right: 4rem;/);
+  assert.doesNotMatch(css, /\.ui-select--small/);
+
+  const offenders: string[] = [];
+  for (const file of sourceFiles(new URL('../src/', import.meta.url))) {
+    for (const classList of selectClassLists(readFileSync(file, 'utf8'))) {
+      if (!/\bui-select\b/.test(classList)) {
+        offenders.push(`${file.pathname.split('/src/')[1]} <select class="${classList}">`);
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders,
+    [],
+    'every <select> must carry ui-select instead of its own height and padding',
+  );
+});
+
+/* One label treatment for every field, dense panel or not: 14px medium primary
+   text with 4px to the field. A 12px tier existed for filter panels and made
+   the same control read as two different things depending on the screen. */
+test('every field label is the one 14px medium tier', () => {
+  const offenders: string[] = [];
+
+  for (const file of sourceFiles(new URL('../src/', import.meta.url))) {
+    const text = readFileSync(file, 'utf8');
+    for (const match of text.matchAll(/<label className="([^"]*)"([\s\S]{0,700}?)<\/label>/g)) {
+      const [, classList, body] = match;
+      if (!/\bblock\b/.test(classList)) continue;
+      if (!/<(input|select|textarea)\b/.test(body)) continue;
+      if (
+        !/\btext-sm\b/.test(classList) ||
+        !/\bfont-medium\b/.test(classList) ||
+        !/\btext-text\b/.test(classList)
+      ) {
+        offenders.push(`${file.pathname.split('/src/')[1]} <label class="${classList}">`);
+      }
+    }
+  }
+
+  assert.deepEqual(
+    offenders,
+    [],
+    'a field label must be text-sm, font-medium, text-text',
+  );
 });
 
 test('Avatar names map to exactly three token values', () => {

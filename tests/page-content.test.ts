@@ -25,6 +25,7 @@ import {
   namedLocationList,
   moreShiftsWaitingLabel,
   dashboardAsidePendingLinks,
+  dashboardAsideNextUnfilledShiftLine,
   dashboardHouseRowPendingLinks,
   dashboardAsideWaitingCount,
   groupingChildListPageHeading,
@@ -577,6 +578,16 @@ test('the Dashboard aside sort puts blank houses last and orders the rest', () =
     ),
     ['dee-why-1', 'galston-1', 'hornsby'],
   );
+});
+
+test('the Dashboard aside exposes the date and time used by the soonest-unfilled sort', () => {
+  assert.equal(
+    dashboardAsideNextUnfilledShiftLine(
+      new Date(2026, 8, 17, 7, 0),
+    ),
+    'Thu 17, 7:00am',
+  );
+  assert.equal(dashboardAsideNextUnfilledShiftLine(null), null);
 });
 
 test('Overview house rows carry approvals and messages only', () => {

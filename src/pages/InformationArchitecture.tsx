@@ -265,7 +265,7 @@ export function InformationArchitecture() {
           <Card as="section" className="mt-8 p-4">
             <h2 className="text-sm font-bold text-text">Filter tree</h2>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <label className="block text-xs font-medium text-text">
+              <label className="block text-sm font-medium text-text">
                 Persona
                 <span className="relative mt-1 block">
                   <select
@@ -273,7 +273,7 @@ export function InformationArchitecture() {
                     onChange={(event) =>
                       setPersonaFilter(event.target.value as PersonaId | '')
                     }
-                    className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className="ui-select w-full"
                   >
                     <option value="">All organisations and personas</option>
                     {VISIBLE_ORGANISATIONS.map((organisation) => (

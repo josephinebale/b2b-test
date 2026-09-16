@@ -44,7 +44,7 @@ export function GroupingLocationSortControl({
 }) {
   return (
     <div className="inline-flex shrink-0 items-center gap-2">
-      <span className="shrink-0 text-xs font-medium text-text">Sort by</span>
+      <span className="shrink-0 text-sm font-medium text-text">Sort by</span>
       <span className="relative block w-full max-w-xs min-w-0">
         <select
           value={sortOption}
@@ -52,15 +52,15 @@ export function GroupingLocationSortControl({
             onSortChange(event.target.value as DashboardAsideSort)
           }
           aria-label={ariaLabel}
-          className="ui-select ui-select--small w-full"
+          className="ui-select w-full"
         >
-          <option value="soonest-shift">Soonest shift</option>
+          <option value="soonest-shift">Soonest unfilled shift</option>
           <option value="most-waiting">Most outstanding tasks</option>
           <option value="house-name">Name A to Z</option>
         </select>
         <ChevronDown
           aria-hidden="true"
-          className="pointer-events-none absolute top-1/2 right-2 h-4 w-4 -translate-y-1/2 text-text-tertiary"
+          className="pointer-events-none absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 text-text-tertiary"
         />
       </span>
     </div>

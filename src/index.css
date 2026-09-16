@@ -94,6 +94,12 @@
   --avatar-md: 2.25rem;
   --avatar-lg: 2.75rem;
 
+  /* One height per role, not one height everywhere: a field is for entering and
+     reading data, a standalone button is a lighter action, and a repeated
+     control in a dense list is lighter again. Controls in the same horizontal
+     group match each other — that rule outranks the role height. */
+  --control-height-field: 2.5rem;
+  --control-height-default: 2.25rem;
   --control-height-small: 2rem;
 
   --footer-gap: var(--space-7);
@@ -146,6 +152,7 @@ body {
 
 .ui-button:focus-visible,
 .ui-icon-button:focus-visible,
+.ui-select:focus-visible,
 .ui-entity-link:focus-visible,
 .ui-link:focus-visible,
 .header-menu-trigger:focus-visible,
@@ -160,7 +167,7 @@ body {
 }
 
 .ui-button--default {
-  height: 2.25rem;
+  height: var(--control-height-default);
   padding: 0 var(--space-4);
 }
 
@@ -218,8 +225,8 @@ body {
 }
 
 .ui-icon-button--default {
-  width: 2.25rem;
-  height: 2.25rem;
+  width: var(--control-height-default);
+  height: var(--control-height-default);
 }
 
 .ui-icon-button--small {
@@ -227,21 +234,27 @@ body {
   height: var(--control-height-small);
 }
 
+/* A dropdown is a field, so it takes the 40px field height wherever it sits —
+   including the Overview heading row, where it once matched the 32px week
+   controls beside it and so read as a different kind of thing to the identical
+   filters elsewhere. The right padding holds the 20px chevron. */
 .ui-select {
   appearance: none;
+  height: var(--control-height-field);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-  padding: 0 var(--space-2);
-  padding-right: 2rem;
+  padding: 0 var(--space-3);
+  padding-right: 2.5rem;
   font-size: var(--text-sm);
   line-height: var(--text-sm--line-height);
   font-weight: var(--font-weight-normal);
   color: var(--color-text);
 }
 
-.ui-select--small {
-  height: var(--control-height-small);
+/* A clear button sits inboard of the chevron and needs its own room. */
+.ui-select--clearable {
+  padding-right: 4rem;
 }
 
 .pinned-question-trigger {
@@ -725,14 +738,21 @@ a.ui-entity-link--plain:hover {
   width: var(--narrow-column-width);
 }
 
-/* A control beside text centres on the text LINE it sits beside. The wrapper is
-   that line box, so a control taller than the line overflows it evenly rather
-   than pushing the line down or growing the row. Never hand-tune a margin on
-   the control instead. */
+/* A control beside text has two modes and the content chooses, not the caller:
+   a block with a supporting line has a bottom to align to, so the control's
+   bottom edge sits on the last line's baseline; a one-line block has no bottom
+   of its own, so the control centres on the line. Centring is the CSS default
+   — `--line-aligned-height` is the line the control sits beside — and
+   `LineAlignedControl` translates the wrapper once it has measured the block,
+   so the mode follows the rendered text rather than the class. The wrapper is
+   the line's own height and `overflow: visible`, so a taller control spills
+   past it instead of growing a row that stays `items-start`. Never hand-tune a
+   margin on the control instead. */
 .line-aligned {
   display: flex;
   align-items: center;
   height: var(--line-aligned-height);
+  overflow: visible;
 }
 
 .line-aligned--sm {
@@ -799,7 +819,7 @@ a.ui-entity-link--plain:hover {
    and the border cut straight through them. */
 .header-menu-trigger {
   display: inline-flex;
-  height: 2.25rem;
+  height: var(--control-height-default);
   align-items: center;
   gap: var(--space-3);
   padding: 0 var(--space-2);

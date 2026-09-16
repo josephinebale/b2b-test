@@ -34,7 +34,7 @@ test('SectionHeadingRow is the single Overview section heading structure', () =>
   assert.doesNotMatch(workers, /mb-3 flex items-center justify-between/);
 });
 
-test('a control beside text centres on that text line through one shared wrapper', () => {
+test('a control beside text picks its mode from the text block through one shared wrapper', () => {
   const wrapper = source('../src/components/LineAlignedControl.tsx');
   const css = source('../src/index.css');
   const row = source('../src/pages/dashboard/SectionHeadingRow.tsx');
@@ -42,10 +42,30 @@ test('a control beside text centres on that text line through one shared wrapper
   const request = source('../src/pages/BookingRequest.tsx');
 
   assert.match(wrapper, /line-aligned line-aligned--\$\{line\}/);
+  assert.match(wrapper, /useLayoutEffect/);
+
+  // Two modes. More than one line: bottom edge on the last line's baseline.
+  // One line: centred on that line.
+  assert.match(wrapper, /alignToText/);
+  assert.match(wrapper, /textLines/);
+  assert.match(wrapper, /lastBaselineY/);
+  assert.match(wrapper, /lines\.length === 1/);
+  assert.match(wrapper, /lineCentre - controlCentre/);
+  assert.match(wrapper, /baseline - box\.bottom/);
+
+  // The content chooses, never the caller: these are the only three props.
+  assert.match(
+    wrapper,
+    /line: TextLine;\s*className\?: string;\s*children: ReactNode;/,
+  );
+  assert.doesNotMatch(wrapper, /mode\?:/);
+
   assert.match(
     css,
-    /\.line-aligned \{\s*display: flex;\s*align-items: center;\s*height: var\(--line-aligned-height\);/,
+    /\.line-aligned \{\s*display: flex;\s*align-items: center;\s*height: var\(--line-aligned-height\);\s*overflow: visible;/,
   );
+  assert.doesNotMatch(css, /align-items: flex-end;\s*height: 0;/);
+  assert.doesNotMatch(css, /align-self: last baseline/);
   assert.match(css, /\.line-aligned--sm \{\s*--line-aligned-height: var\(--text-sm--line-height\);/);
   assert.match(css, /\.line-aligned--md \{\s*--line-aligned-height: var\(--text-md--line-height\);/);
   assert.match(css, /\.line-aligned--xl \{\s*--line-aligned-height: var\(--text-xl--line-height\);/);
@@ -70,7 +90,8 @@ test('GroupingLocationSortControl keeps label and select on one inline line', ()
   const row = source('../src/pages/dashboard/SectionHeadingRow.tsx');
 
   assert.match(row, /inline-flex shrink-0 items-center gap-2/);
-  assert.match(row, /shrink-0 text-xs font-medium text-text">Sort by</);
-  assert.match(row, /ui-select ui-select--small w-full/);
+  assert.match(row, /shrink-0 text-sm font-medium text-text">Sort by</);
+  assert.match(row, /ui-select w-full/);
+  assert.doesNotMatch(row, /ui-select--small/);
   assert.doesNotMatch(row, /<label[\s\S]*Sort by/);
 });

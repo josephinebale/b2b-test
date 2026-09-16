@@ -1,5 +1,14 @@
 import { Fragment, useMemo, useState } from 'react';
-import { Check, Clock3, MapPin, Moon, Repeat2, Users, X } from 'lucide-react';
+import {
+  Check,
+  ChevronDown,
+  Clock3,
+  MapPin,
+  Moon,
+  Repeat2,
+  Users,
+  X,
+} from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import {
   LANDING_CONTENT_ENABLED,
@@ -377,25 +386,29 @@ export function Bookings({
           </div>
 
           <div className="mt-3 space-y-4">
-          <label className="block text-xs font-medium text-text">
+          <label className="block text-sm font-medium text-text">
             Support worker
             <span className="relative mt-1 block">
               <select
                 value={worker}
                 onChange={(event) => setWorker(event.target.value)}
-                className="h-10 w-full appearance-none rounded border border-border bg-surface px-2 pr-8 text-sm font-normal text-text"
+                className="ui-select ui-select--clearable w-full"
               >
                 <option value="">All workers</option>
                 {data.workers.map((option) => (
                   <option key={option.id} value={option.name}>{option.name}</option>
                 ))}
               </select>
+              <ChevronDown
+                aria-hidden="true"
+                className="pointer-events-none absolute top-1/2 right-3 h-5 w-5 -translate-y-1/2 text-text-tertiary"
+              />
               {worker && (
                 <button
                   type="button"
                   onClick={() => setWorker('')}
                   aria-label="Clear worker filter"
-                  className="absolute top-1/2 right-8 -translate-y-1/2 text-text-secondary"
+                  className="absolute top-1/2 right-10 -translate-y-1/2 text-text-secondary"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -403,7 +416,7 @@ export function Bookings({
             </span>
           </label>
 
-          <label className="block text-xs font-medium text-text">
+          <label className="block text-sm font-medium text-text">
             Date from
             <input
               type="date"
@@ -413,7 +426,7 @@ export function Bookings({
             />
           </label>
 
-          <label className="block text-xs font-medium text-text">
+          <label className="block text-sm font-medium text-text">
             Date to
             <input
               type="date"
@@ -423,7 +436,7 @@ export function Bookings({
             />
           </label>
 
-          <label className="flex items-center gap-2 text-xs font-medium text-text">
+          <label className="flex items-center gap-2 text-sm font-medium text-text">
             <input
               type="checkbox"
               checked={createdByMe}

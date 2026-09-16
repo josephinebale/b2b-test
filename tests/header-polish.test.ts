@@ -47,7 +47,10 @@ test('the account trigger is 36px tall with no extra vertical padding', () => {
 
   assert.match(header, /<Avatar name=\{persona\.name\} size="sm" \/>/);
   assert.match(header, /size="default"/);
-  assert.match(css, /\.ui-button--default \{\s*height: 2\.25rem;\s*padding: 0 var\(--space-4\);/);
+  assert.match(
+    css,
+    /\.ui-button--default \{\s*height: var\(--control-height-default\);\s*padding: 0 var\(--space-4\);/,
+  );
   assert.match(avatar, /\bblock shrink-0\b/);
 });
 
@@ -58,7 +61,7 @@ test('the account remains a centred trigger in the identity row', () => {
 
   assert.match(
     css,
-    /\.header-menu-trigger \{[\s\S]*?height: 2\.25rem;[\s\S]*?align-items: center;[\s\S]*?gap: var\(--space-3\);/,
+    /\.header-menu-trigger \{[\s\S]*?height: var\(--control-height-default\);[\s\S]*?align-items: center;[\s\S]*?gap: var\(--space-3\);/,
   );
   assert.match(header, /className="header-menu-trigger"/);
   assert.match(header, /NodeBreadcrumb|app-header-nav-row/);

@@ -163,7 +163,7 @@ export function JobsToBeDone() {
         <Card as="section" className="p-4">
             <h2 className="text-sm font-bold text-text">Filter jobs</h2>
             <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <label className="block text-xs font-medium text-text">
+              <label className="block text-sm font-medium text-text">
                 Organisation
                 <span className="relative mt-1 block">
                   <select
@@ -173,7 +173,7 @@ export function JobsToBeDone() {
                         event.target.value as Organisation | '',
                       )
                     }
-                    className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className="ui-select w-full"
                   >
                     <option value="">All organisations</option>
                     {ORGANISATIONS.map((organisation) => (
@@ -186,7 +186,7 @@ export function JobsToBeDone() {
                 </span>
               </label>
 
-              <label className="block text-xs font-medium text-text">
+              <label className="block text-sm font-medium text-text">
                 Sector
                 <span className="relative mt-1 block">
                   <select
@@ -194,7 +194,7 @@ export function JobsToBeDone() {
                     onChange={(event) =>
                       setSectorFilter(event.target.value as Sector | '')
                     }
-                    className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className="ui-select w-full"
                   >
                     <option value="">All sectors</option>
                     {SECTORS.map((sector) => (
@@ -207,13 +207,13 @@ export function JobsToBeDone() {
                 </span>
               </label>
 
-              <label className="block text-xs font-medium text-text">
+              <label className="block text-sm font-medium text-text">
                 Theme
                 <span className="relative mt-1 block">
                   <select
                     value={themeFilter}
                     onChange={(event) => setThemeFilter(event.target.value)}
-                    className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className="ui-select w-full"
                   >
                     <option value="">All themes</option>
                     {JOB_THEMES.map((theme) => (
@@ -226,7 +226,7 @@ export function JobsToBeDone() {
                 </span>
               </label>
 
-              <label className="block text-xs font-medium text-text">
+              <label className="block text-sm font-medium text-text">
                 Origin
                 <span className="relative mt-1 block">
                   <select
@@ -236,7 +236,7 @@ export function JobsToBeDone() {
                         event.target.value as '' | 'research' | 'inferred',
                       )
                     }
-                    className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className="ui-select w-full"
                   >
                     <option value="">All origins</option>
                     <option value="research">Validated</option>
@@ -246,7 +246,7 @@ export function JobsToBeDone() {
                 </span>
               </label>
 
-              <label className="block text-xs font-medium text-text">
+              <label className="block text-sm font-medium text-text">
                 Status
                 <span className="relative mt-1 block">
                   <select
@@ -260,7 +260,7 @@ export function JobsToBeDone() {
                           | 'unaddressed',
                       )
                     }
-                    className="h-10 w-full appearance-none rounded border border-border bg-surface px-3 pr-10 text-sm font-normal text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                    className="ui-select w-full"
                   >
                     <option value="">All statuses</option>
                     <option value="addressed">Addressed</option>

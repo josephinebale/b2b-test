@@ -1,10 +1,12 @@
 import { findLocation, locationTypeSuburbLine, type Location } from '../data/locations.ts';
 import {
   addDays,
+  formatTime,
   formatShiftClock,
   isSameDay,
   startOfDay,
   weekdayLong,
+  weekdayShort,
 } from './date.ts';
 
 export const WORKERS_ROUTE = '/workers';
@@ -301,6 +303,13 @@ export type DashboardAsideLocationSortMetrics = {
   waitingCount: number;
   soonestAwaitingStart: Date | null;
 };
+
+export function dashboardAsideNextUnfilledShiftLine(
+  start: Date | null,
+): string | null {
+  if (!start) return null;
+  return `${weekdayShort(start)} ${start.getDate()}, ${formatTime(start)}`;
+}
 
 export function dashboardAsideWaitingCount(counts: {
   cancelled: number;
