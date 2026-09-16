@@ -180,9 +180,9 @@ export function bookingActionItems(
   return actions;
 }
 
-/* A grouping row states the same waiting work as the location's own action
-   line, so it drops a zero the same way: a quiet location reads as quiet in
-   both places rather than as "0 requests · 0 approvals · 0 unread messages".
+/* Supportables direct-location rows state the same waiting work as the
+   location's own action line, dropping zeros so a quiet location reads as quiet
+   rather than as "0 requests · 0 approvals · 0 unread messages".
    Messages stay in this summary — a grouping has no nav badge to carry them. */
 export function pendingWorkParts(counts: {
   requests: number;

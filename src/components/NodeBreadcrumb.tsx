@@ -5,8 +5,6 @@ import {
   childGroupings,
   findLocation,
   groupingContentsSummary,
-  pendingCountsForGrouping,
-  pendingCountsForLocation,
   rootGroupingsForOrganisation,
   locationTypeSuburbLine,
   type Grouping,
@@ -18,8 +16,6 @@ import {
   type VisibleBreadcrumbItem,
 } from '../lib/breadcrumb';
 import { useKeyboardMenu } from '../lib/useKeyboardMenu';
-import { pendingWorkParts } from '../lib/pageContent';
-import { LANDING_CONTENT_ENABLED } from './LandingPlaceholder';
 import { PinnedQuestion } from './PinnedQuestion';
 import { Card } from './ui/Card';
 
@@ -262,14 +258,7 @@ function BreadcrumbMenu({
             onKeyDown={menu.onMenuKeyDown}
             className="py-1"
           >
-            {shown.map((item) => {
-              const pendingWork = item.grouping
-                ? pendingWorkParts(pendingCountsForGrouping(item.grouping))
-                : item.location
-                  ? pendingWorkParts(pendingCountsForLocation(item.location.id))
-                  : [];
-
-              return (
+            {shown.map((item) => (
               <button
                 key={item.id}
                 type="button"
@@ -291,13 +280,6 @@ function BreadcrumbMenu({
                       {locationTypeSuburbLine(item.location)}
                     </span>
                   )}
-                  {pendingWork.length > 0 && (
-                    LANDING_CONTENT_ENABLED ? (
-                    <span className="mt-1 block text-xs text-text-secondary">
-                      {pendingWork.join(' · ')}
-                    </span>
-                    ) : null
-                  )}
                 </span>
                 {currentIds.has(item.id) && (
                   <Check
@@ -306,8 +288,7 @@ function BreadcrumbMenu({
                   />
                 )}
               </button>
-              );
-            })}
+            ))}
             {moreCount > 0 && (
               <p className="px-3 py-2 text-xs text-text-secondary">
                 {moreCount} more
